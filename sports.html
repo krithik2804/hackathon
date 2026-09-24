@@ -1,0 +1,2225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Grassroots Scout — Multi-Sport AI Performance & Kinematics Analyzer. Phone-only pose estimation for vertical jump, broad jump, push-ups, plank, pull-ups, Cooper test, shuttle run and sit-and-reach, with age/gender-adjusted scoring.">
+<title>Grassroots Scout · Multi-Sport AI Performance &amp; Kinematics Analyzer</title>
+<meta name="theme-color" content="#0B0F14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GScout">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%27112%27 fill=%27%230B0F14%27/%3E%3Ccircle cx=%27256%27 cy=%27256%27 r=%27150%27 fill=%27none%27 stroke=%27%23A3E635%27 stroke-width=%2726%27/%3E%3Cpath d=%27M256 60v70M256 382v70M60 256h70M382 256h70%27 stroke=%27%2322D3EE%27 stroke-width=%2726%27 stroke-linecap=%27round%27/%3E%3Ccircle cx=%27256%27 cy=%27256%27 r=%2752%27 fill=%27%23A3E635%27/%3E%3C/svg%3E">
+<link rel="manifest" href='data:application/manifest+json,{"id":"gscout","name":"Grassroots%20Scout","short_name":"GScout","description":"Multi-sport%20AI%20performance%20and%20kinematics%20analyzer","start_url":".","scope":".","display":"standalone","orientation":"portrait","background_color":"%230B0F14","theme_color":"%230B0F14","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%27112%27 fill=%27%230B0F14%27/%3E%3Ccircle cx=%27256%27 cy=%27256%27 r=%27150%27 fill=%27none%27 stroke=%27%23A3E635%27 stroke-width=%2726%27/%3E%3Cpath d=%27M256 60v70M256 382v70M60 256h70M382 256h70%27 stroke=%27%2322D3EE%27 stroke-width=%2726%27 stroke-linecap=%27round%27/%3E%3Ccircle cx=%27256%27 cy=%27256%27 r=%2752%27 fill=%27%23A3E635%27/%3E%3C/svg%3E","sizes":"512x512 192x192","type":"image/svg+xml","purpose":"any"}]}'>
+<style>
+:root{
+  --bg:#0B0F14; --bg2:#0E141B; --card:#121A24; --card2:#161F2B;
+  --line:#1F2A3A; --txt:#E8EEF5; --mut:#8A97A8; --dim:#5A6878;
+  --acc:#A3E635; --acc2:#22D3EE; --warn:#FBBF24; --bad:#FB7185; --ok:#4ADE80;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--txt);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;touch-action:manipulation;overscroll-behavior:none}
+#app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;user-select:none;-webkit-user-select:none}
+input,select{font:inherit;color:var(--txt)}
+.hidden{display:none!important}
+.muted{color:var(--mut);font-size:12px}
+#topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;background:linear-gradient(180deg,#0B0F14 70%,rgba(11,15,20,.88));border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand h1{font-size:12.5px;letter-spacing:.14em;font-weight:800;white-space:nowrap}
+.brand small{display:block;font-size:9.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}
+#chips{margin-left:auto;display:flex;gap:5px;align-items:center}
+.chip{font-size:9.5px;font-weight:700;letter-spacing:.05em;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:3px 8px;white-space:nowrap;font-variant-numeric:tabular-nums;background:var(--bg2)}
+.chip.acc{color:var(--acc);border-color:rgba(163,230,53,.35)}
+.chip.cy{color:var(--acc2);border-color:rgba(34,211,238,.35)}
+.chip.warn{color:var(--warn);border-color:rgba(251,191,36,.4)}
+.chip.bad{color:var(--bad);border-color:rgba(251,113,133,.4)}
+.iconbtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:var(--mut);font-weight:800}
+#stage{position:relative;height:42vh;height:42dvh;min-height:272px;max-height:520px;background:#000;overflow:hidden;border-bottom:1px solid var(--line)}
+#video,#overlay{position:absolute;inset:0;width:100%;height:100%}
+#video{object-fit:cover}
+#overlay{pointer-events:none}
+#stage-hint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;color:var(--mut);font-size:12.5px;line-height:1.6;z-index:4;pointer-events:none}
+#stage-hint b{color:var(--txt)}
+#mode-badge,#demo-badge{position:absolute;top:8px;font-size:9.5px;font-weight:800;letter-spacing:.12em;padding:4px 9px;border-radius:99px;z-index:5}
+#mode-badge{left:8px;background:rgba(11,15,20,.75);border:1px solid rgba(163,230,53,.5);color:var(--acc)}
+#demo-badge{right:8px;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.55);color:var(--warn);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+main{flex:1;display:flex;flex-direction:column}
+.view{padding:10px 12px 14px;display:flex;flex-direction:column;gap:10px}
+.card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;padding:13px}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.card-head h2{font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:800}
+.tag{font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--mut);margin-left:auto}
+.tag.ok{color:var(--acc);border-color:rgba(163,230,53,.45)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.spread{justify-content:space-between}
+.btn{min-height:44px;padding:10px 16px;border-radius:12px;font-weight:700;font-size:13px;border:1px solid var(--line);background:var(--bg2);color:var(--txt);transition:transform .06s;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--acc);color:#0B0F14;border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.small{min-height:36px;padding:7px 12px;font-size:12px;border-radius:10px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.45;cursor:default}
+.banner{border:1px solid rgba(251,191,36,.45);background:rgba(251,191,36,.08);color:var(--warn);font-size:12px;padding:9px 12px;border-radius:12px;font-weight:600}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.metric{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:9px 10px;min-width:0}
+.metric label{display:block;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric b{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;display:block;white-space:nowrap}
+.metric small{font-size:9.5px;color:var(--mut);font-variant-numeric:tabular-nums}
+.gauge-card{display:flex;gap:14px;align-items:center}
+.gauge{position:relative;flex:0 0 auto;width:118px;height:118px}
+.gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+.gbg{fill:none;stroke:var(--line);stroke-width:9}
+.gfg{fill:none;stroke:var(--acc);stroke-width:9;stroke-linecap:round;stroke-dasharray:364.42;stroke-dashoffset:364.42;transition:stroke-dashoffset .5s,stroke .3s}
+.gauge .gn{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge .gn b{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.gauge .gn small{font-size:8.5px;letter-spacing:.14em;color:var(--mut);font-weight:800}
+.gauge-side{flex:1;min-width:0}
+/* profile */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pfield{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:9px 10px}
+.pfield label{display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700;margin-bottom:5px}
+.pfield input{width:100%;background:transparent;border:0;outline:0;font-size:16px;font-variant-numeric:tabular-nums}
+.seg{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;min-height:36px;border-radius:9px;font-weight:700;font-size:12px;color:var(--mut)}
+.seg button.on{background:var(--card2);color:var(--acc);box-shadow:inset 0 0 0 1px rgba(163,230,53,.35)}
+.src-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.src-btn{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:64px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);text-align:left;font-weight:700;font-size:12.5px}
+.src-btn small{font-weight:500;color:var(--mut);font-size:10px}
+.src-btn.on{border-color:var(--acc);color:var(--acc);box-shadow:inset 0 0 0 1px rgba(163,230,53,.35)}
+/* event cards */
+.evt{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));overflow:hidden}
+.evt-head{display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;user-select:none}
+.evt-ic{width:34px;height:34px;flex:0 0 auto;border-radius:10px;background:var(--bg2);border:1px solid var(--line);display:grid;place-items:center;color:var(--acc)}
+.evt-tt{flex:1;min-width:0}
+.evt-tt b{font-size:13.5px;display:block}
+.evt-tt small{color:var(--mut);font-size:10px}
+.evt-res{font-size:10px}
+.chev{color:var(--dim);font-size:11px;transition:transform .2s}
+.evt.open .chev{transform:rotate(180deg)}
+.evt-body{padding:0 12px 12px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line)}
+.prep{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:11.5px;color:var(--mut)}
+.prep b{display:block;color:var(--txt);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;margin:7px 0 3px}
+.prep b:first-child{margin-top:0}
+.prep ol{margin-left:16px;line-height:1.6}
+.prep ul{margin-left:14px;line-height:1.55}
+.prep p{line-height:1.5}
+.evlive{display:flex;gap:6px;flex-wrap:wrap;min-height:24px}
+.evchip{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:99px;padding:4px 10px;background:var(--bg2);color:var(--txt)}
+.evchip.ok{color:var(--acc);border-color:rgba(163,230,53,.4)}
+.evchip.warn{color:var(--warn);border-color:rgba(251,191,36,.5)}
+.evchip.bad{color:var(--bad);border-color:rgba(251,113,133,.5)}
+.evres{display:flex;gap:10px;align-items:center;background:var(--bg2);border:1px solid rgba(163,230,53,.35);border-radius:12px;padding:10px 12px;flex-wrap:wrap}
+.evres b{font-size:22px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.evres .sc{margin-left:auto;text-align:right}
+.evres .sc b{font-size:18px}
+.tier{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:99px;margin-top:3px}
+.tier-Elite{background:rgba(163,230,53,.15);color:var(--acc)}
+.tier-Excellent{background:rgba(34,211,238,.14);color:var(--acc2)}
+.tier-Good{background:rgba(74,222,128,.13);color:var(--ok)}
+.tier-Average{background:rgba(251,191,36,.14);color:var(--warn)}
+.tier-Poor{background:rgba(251,113,133,.13);color:var(--bad)}
+/* report */
+#json-view{background:#0A0E13;border:1px solid var(--line);border-radius:12px;padding:11px;font:10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#B9C6D6;max-height:250px;overflow:auto;white-space:pre}
+.modrow{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.modrow .chip{font-size:10px}
+table.rep{width:100%;border-collapse:collapse;font-size:11.5px}
+table.rep th{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+table.rep td{padding:6px;border-bottom:1px solid rgba(31,42,58,.5);font-variant-numeric:tabular-nums}
+table.rep td.r{text-align:right}
+.expl{font-size:11px;color:var(--mut);line-height:1.7}
+.expl b{color:var(--txt)}
+.rec{list-style:none;display:flex;flex-direction:column;gap:7px}
+.rec li{font-size:12px;color:var(--mut);border-left:2px solid var(--acc);padding-left:9px;line-height:1.5}
+.rec li b{color:var(--txt)}
+#log-list{list-style:none;display:flex;flex-direction:column;gap:4px;max-height:190px;overflow:auto}
+#log-list li{display:flex;gap:8px;align-items:baseline;font-size:11px;border-bottom:1px solid rgba(31,42,58,.55);padding:5px 0}
+#log-list time{color:var(--dim);font-variant-numeric:tabular-nums;flex:0 0 auto;font-size:10px}
+#log-list b{flex:0 0 auto;font-size:9px;letter-spacing:.08em;padding:2px 6px;border-radius:5px;color:var(--acc2);background:rgba(34,211,238,.1)}
+#log-list span{color:var(--mut);min-width:0}
+.footnote{font-size:9.5px;color:var(--dim);text-align:center;padding:0 10px 8px;line-height:1.6}
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,100%);z-index:50;display:grid;grid-template-columns:repeat(3,1fr);padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:rgba(11,15,20,.92);border-top:1px solid var(--line);backdrop-filter:blur(14px)}
+#nav button{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:52px;color:var(--dim);font-size:9px;font-weight:800;letter-spacing:.08em;border-radius:12px}
+#nav button.on{color:var(--acc)}
+#nav button.on svg{stroke:var(--acc)}
+#nav svg{stroke:var(--dim)}
+.modal{position:fixed;inset:0;z-index:70;background:rgba(4,7,10,.72);display:grid;place-items:center;padding:18px;backdrop-filter:blur(4px)}
+.modal-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;max-width:420px;width:100%;max-height:82vh;overflow:auto}
+.modal-card h3{font-size:15px;margin-bottom:8px}
+.modal-card p{color:var(--mut);font-size:12.5px;line-height:1.55}
+.modal-card ul{margin:9px 0 4px 16px;color:var(--mut);font-size:12.5px;line-height:1.7}
+.modal-card b{color:var(--txt)}
+.modal-actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));z-index:80;background:#111A26;border:1px solid var(--line);color:var(--txt);font-size:12px;font-weight:600;padding:10px 16px;border-radius:12px;max-width:88vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+@media (max-width:380px){.metric b{font-size:16px}.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 512 512" aria-hidden="true">
+        <rect width="512" height="512" rx="112" fill="#101823"/>
+        <circle cx="256" cy="256" r="150" fill="none" stroke="#A3E635" stroke-width="26"/>
+        <path d="M256 60v70M256 382v70M60 256h70M382 256h70" stroke="#22D3EE" stroke-width="26" stroke-linecap="round"/>
+        <circle cx="256" cy="256" r="52" fill="#A3E635"/>
+      </svg>
+      <div>
+        <h1>GRASSROOTS SCOUT</h1>
+        <small>Multi-Sport AI Performance &amp; Kinematics Analyzer</small>
+      </div>
+    </div>
+    <div id="chips">
+      <span id="chip-engine" class="chip">ENGINE —</span>
+      <span id="chip-fps" class="chip">FPS —</span>
+      <span id="chip-height" class="chip hidden">H —</span>
+      <button id="btn-help" class="iconbtn" aria-label="How it works">?</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="stage" aria-label="Camera view">
+      <video id="video" playsinline muted autoplay></video>
+      <canvas id="overlay"></canvas>
+      <div id="stage-hint"><div><b>No camera source.</b><br>Pick a source on the Setup tab:<br>live camera, webcam, video file — or <b>Demo athlete</b>.</div></div>
+      <div id="mode-badge">SETUP</div>
+      <div id="demo-badge" class="hidden">DEMO DATA</div>
+    </section>
+
+    <!-- ============ SETUP ============ -->
+    <section class="view" id="view-setup">
+      <div class="card">
+        <div class="card-head"><h2>Athlete Profile</h2><span class="tag" id="prof-state">INCOMPLETE</span></div>
+        <p class="muted" style="margin-bottom:9px">Used for age/gender-adjusted scoring (standardized norms, NSCA/Cooper-style bands). Height can be taken straight from the camera.</p>
+        <div class="pgrid">
+          <div class="pfield"><label>Age (yrs)</label><input id="pf-age" type="number" inputmode="numeric" min="10" max="90" placeholder="e.g. 24"></div>
+          <div class="pfield"><label>Gender</label>
+            <div class="seg" style="margin-top:2px"><button id="pf-m" class="on">Male</button><button id="pf-f">Female</button></div>
+          </div>
+          <div class="pfield"><label>Height (cm)</label><div class="row" style="gap:6px"><input id="pf-h" type="number" inputmode="decimal" min="100" max="230" placeholder="e.g. 178" style="flex:1"><button id="pf-hcam" class="btn ghost small">From camera</button></div></div>
+          <div class="pfield"><label>Weight (kg)</label><input id="pf-w" type="number" inputmode="decimal" min="25" max="200" placeholder="e.g. 74"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Camera Source</h2></div>
+        <div class="src-grid">
+          <button class="src-btn on" id="src-live">📷 Live camera<small>Rear lens · real-time</small></button>
+          <button class="src-btn" id="src-webcam">🤳 Webcam<small>Front lens · real-time</small></button>
+          <button class="src-btn" id="src-file">🎞 Video file<small>Pre-recorded clip · 30 fps</small></button>
+          <button class="src-btn" id="src-demo">🧪 Demo athlete<small>Synthetic · offline</small></button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="btn-camera" class="btn primary">Open Camera</button>
+          <button id="btn-file" class="btn ghost hidden">Choose video…</button>
+          <button id="btn-replay" class="btn ghost hidden">Replay</button>
+          <input type="file" id="file-input" accept="video/*" class="hidden">
+          <span id="file-name" class="muted"></span>
+        </div>
+        <p class="muted" id="cam-status" style="margin-top:9px">Select a source. Live camera requires HTTPS + permission. All inference runs on-device.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Auto Height Lock (scale reference)</h2><span id="height-state" class="tag">UNLOCKED</span></div>
+        <p class="muted" style="margin-bottom:9px">Full body in frame, 2–6 m, centered, upright. Kalman-filtered over 45–75 frames. With motion access, the phone tilt solves height exactly in either orientation: <b style="color:var(--txt)">held at chest height, tilted down</b> at the athlete, or <b style="color:var(--txt)">placed on the floor, tilted up</b> (auto-detected). Without it, a 3 m optics prior is used — confidence reflects that, and the coach can override manually.</p>
+        <div class="row">
+          <button id="btn-lock" class="btn primary">Begin Height Lock</button>
+          <button id="btn-manual" class="btn ghost">Manual (coach)</button>
+          <button id="btn-motion" class="btn ghost hidden">Enable motion (iOS)</button>
+        </div>
+        <div id="lock-progress" class="row hidden" style="margin-top:10px">
+          <div class="bar" style="flex:1;height:8px;border-radius:99px;background:var(--bg2);border:1px solid var(--line);overflow:hidden"><i id="lock-bar" style="display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .2s"></i></div>
+          <span id="lock-label" class="muted">Collecting frames…</span>
+        </div>
+        <div id="height-result" class="grid-3 hidden" style="margin-top:10px">
+          <div class="metric"><label>Height</label><b id="h-cm">—</b><small id="h-tol">±— cm</small></div>
+          <div class="metric"><label>Confidence</label><b id="h-conf">—</b><small>0–1 score</small></div>
+          <div class="metric"><label>Distance</label><b id="h-dist">—</b><small>from lens</small></div>
+        </div>
+        <div id="h-assist" class="muted" style="display:none;margin-top:7px;font-size:11px"></div>
+        <div id="manual-row" class="row hidden" style="margin-top:10px">
+          <input id="h-input" type="number" inputmode="decimal" min="120" max="230" step="0.5" placeholder="Height, e.g. 172" style="flex:1;min-width:90px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 12px">
+          <button id="h-set" class="btn">cm → Set</button>
+        </div>
+      </div>
+      <p class="footnote">RGB frames only — no depth sensor, wearables or markers. Video never leaves this device.</p>
+    </section>
+
+    <!-- ============ EVENTS ============ -->
+    <section class="view hidden" id="view-events">
+      <div class="card" style="padding:10px 12px">
+        <p class="muted" style="font-size:12px"><b style="color:var(--txt)">8 standardized events · 4 components.</b> Open an event for setup protocol, start the trial on the stage above, and finish to bank a scored result. Retest anytime — best raw scores count in the report.</p>
+      </div>
+      <div id="event-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    </section>
+
+    <!-- ============ REPORT ============ -->
+    <section class="view hidden" id="view-report">
+      <div class="card gauge-card">
+        <div class="gauge">
+          <svg viewBox="0 0 140 140"><circle class="gbg" cx="70" cy="70" r="58"/><circle class="gfg" id="g-over-c" cx="70" cy="70" r="58"/></svg>
+          <div class="gn"><b id="overall-score">—</b><small id="overall-tier">COMPOSITE</small></div>
+        </div>
+        <div class="gauge-side">
+          <p class="muted">Weighted composite: <b style="color:var(--txt)">Power 25% · Strength &amp; Endurance 25% · Cardio 30% · Agility &amp; Mobility 20%</b> (re-normalized over completed events).</p>
+          <div class="modrow">
+            <span class="chip" id="c-power">POWER —</span>
+            <span class="chip" id="c-strength">STR — END —</span>
+            <span class="chip" id="c-cardio">CARDIO —</span>
+            <span class="chip" id="c-agility">AGILITY —</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Test Breakdown</h2>
+          <div class="row"><button id="btn-json" class="btn small">JSON</button><button id="btn-csv" class="btn small">CSV</button><button id="btn-share" class="btn small">Share</button></div>
+        </div>
+        <div style="overflow:auto"><table class="rep" id="rep-table">
+          <thead><tr><th>Event</th><th class="r">Raw</th><th class="r">Age-adj</th><th class="r">Score</th><th>Tier</th></tr></thead>
+          <tbody id="rep-body"><tr><td colspan="5" class="muted">No completed events yet.</td></tr></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Calculation Method</h2></div>
+        <div class="expl" id="explain-box"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Coach Recommendations</h2></div>
+        <ul class="rec" id="rec-list"><li>Complete at least one event per component to generate targeted recommendations.</li></ul>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Live JSON Payload</h2><button id="btn-copy" class="btn small">Copy</button></div>
+        <pre id="json-view">{ }</pre>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Event Log</h2></div>
+        <ul id="log-list"><li class="muted">No events yet.</li></ul>
+      </div>
+    </section>
+
+    <p class="footnote">Grassroots Scout v2.0 · multi-sport PFT battery · on-device inference · single-file PWA</p>
+  </main>
+
+  <nav id="nav" aria-label="Primary">
+    <button id="nav-setup" class="on" data-view="setup">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c1-3.6 3.8-5.4 7-5.4S18 16.4 19 20"/></svg>
+      SETUP
+    </button>
+    <button id="nav-events" data-view="events">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M9 20V4M14 20v-8M19 20V7"/></svg>
+      EVENTS
+    </button>
+    <button id="nav-report" data-view="report">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 4-6"/></svg>
+      REPORT
+    </button>
+  </nav>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <h3 id="modal-title"></h3>
+    <p id="modal-body"></p>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+<div id="toast" class="hidden"></div>
+<noscript><div style="padding:40px;text-align:center">Grassroots Scout requires JavaScript (on-device vision inference).</div></noscript>
+
+<script type="module">
+'use strict';
+/* =====================================================================
+   GRASSROOTS SCOUT v2 — Multi-Sport AI Performance & Kinematics Analyzer
+   Single-file PWA · MediaPipe Pose (on-device) · monocular scale engine
+   8 events: vertical jump · broad jump · push-ups · plank · pull-ups/rows
+             Cooper test · 10 m×4 shuttle · sit-and-reach
+   Scoring: age/gender-adjusted standardized norms → 0–100 per event,
+            component weights → composite.
+   ===================================================================== */
+
+/* ---------------- 0. helpers ---------------- */
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const round1=v=>Math.round(v*10)/10;
+const round2=v=>Math.round(v*100)/100;
+const fmt=(v,d=1)=>Number.isFinite(v)?v.toFixed(d):'—';
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+const std=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(mean(a.map(x=>(x-m)*(x-m))));};
+let DPR=Math.min(2,window.devicePixelRatio||1);
+function toast(msg,ms=2400){const t=$('#toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.add('hidden'),ms);}
+function download(name,text,type='application/json'){
+  const b=new Blob([text],{type});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},500);
+}
+function showModal(title,html,actions=[{label:'OK'}]){
+  $('#modal-title').textContent=title;
+  $('#modal-body').innerHTML=html;
+  const box=$('#modal-actions');box.innerHTML='';
+  for(const a of actions){
+    const b=document.createElement('button');
+    b.className='btn '+(a.primary?'primary':'ghost');b.textContent=a.label;
+    b.onclick=()=>{if(a.cb)a.cb();$('#modal').classList.add('hidden');};
+    box.appendChild(b);
+  }
+  $('#modal').classList.remove('hidden');
+}
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+/* ---------------- 1. audio ---------------- */
+let actx=null;
+function beep(f=880,dur=0.1,vol=0.35){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended')actx.resume();
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.type='sine';o.frequency.value=f;o.connect(g);g.connect(actx.destination);
+    const t0=actx.currentTime;
+    g.gain.setValueAtTime(vol,t0);
+    g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+    o.start(t0);o.stop(t0+dur+0.02);
+  }catch(e){}
+}
+
+/* ---------------- 2. state ---------------- */
+const S={
+  mode:'setup',demo:false,camOn:false,front:false,src:'live',
+  fileUrl:null,fileName:'',
+  engine:{ready:false,backend:'—'},plm:null,
+  gyro:null,vw:0,vh:0,
+  scale:{px:null,last:0,distM:0},
+  height:{v:null,conf:0,src:null,locked:false,tol:0},
+  lock:{active:false,t0:0,need:2500,kf:null,upCount:0,gyro:false},
+  ev:null,                     // active event state
+  results:{},                  // id -> {raw,unit,detail,ts}
+  profile:{age:null,gender:'M',height:null,weight:null},
+  lastV:null,lastVT:0,payloadT:0,
+};
+const LOG=[];
+function logEvent(mod,evt,detail=''){
+  LOG.push({t:new Date(),mod,evt,detail});
+  if(LOG.length>400)LOG.shift();
+  if(!$('#view-report').classList.contains('hidden'))renderLog();
+}
+function saveResult(id,raw,detail){
+  const E=EVENTS[id];
+  const prev=S.results[id];
+  // keep best by component direction (shuttle: lower better)
+  if(prev&&!E.worseIsBetter&&raw>prev.raw){ /* new best */ }
+  S.results[id]={raw,unit:E.unit,detail:detail||{},ts:new Date().toISOString(),best:prev?bestOf(prev.raw,raw,E.worseIsBetter):raw};
+  logEvent('EVT',`${E.title}: ${fmtRaw(id,raw)}`,detail&&detail.note||'');
+  renderEventCard(id);renderEventChips();
+  if(!$('#view-report').classList.contains('hidden'))renderReport();
+  beep(740,0.14);
+}
+function bestOf(a,b,inv){return inv?Math.min(a,b):Math.max(a,b);}
+function fmtRaw(id,raw){
+  const E=EVENTS[id];
+  if(id==='cooper')return Math.round(raw).toLocaleString()+' m (12-min equiv)';
+  if(id==='shuttle')return fmt(raw,2)+' s';
+  if(id==='plank')return Math.round(raw)+' s';
+  if(E.unit==='reps')return Math.round(raw)+' reps';
+  return fmt(raw,1)+' '+E.unit;
+}
+
+/* ---------------- 3. geometry ---------------- */
+const LIMBS=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,31],[28,32]];
+const MAIN_KP=[11,12,13,14,15,16,23,24,25,26,27,28];
+const vis=p=>(p&&p.visibility==null?1:(p?p.visibility:0));
+function bodyExtents(V){
+  const nose=V[0],shL=V[11],shR=V[12];
+  if(!nose||vis(nose)<0.4||vis(shL)<0.35||vis(shR)<0.35)return null;
+  const feet=[V[27],V[28],V[29],V[30],V[31],V[32]].filter(p=>vis(p)>0.5);
+  if(!feet.length)return null;
+  const soleY=Math.max(...feet.map(p=>p.y));
+  const shMidY=(shL.y+shR.y)/2;
+  const headH=(shMidY-nose.y)/0.94;
+  if(headH<=0.004)return null;
+  const vertexY=nose.y-0.55*headH;
+  const px=soleY-vertexY;
+  if(px<0.03||px>0.98)return null;
+  return{px,vertexY,soleY,noseX:nose.x};
+}
+function isUpright(V){
+  const a=V[11],b=V[12],c=V[23],d=V[24];
+  if(vis(a)<0.4||vis(c)<0.4)return false;
+  const dx=(a.x+b.x)/2-(c.x+d.x)/2, dy=(a.y+b.y)/2-(c.y+d.y)/2;
+  return Math.abs(dy)>1.5*Math.abs(dx);
+}
+function isLying(V){
+  const a=V[11],b=V[12],c=V[23],d=V[24];
+  if(vis(a)<0.4||vis(c)<0.4)return false;
+  const dx=(a.x+b.x)/2-(c.x+d.x)/2, dy=(a.y+b.y)/2-(c.y+d.y)/2;
+  return Math.abs(dx)>1.5*Math.abs(dy);
+}
+function comOf(V){
+  const a=[V[11],V[12],V[23],V[24]].filter(p=>vis(p)>0.4);
+  if(a.length<2)return null;
+  return{x:mean(a.map(p=>p.x)),y:mean(a.map(p=>p.y))};
+}
+function midOf(V,i1,i2){
+  const a=V[i1],b=V[i2];
+  if(vis(a)<0.3||vis(b)<0.3)return null;
+  return{x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+}
+function angleAt(a,b,c){
+  const v1x=a.x-b.x,v1y=a.y-b.y,v2x=c.x-b.x,v2y=c.y-b.y;
+  const m=Math.hypot(v1x,v1y)*Math.hypot(v2x,v2y);
+  if(m<1e-6)return 180;
+  return Math.acos(clamp((v1x*v2x+v1y*v2y)/m,-1,1))*180/Math.PI;
+}
+function extPxH(V){
+  const e=bodyExtents(V);
+  return e?e.px*S.vh:0.85*S.vh;
+}
+
+/* ---------------- 4. camera / sources ---------------- */
+const video=$('#video');
+let camStream=null;
+function setSrc(id){
+  S.src=id;
+  for(const b of ['#src-live','#src-webcam','#src-file','#src-demo'])$(b).classList.toggle('on',b==='#src-'+id);
+  $('#btn-file').classList.toggle('hidden',id!=='file');
+  $('#btn-replay').classList.toggle('hidden',id!=='file');
+  $('#btn-camera').classList.toggle('hidden',id==='file');
+  if(id==='demo'){toggleDemo(true);return;}
+  if(S.demo)toggleDemo(false);
+  closeCamera();
+  if(id==='live')openCamera(false);
+  else if(id==='webcam')openCamera(true);
+  else if(id==='file'){$('#file-input').click();}
+  $('#stage-hint').style.display='';
+}
+async function openCamera(front){
+  if(S.src==='file'){setSrc('live');return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showModal('Camera unavailable','This context blocks <b>getUserMedia</b> (sandboxed frame / no HTTPS).<br><br>Use the <b>Demo athlete</b> or a <b>video file</b> to explore every module.',
+      [{label:'Use Demo',primary:true,cb:()=>setSrc('demo')},{label:'Use video file',cb:()=>setSrc('file')},{label:'Close',cb:()=>{}}]);
+    return;
+  }
+  try{
+    if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+    if(S.fileUrl){video.removeAttribute('src');video.load();S.fileUrl=null;S.fileName='';$('#file-name').textContent='';}
+    S.front=front;
+    const stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:front?'user':'environment',width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}},audio:false,
+    });
+    camStream=stream;video.srcObject=stream;
+    await video.play().catch(()=>{});
+    S.camOn=true;
+    $('#stage-hint').style.display='none';
+    $('#cam-status').textContent=`Camera LIVE (${front?'front':'rear'} lens) · ${video.videoWidth}×${video.videoHeight} · on-device inference.`;
+  }catch(err){
+    S.camOn=false;
+    const msg=err.name==='NotAllowedError'?'Camera permission denied — allow access in site settings, then retry.':'Camera error: '+(err.message||err.name)+'. HTTPS required.';
+    showModal('Camera error',msg,[{label:'Use Demo',primary:true,cb:()=>setSrc('demo')},{label:'Use video file',cb:()=>setSrc('file')},{label:'Close',cb:()=>{}}]);
+  }
+}
+function closeCamera(){
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  if(video.srcObject){video.srcObject=null;S.camOn=false;}
+  $('#btn-camera').textContent='Open Camera';
+}
+function loadFile(file){
+  if(!file)return;
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;video.srcObject=null;S.camOn=false;}
+  if(S.fileUrl)URL.revokeObjectURL(S.fileUrl);
+  S.fileUrl=URL.createObjectURL(file);
+  S.fileName=file.name;
+  video.src=S.fileUrl;video.loop=false;
+  video.play().catch(()=>{});
+  $('#file-name').textContent='🎞 '+file.name;
+  $('#cam-status').textContent='Video file loaded. Tip: side view, ~30 fps, full body in frame. Use Replay to re-analyze.';
+  logEvent('SETUP','Video file loaded',file.name);
+}
+
+/* ---------------- 5. vision engine ---------------- */
+const MP_CDN='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const MP_MODEL='https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+async function initEngine(){
+  try{
+    const mod=await import(MP_CDN+'/vision_bundle.mjs');
+    const fileset=await mod.FilesetResolver.forVisionTasks(MP_CDN+'/wasm');
+    try{
+      S.plm=await mod.PoseLandmarker.createFromOptions(fileset,{
+        baseOptions:{modelAssetPath:MP_MODEL,delegate:'GPU'},
+        runningMode:'VIDEO',numPoses:1,
+        minPoseDetectionConfidence:0.4,minPosePresenceConfidence:0.4,minTrackingConfidence:0.4,
+      });
+      S.engine.backend='GPU';
+    }catch(e){
+      S.plm=await mod.PoseLandmarker.createFromOptions(fileset,{
+        baseOptions:{modelAssetPath:MP_MODEL,delegate:'CPU'},
+        runningMode:'VIDEO',numPoses:1,
+        minPoseDetectionConfidence:0.4,minPosePresenceConfidence:0.4,minTrackingConfidence:0.4,
+      });
+      S.engine.backend='CPU';
+    }
+    S.engine.ready=true;
+    setChip('chip-engine','ENGINE '+S.engine.backend,'cy');
+    logEvent('SETUP','Engine ready',S.engine.backend+' delegate · BlazePose 33 kps');
+  }catch(err){
+    setChip('chip-engine','ENGINE OFFLINE','bad');
+    $('#cam-status').textContent='Pose model could not load (no network?). Live camera + full app work with internet; Demo mode works offline.';
+  }
+}
+function setChip(id,txt,cls=''){
+  const c=$('#'+id);c.textContent=txt;
+  c.className='chip'+(cls?' '+cls:'');
+}
+
+/* ---------------- 6. scale & height ---------------- */
+function quadRoots(A,B,C){
+  if(!Number.isFinite(A)||!Number.isFinite(B)||!Number.isFinite(C))return null;
+  const d=B*B-4*A*C;
+  if(d<=0)return null;
+  const r=Math.sqrt(d);
+  return[(-B-r)/(2*A),(-B+r)/(2*A)];
+}
+/* Exact monocular height solve from tilted-camera pinhole projection.
+   Device convention (portrait): beta=90 → phone vertical.
+   beta<90 → tilted DOWN (handheld, lens height a≈1.45 m).
+   beta>90 → tilted UP (floor-placed phone, a≈0.15 m).
+   Both cases reduced to a quadratic; physically-plausible root selected. */
+function heightEstimate(pxNative){
+  const fx=0.85*S.vw;
+  const prior=pxNative*3.0/fx; // no-tilt prior: assume 3 m
+  const g=S.gyro;
+  if(g&&Number.isFinite(g.beta)&&performance.now()-g.t<700){
+    const tilt=Math.abs(g.beta-90);
+    if(tilt>=8&&tilt<=45){
+      const th=tilt*Math.PI/180;
+      const s=Math.sin(th),c=Math.cos(th);
+      const c2=c*c,s2=s*s;
+      const P=pxNative/(fx*s*c);
+      if(Number.isFinite(P)&&P>0){
+        let roots=[];
+        if(g.beta<90){
+          // down-tilt (handheld): solves A·H²−B·H+C=0 (quadRoots wants signed B)
+          const A=P*(1+s2)*c2+2,B=4*1.45*(P+1),C=4*P*1.45*1.45;
+          roots=quadRoots(A,-B,C)||[];
+        }else{
+          // up-tilt (floor), quadratic in u=H/2 → H=2u
+          const A=P*(1+s2)*c2-2,B=2*0.15*(1-P),C=P*0.15*0.15;
+          const ur=quadRoots(A,B,C);
+          roots=ur?ur.map(u=>2*u):[];
+        }
+        roots=roots.filter(h=>h>0.9&&h<2.2);
+        if(roots.length===1)return{h:clamp(roots[0],1.2,2.1),gyro:true,src:g.beta<90?'gyro-handheld':'gyro-floor'};
+        if(roots.length>1){
+          roots.sort((x,y)=>Math.abs(x-prior)-Math.abs(y-prior));
+          return{h:clamp(roots[0],1.2,2.1),gyro:true,src:'gyro-amb'};
+        }
+      }
+    }
+  }
+  return{h:clamp(prior,1.2,2.1),gyro:false,src:'prior'};
+}
+function KF1d(x0,q){return{x:x0,P:q*4,q,n:0,samples:[]};}
+function kfUpdate(f,m,r){
+  f.P+=f.q;const K=f.P/(f.P+r);
+  f.x+=K*(m-f.x);f.P*=(1-K);
+  f.n++;f.samples.push(m);
+  if(f.samples.length>90)f.samples.shift();
+}
+function startLock(){
+  if(S.lock.active){ // cancel in-flight lock
+    S.lock.active=false;
+    $('#btn-lock').disabled=false;
+    $('#btn-lock').textContent='Begin Height Lock';
+    $('#lock-progress').classList.add('hidden');
+    toast('Height lock cancelled');
+    return;
+  }
+  if(S.demo){
+    $('#lock-progress').classList.remove('hidden');
+    const t0=performance.now();
+    const iv=setInterval(()=>{
+      const p=clamp((performance.now()-t0)/1300,0,1);
+      $('#lock-bar').style.width=(p*100)+'%';
+      if(p>=1){
+        clearInterval(iv);
+        demoHeightLock();
+        $('#lock-progress').classList.add('hidden');
+        $('#btn-lock').textContent='Re-run Height Lock';
+        logEvent('SETUP','Height locked (demo)','175.0 cm ±1.1 · conf 0.93');
+        renderHeightCard();beep(740,0.15);
+      }
+    },60);
+    return;
+  }
+  const hasFeed=S.camOn||(S.fileUrl&&video.readyState>=2);
+  if(!hasFeed){toast('Open a camera source first (live / webcam / file)');return;}
+  if(!S.lastV){toast('No subject detected — get full body in frame');return;}
+  if(!isUpright(S.lastV)){toast('Athlete must stand upright, full body in frame');return;}
+  if(!S.engine.ready){toast('Vision engine not ready — check connection');return;}
+  S.lock={active:true,t0:performance.now(),lastPoseT:performance.now(),need:2500,kf:null,upCount:0,gyro:false,src:'prior'};
+  $('#lock-progress').classList.remove('hidden');
+  $('#lock-bar').style.width='0%';
+  $('#lock-label').textContent='Collecting 45–75 frames…';
+  $('#btn-lock').disabled=false;
+  $('#btn-lock').textContent='Cancel Lock';
+}
+function finishLock(stalled){
+  S.lock.active=false;
+  $('#btn-lock').disabled=false;
+  $('#btn-lock').textContent='Re-run Height Lock';
+  $('#lock-progress').classList.add('hidden');
+  const kf=S.lock.kf;
+  if(stalled){
+    toast('Lost subject mid-lock — retry with full body in frame');
+    renderHeightCard();
+    return;
+  }
+  if(kf&&kf.n>=18&&S.lock.upCount>=15){
+    const H=kf.x,tol=Math.max(0.8,std(kf.samples)*100),cvv=std(kf.samples)/H;
+    const assisted=S.lock.src;
+    const pxRef=(S.lock.pxSamples&&S.lock.pxSamples.length>=5)?mean(S.lock.pxSamples):null;
+    S.height={v:H,conf:assisted!=='prior'?clamp(0.95-cvv*2.5,0.55,0.95):clamp(0.60-cvv*2.5,0.35,0.60),src:'auto',assisted,locked:true,tol,pxRef};
+    logEvent('SETUP','Height locked',`${(H*100).toFixed(1)} cm ±${S.height.tol.toFixed(1)} · ${assisted} · conf ${round2(S.height.conf)}`);
+    beep(740,0.15);
+  }else{
+    toast('Could not lock height — keep full body in frame, retry');
+  }
+  renderHeightCard();
+}
+function setManualHeight(cm){
+  S.height={v:cm/100,conf:1,src:'manual',assisted:'manual',locked:true,tol:0};
+  $('#manual-row').classList.add('hidden');
+  logEvent('SETUP','Height set (coach)',`${cm.toFixed(1)} cm · conf 1.00`);
+  renderHeightCard();beep(740,0.12);
+}
+function demoHeightLock(){
+  let pxRef=null;
+  const de=S.lastV?bodyExtents(S.lastV):null;
+  if(de)pxRef=de.px*S.vh;
+  if(!pxRef)pxRef=0.878*(S.vh||430); // deterministic demo standing extent (vertex→sole)
+  S.height={v:1.75,conf:0.93,src:'auto',assisted:'demo',locked:true,tol:1.1,pxRef};
+  renderHeightCard();
+}
+function currentScale(){
+  if(!S.height.locked)return null;
+  const t=performance.now();
+  // Stable reference: locked standing height in pixels (immune to pose change)
+  if(S.height.pxRef)return S.height.v/S.height.pxRef;
+  const V=S.lastV;
+  if(!V)return null;
+  const ext=bodyExtents(V);
+  if(ext&&isUpright(V)){S.scale.px=ext.px*S.vh;S.scale.last=t;return S.height.v/S.scale.px;}
+  if(isLying(V)){
+    const xs=V.filter(p=>vis(p)>0.5).map(p=>p.x);
+    const pxLen=(Math.max(...xs)-Math.min(...xs))*S.vw/1.04;
+    if(pxLen>40)return S.height.v*1.04/pxLen;
+  }
+  if(t-S.scale.last<8000&&S.scale.px)return S.height.v/S.scale.px;
+  return null;
+}
+function renderHeightCard(){
+  const h=S.height;
+  $('#height-state').textContent=h.locked?('LOCKED · '+(h.src==='manual'?'COACH':'AUTO')):'UNLOCKED';
+  $('#height-state').className='tag '+(h.locked?'ok':'');
+  $('#height-result').classList.toggle('hidden',!h.locked);
+  $('#h-cm').textContent=h.locked?(h.v*100).toFixed(1):'—';
+  $('#h-tol').textContent=h.locked?('±'+h.tol.toFixed(1)+' cm'):'±— cm';
+  $('#h-conf').textContent=h.locked?h.conf.toFixed(2):'—';
+  $('#h-dist').textContent=S.scale.distM>0.3?S.scale.distM.toFixed(1)+' m':'—';
+  const ast=$('#h-assist');
+  if(ast){
+    const s=h.locked?(h.assisted||''):'';
+    ast.textContent=!h.locked?'':(s==='prior'?'⚠ prior (no tilt data)·set motion for exact':(s==='gyro-handheld'?'gyro · handheld tilt':(s==='gyro-floor'?'gyro · floor tilt':'gyro')));
+    ast.style.display=h.locked?'block':'none';
+  }
+  if(h.locked){setChip('chip-height',`H ${(h.v*100).toFixed(0)}cm · ${S.scale.distM>0.3?S.scale.distM.toFixed(1)+'m':'—'}`,'acc');$('#chip-height').classList.remove('hidden');}
+  else{$('#chip-height').classList.add('hidden');}
+  if(h.locked&&S.profile.height==null){
+    S.profile.height=Math.round(h.v*1000)/10;
+    $('#pf-h').value=S.profile.height;
+    saveProfile();
+  }
+}
+
+/* ---------------- 7. norms & scoring ---------------- */
+const NORMS={
+  vert:   {comp:'power',unit:'cm',inv:false,M:[[-30,0],[24,30],[30,50],[36,68],[42,85],[48,100]],F:[[-20,0],[18,30],[23,50],[28,68],[33,85],[38,100]]},
+  broad:  {comp:'power',unit:'cm',inv:false,M:[[90,0],[190,30],[220,50],[250,68],[280,85],[310,100]],F:[[80,0],[155,30],[185,50],[215,68],[245,85],[275,100]]},
+  pushup: {comp:'strength',unit:'reps',inv:false,M:[[2,0],[14,30],[24,50],[34,68],[44,85],[54,100]],F:[[1,0],[9,30],[16,50],[24,68],[32,85],[40,100]]},
+  plank:  {comp:'strength',unit:'s',inv:false,M:[[10,0],[50,30],[90,50],[150,68],[220,85],[300,100]],F:[[10,0],[45,30],[75,50],[120,68],[180,85],[250,100]]},
+  pullup: {comp:'strength',unit:'reps',inv:false,M:[[0,0],[1,30],[4,50],[8,68],[13,85],[18,100]],F:[[0,0],[0.5,25],[2,50],[5,68],[9,85],[13,100]]},
+  cooper: {comp:'cardio',unit:'m',inv:false,M:[[400,0],[1400,30],[1750,50],[2050,68],[2350,85],[2650,100]],F:[[300,0],[1200,30],[1500,50],[1800,68],[2100,85],[2400,100]]},
+  shuttle:{comp:'agility',unit:'s',inv:true,M:[[13.8,100],[14.8,85],[16,68],[17.5,50],[19.5,30],[26,0]],F:[[15.3,100],[16.5,85],[18,68],[19.5,50],[21.5,30],[28,0]]},
+  sitreach:{comp:'agility',unit:'cm',inv:false,M:[[-14,0],[-4,30],[2,50],[7,68],[12,85],[17,100]],F:[[-14,0],[-6,30],[0,50],[5,68],[10,85],[15,100]]},
+};
+const AGE_F={
+  power:[[13,0.92],[30,1.0],[40,0.94],[50,0.86],[60,0.76],[120,0.65]],
+  strength:[[13,0.90],[30,0.98],[40,0.92],[50,0.85],[60,0.75],[120,0.65]],
+  cardio:[[13,0.90],[30,0.97],[40,0.89],[50,0.80],[60,0.69],[120,0.58]],
+  agility:[[13,0.94],[30,0.99],[40,0.94],[50,0.88],[60,0.80],[120,0.72]],
+};
+function ageFactor(age,comp){
+  const t=AGE_F[comp];
+  if(age<=t[0][0])return t[0][1];
+  for(let i=0;i<t.length-1;i++){
+    if(age>=t[i][0]&&age<t[i+1][0])return lerp(t[i][1],t[i+1][1],(age-t[i][0])/(t[i+1][0]-t[i][0]));
+  }
+  return t[t.length-1][1];
+}
+function scaleScore(anchors,r){
+  const asc=anchors[0][0]<=anchors[1][0];
+  const A=asc?anchors:anchors.slice().reverse();
+  const rr=asc?r:-r;
+  if(rr>=A[A.length-1][0])return A[A.length-1][1];
+  if(rr<=A[0][0])return clamp(A[0][1]-(A[0][0]-rr)*(A[1][1]-A[0][1])/Math.max(1e-6,A[1][0]-A[0][0]),0,100);
+  for(let i=0;i<A.length-1;i++){
+    if(rr<=A[i+1][0])return A[i][1]+(A[i+1][1]-A[i][1])*(rr-A[i][0])/(A[i+1][0]-A[i][0]);
+  }
+  return 100;
+}
+function scoreEvent(id,raw){
+  if(raw==null||!Number.isFinite(raw))return null;
+  const n=NORMS[id];
+  if(!S.profile.age||!S.profile.gender)return null;
+  const f=ageFactor(S.profile.age,n.comp);
+  const rAdj=raw/f;
+  const A=(S.profile.gender==='F')?n.F:n.M;
+  return{score:Math.round(scaleScore(A,rAdj)*10)/10,adj:round1(rAdj),f:round2(f)};
+}
+function tierOf(s){return s>=95?'Elite':s>=80?'Excellent':s>=60?'Good':s>=35?'Average':'Poor';}
+const COMP_W={power:0.25,strength:0.25,cardio:0.30,agility:0.20};
+const COMP_EVENTS={power:['vert','broad'],strength:['pushup','plank','pullup'],cardio:['cooper'],agility:['shuttle','sitreach']};
+function computeReport(){
+  const per={};
+  for(const id of Object.keys(NORMS)){
+    const r=S.results[id];
+    per[id]=r?{raw:r.raw,scored:scoreEvent(id,r.best)}:{raw:null,scored:null};
+  }
+  const comps={};
+  for(const c of Object.keys(COMP_W)){
+    const ss=COMP_EVENTS[c].map(id=>per[id].scored&&per[id].scored.score).filter(v=>v!=null);
+    comps[c]=ss.length?round1(mean(ss)):null;
+  }
+  let wsum=0,tot=0;
+  for(const c of Object.keys(COMP_W))if(comps[c]!=null){tot+=comps[c]*COMP_W[c];wsum+=COMP_W[c];}
+  const overall=wsum?round1(tot/wsum):null;
+  return{per,comps,overall};
+}
+
+/* ---------------- 8. event pipelines ---------------- */
+function newEV(id){
+  const d=EVENTS[id].newData();
+  return{id,phase:'arm',t0:performance.now(),data:d};
+}
+S.cooperMode='12min';
+S.shuttleWidth=10;
+function startEvent(id){
+  const E=EVENTS[id];
+  if(S.ev&&S.ev.phase!=='done'&&S.ev.id!==id)stopEvent(false);
+  if(E.needsScale&&!S.height.locked){toast('Lock height first (Setup tab) — metric events need a scale reference');return;}
+  const hasFeed=S.demo||S.camOn||(S.fileUrl&&video.readyState>=2);
+  if(!hasFeed){toast('Select a camera source first (Setup tab)');return;}
+  if(!S.lastV&&!S.demo){toast('No subject in frame yet');return;}
+  S.ev=newEV(id);
+  if(id==='cooper')S.ev.data.mode=S.cooperMode;
+  if(id==='shuttle'){
+    S.ev.data.widthM=S.demo?1.5:S.shuttleWidth; // demo uses a frame-fitting corridor
+  }
+  if(S.ev.phase==='arm')$('#stage-hint').style.display='none';
+  setOverlayPointer();
+  $('#mode-badge').textContent=E.title.toUpperCase();
+  logEvent('EVT',E.title+': armed',E.unit);
+  beep(660,0.08);
+  renderEventCard(id);
+}
+function setOverlayPointer(){
+  const dragg=S.ev&&['broad','pullup'].includes(S.ev.id)&&S.ev.phase!=='idle'&&S.ev.phase!=='done';
+  cv.style.pointerEvents=dragg?'auto':'none';
+}
+function stopEvent(save){
+  if(!S.ev||S.ev.phase==='idle')return;
+  const E=EVENTS[S.ev.id];
+  if(save)E.finish&&E.finish(S.ev,true);
+  else{S.ev.phase='idle';E.onStop&&E.onStop(S.ev);}
+  if(!S.ev||S.ev.phase==='idle'){
+    S.ev=null;
+    $('#mode-badge').textContent={setup:'SETUP',events:'EVENTS',report:'REPORT'}[S.mode]||'EVENTS';
+  }
+  setOverlayPointer();
+  const openId=$('#evt-open')?$('#evt-open').id.replace('evt-b-',''):null;
+  if(openId&&EVENTS[openId])renderEventCard(openId);
+}
+function finishEvent(id,raw,detail){
+  if(!S.ev||S.ev.id!==id)return;
+  S.ev.phase='done';
+  saveResult(id,raw,detail);
+  setOverlayPointer();
+  renderEventCard(id);
+}
+function requirePosePts(V,idxs){
+  for(const i of idxs)if(vis(V[i])<0.4)return false;
+  return true;
+}
+function pxP(V,i){return{x:V[i].x*S.vw,y:V[i].y*S.vh};}
+function pickArm(V){
+  const lv=vis(V[13]),rv=vis(V[14]);
+  if(lv>=rv)return{sh:11,el:13,wr:15};
+  return{sh:12,el:14,wr:16};
+}
+
+/* ---------- VERTICAL JUMP ---------- */
+const EVT_VERT={
+  id:'vert',title:'Vertical Jump',sub:'Power · g·t²/8',unit:'cm',worseIsBetter:false,needsScale:true,
+  icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V6M6 12l6-6 6 6"/></svg>',
+  prep:{
+    camera:'Side view, 3–6 m away, full body + generous headroom, lens at hip height.',
+    setup:['Height locked (Setup tab).','Athlete stands sideways, arms relaxed at sides.','On start: settle 1.5 s, then dip into a squat and jump straight up.','Land softly. One attempt is scored — retest for best.'],
+    measures:['Baseline hip & ankle level (auto, 1.5 s settle)','Peak hip displacement (px → m via height scale)','Ankle flight time t (takeoff → contact, ±33 ms)'],
+    math:'Height = g·t²/8 (ballistic, t = ankle flight time). Cross-check: Δhip × 1.15 (hip→COM transfer factor). Accuracy ±3–5 cm.'
+  },
+  newData:()=>({baseHip:null,baseAnk:null,flight:false,takeT:0,landT:0,peakHip:null,runT0:0,lastT:0}),
+  step(V,t){
+    const d=S.ev.data;
+    if(!requirePosePts(V,[23,24,27,28]))return;
+    const hip=(V[23].y+V[24].y)/2*S.vh;
+    const ank=Math.min(V[27].y,V[28].y)*S.vh;
+    const pxH=extPxH(V);
+    const dt=Math.max(1e-3,(t-(d.lastT||t))/1000);d.lastT=t;
+    if(S.ev.phase==='arm'){
+      d.baseHip=d.baseHip==null?hip:lerp(d.baseHip,hip,0.1);
+      d.baseAnk=d.baseAnk==null?ank:lerp(d.baseAnk,ank,0.1);
+      if(!isUpright(V)&&t-S.ev.t0>1200){stopEvent(false);toast('Stand upright for vertical jump');return;}
+      if(t-S.ev.t0>1500){S.ev.phase='run';d.runT0=t;}
+      return;
+    }
+    if(S.ev.phase!=='run')return;
+    if(!d.flight){
+      if(d.baseAnk!=null&&ank<d.baseAnk-0.025*pxH){
+        d.flight=true;d.takeT=t-dt*500;d.peakHip=hip;
+      }
+    }else{
+      d.peakHip=Math.min(d.peakHip,hip);
+      if(ank>d.baseAnk+0.012*pxH){
+        d.landT=t;
+        const tf=(d.landT-d.takeT)/1000;
+        const mpp=currentScale();
+        const hipDisp=mpp?(d.baseHip-d.peakHip)*mpp*1.15:0;
+        let h=9.81*tf*tf/8, method='ballistic (flight time)';
+        if(tf<0.18||tf>1.1){h=hipDisp;method='hip displacement ×1.15';}
+        if(h>0.04&&h<1.0){
+          finishEvent('vert',round1(h*100),{flight:round2(tf),hipDisp:round1(hipDisp*100),method,vTake:round1(9.81*tf/2),note:method});
+        }else{
+          toast('Too low — jump higher and retest');
+          stopEvent(false);
+        }
+      }
+    }
+  },
+  live(){
+    const d=S.ev.data;
+    const tf=d.landT?fmt((d.landT-d.takeT)/1000,2)+' s':'—';
+    const dh=d.peakHip&&d.baseHip?fmt((d.baseHip-d.peakHip)*currentScale(),2):'—';
+    return[S.ev.phase==='arm'?'SETTLING…':(d.flight?'FLIGHT':'READY — JUMP'),
+      't_flight '+tf,'Δhip '+(dh==='—'?dh:dh+' m'),'peak '+(d.flight?'▲':'—')];
+  },
+  draw(ctx,t,V){
+    const d=S.ev.data;
+    if(d.baseAnk!=null)lineFull(ctx,d.baseAnk,'rgba(34,211,238,0.55)');
+    if(d.peakHip!=null&&(d.flight||S.ev.phase==='done'))lineFull(ctx,d.peakHip,'rgba(163,230,53,0.9)');
+    bigText(ctx,'VERTICAL JUMP',t);
+  }
+};
+
+/* ---------- BROAD JUMP ---------- */
+const EVT_BROAD={
+  id:'broad',title:'Standing Broad Jump',sub:'Power · toe-off → heel',unit:'cm',worseIsBetter:false,needsScale:true,
+  icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h14M13 6l6 6-6 6"/></svg>',
+  prep:{
+    camera:'Side view covering takeoff line + landing zone, 4–8 m, lens at knee height.',
+    setup:['Drag the red line onto the takeoff line.','Athlete approaches from the left, toes at the line.','Standing long jump: squat, swing arms, jump straight out — land on both feet.','Distance = takeoff line → back of closest heel at landing.'],
+    measures:['Toe-off position (last ground contact, auto)','Landing heel position (first contact, auto)','Takeoff line (coach-draggable)'],
+    math:'Distance = (landing heel x − line x) × scale (m/px from height lock). Direction auto-detected.'
+  },
+  newData:()=>({baseAnk:null,lineX:0.30,air:false,lastToeX:null,takeX:null,landX:null,settleT:0,prevT:0}),
+  step(V,t){
+    const d=S.ev.data;
+    if(!requirePosePts(V,[27,28,29,30]))return;
+    const ank=Math.min(V[27].y,V[28].y)*S.vh;
+    const pxH=extPxH(V);
+    if(S.ev.phase==='arm'){
+      d.baseAnk=d.baseAnk==null?ank:lerp(d.baseAnk,ank,0.1);
+      if(t-S.ev.t0>1000)S.ev.phase='run';
+      return;
+    }
+    if(S.ev.phase!=='run')return;
+    if(d.baseAnk==null)return;
+    const toeF=Math.max(V[29].x,V[30].x)*S.vw;
+    const toeB=Math.min(V[29].x,V[30].x)*S.vw;
+    const contact=ank>d.baseAnk-0.015*pxH;
+    if(!d.air){
+      if(contact)d.lastToeX=toeF;
+      else if(d.lastToeX!=null){d.air=true;d.takeX=d.lastToeX;}
+    }else{
+      if(contact){
+        const heelF=Math.max(V[31].x,V[32].x)*S.vw;
+        const heelB=Math.min(V[31].x,V[32].x)*S.vw;
+        // closest heel to the takeoff line (the side we jumped from)
+        const lineX=d.lineX*S.vw;
+        d.landX=(d.takeX>=lineX)?Math.min(heelF,heelB):Math.max(heelF,heelB);
+        if(Math.abs(d.landX-lineX)<0.02*S.vw)d.landX=(d.takeX>=lineX)?heelF:heelB;
+        d.air=false;d.settleT=t;
+      }
+    }
+    if(d.landX!=null&&t-d.settleT>700){
+      const mpp=currentScale();
+      if(mpp){
+        const dist=Math.abs(d.landX-d.lineX*S.vw)*mpp;
+        if(dist>0.25&&dist<4){
+          finishEvent('broad',round1(dist*100),{dir:d.landX>=d.lineX*S.vw?'L→R':'R→L',note:'line→closest heel'});
+        }else{toast('Did not clear the line well — retest');stopEvent(false);}
+      }
+    }
+  },
+  live(){
+    const d=S.ev.data;
+    return[S.ev.phase==='arm'?'SETTLING…':(d.air?'IN FLIGHT →':'READY — JUMP'),
+      'line @ '+(d.lineX*100).toFixed(0)+'% W',
+      d.landX!=null?('dist '+fmt(Math.abs(d.landX-d.lineX*S.vw)*currentScale(),2)+' m'):'dist —'];
+  },
+  draw(ctx,t,V){
+    const d=S.ev.data;
+    const x=d.lineX*S.vw*coverScale().s+coverScale().ox;
+    ctx.setLineDash([8*DPR,6*DPR]);
+    ctx.strokeStyle='rgba(251,113,133,0.95)';ctx.lineWidth=2.5*DPR;
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font=`800 ${9.5*DPR}px system-ui`;ctx.fillStyle='rgba(251,113,133,0.95)';
+    ctx.fillText('TAKEOFF (drag)',x+6*DPR,14*DPR);
+    if(d.takeX!=null){
+      const[tx,ty]=mapPt(d.takeX/S.vw,0.9);
+      ctx.strokeStyle='rgba(34,211,238,0.9)';ctx.lineWidth=2*DPR;
+      ctx.beginPath();ctx.moveTo(tx,ty-16*DPR);ctx.lineTo(tx,ty);ctx.stroke();
+    }
+    if(d.landX!=null){
+      const[lx,ly]=mapPt(d.landX/S.vw,0.9);
+      ctx.fillStyle='rgba(163,230,53,0.95)';
+      ctx.beginPath();ctx.arc(lx,ly,5*DPR,0,Math.PI*2);ctx.fill();
+      ctx.font=`800 ${10*DPR}px system-ui`;
+      ctx.fillText(fmt(Math.abs(d.landX-d.lineX*S.vw)*currentScale(),2)+' m',lx-20*DPR,ly-12*DPR);
+    }
+    bigText(ctx,'BROAD JUMP',t);
+  }
+};
+
+/* ---------- PUSH-UPS ---------- */
+const EVT_PUSHUP={
+  id:'pushup',title:'Push-Ups (60 s)',sub:'Strength · elbow angle reps',unit:'reps',worseIsBetter:false,needsScale:false,
+  icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17h20M6 17l4-6 4 3 5-4"/><circle cx="7" cy="7" r="2.4"/></svg>',
+  manualStop:true,
+  prep:{
+    camera:'Side view, 2–4 m, full body, lens at chest height.',
+    setup:['Plank position, legs extended, body straight.','Lower chest toward the floor to ~90° elbow, then press to full extension.','Strict reps only — 60 s countdown.','Sagging hips or dropping the butt = fault (not counted).'],
+    measures:['Elbow joint angle (shoulder–elbow–wrist), per rep','Form gate: hip band (±12% torso) + extended legs (knee >150°)','Fault tracking & form %'],
+    math:'Rep = elbow <100° (down) then >150° (up), with gate passed at the bottom. 60 s or manual stop.'
+  },
+  newData:()=>({rep:0,st:'top',baseHip:null,torso:null,form:0,attempts:0,ang:180,faultT:0,prevT:0}),
+  step(V,t){
+    const d=S.ev.data;
+    const arm=pickArm(V);
+    if(vis(V[arm.el])<0.4||vis(V[arm.wr])<0.4||vis(V[23])<0.4||vis(V[24])<0.4)return;
+    const sh=pxP(V,arm.sh),el=pxP(V,arm.el),wr=pxP(V,arm.wr);
+    const hip=(V[23].y+V[24].y)/2*S.vh;
+    const torsoPx=Math.hypot((V[23].x-V[11].x)*S.vw,(V[23].y-V[11].y)*S.vh)||80;
+    d.ang=angleAt(sh,el,wr);
+    if(S.ev.phase==='arm'){
+      d.baseHip=d.baseHip==null?hip:lerp(d.baseHip,hip,0.1);
+      d.torso=torsoPx;
+      if(!isLying(V)&&t-S.ev.t0>1500){stopEvent(false);toast('Get into a plank position (side view)');return;}
+      if(t-S.ev.t0>1000){S.ev.phase='run';beep(880,0.1);logEvent('EVT','Push-ups: 60 s GO','');}
+      return;
+    }
+    if(S.ev.phase!=='run')return;
+    const kneeA=vis(V[25])>0.4&&vis(V[27])>0.4?angleAt(pxP(V,23),pxP(V,25),pxP(V,27)):170;
+    if(d.st==='top'&&d.ang<100){
+      d.st='bottom';d.attempts++;
+      d.gate=Math.abs(hip-d.baseHip)<0.12*torsoPx&&kneeA>150;
+    }else if(d.st==='bottom'&&d.ang>150){
+      d.st='top';
+      if(d.gate){d.rep++;d.form++;}
+      else{d.faultT=t;toast('Fault — keep the body straight');}
+    }
+    if(t-S.ev.t0>=60000){EVT_PUSHUP.finish(S.ev,true);}
+  },
+  finish(ev,manual){
+    const d=ev.data;
+    if(d.rep>0||manual)finishEvent('pushup',d.rep,{formPct:d.attempts?Math.round(d.form/d.attempts*100):100,time:Math.min(60,Math.round((performance.now()-ev.t0)/1000))});
+    else stopEvent(false);
+  },
+  live(){
+    const d=S.ev.data;
+    const rem=S.ev.phase==='run'?Math.max(0,60-(performance.now()-S.ev.t0)/1000):60;
+    return[S.ev.phase==='arm'?'GET INTO PLANK':Math.ceil(rem)+' s LEFT',
+      d.rep+' reps','elbow '+Math.round(d.ang)+'°',
+      (d.attempts?('form '+Math.round(d.form/d.attempts*100)+'%'):'strict only'),
+      (d.st==='bottom'?'▼':'▲')];
+  },
+  draw(ctx,t,V){
+    if(S.ev.phase!=='run'&&S.ev.phase!=='arm')return;
+    const d=S.ev.data;
+    if(d.baseHip!=null){
+      lineFull(ctx,d.baseHip-0.12*(d.torso||80),'rgba(34,211,238,0.35)');
+      lineFull(ctx,d.baseHip+0.12*(d.torso||80),'rgba(34,211,238,0.35)');
+    }
+    const rem=Math.max(0,60-(t-S.ev.t0)/1000);
+    bigText(ctx,Math.ceil(rem)+' s · '+d.rep+' REPS',t);
+  }
+};
+
+/* ---------- PLANK ---------- */
+const EVT_PLANK={
+  id:'plank',title:'Plank Hold',sub:'Strength · form-timed hold',unit:'s',worseIsBetter:false,needsScale:false,
+  manualStop:true,
+  icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15h20M6 15V9M18 15v-2"/></svg>',
+  prep:{
+    camera:'Side view, 2–4 m, full body, lens at mid-torso.',
+    setup:['Forearm plank: elbows under shoulders, body a straight line.','Hold as long as possible with strict form.','Form break (sag >12% torso, or line deviation >15° for 0.4 s) ends the hold.','Stop manually to end early.'],
+    measures:['Hold time (only in-form frames count)','Hip sag vs shoulder→ankle line (m)','Colinearity deviation (°)'],
+    math:'Timer integrates dt while sag <0.12·torso AND |180° − ∠(sh–hip–ank)| <15°. 400 ms out-of-form → stop.'
+  },
+  newData:()=>({holdT:0,prevT:0,badT:0,sag:0,dev:180,ok:true,sh:null,hip:null,an:null}),
+  step(V,t){
+    const d=S.ev.data;
+    const sh=midOf(V,11,12),hip=midOf(V,23,24);
+    const anL=V[27],anR=V[28];
+    if(!sh||!hip||(vis(anL)<0.4&&vis(anR)<0.4))return;
+    const an={x:((vis(anL)>0.4?anL.x:0)+(vis(anR)>0.4?anR.x:0))/(vis(anL)>0.4&&vis(anR)>0.4?2:1),
+              y:((vis(anL)>0.4?anL.y:0)+(vis(anR)>0.4?anR.y:0))/(vis(anL)>0.4&&vis(anR)>0.4?2:1)};
+    const anP={x:an.x*S.vw,y:an.y*S.vh},hipP={x:hip.x*S.vw,y:hip.y*S.vh};
+    const shP={x:sh.x*S.vw,y:sh.y*S.vh};
+    const torsoPx=Math.hypot(anP.x-shP.x,anP.y-shP.y)||80;
+    d.sh=shP;d.hip=hipP;d.an=anP;
+    d.dev=180-angleAt(shP,hipP,anP);
+    if(Math.abs(anP.x-shP.x)>0.05*S.vw){
+      const lineY=shP.y+(anP.y-shP.y)*(hipP.x-shP.x)/(anP.x-shP.x);
+      d.sag=hipP.y-lineY;
+    }else d.sag=0;
+    if(S.ev.phase==='arm'){
+      if(!isLying(V)&&t-S.ev.t0>1500){stopEvent(false);toast('Get into forearm plank (side view)');return;}
+      if(t-S.ev.t0>1000){S.ev.phase='run';d.prevT=t;beep(880,0.1);logEvent('EVT','Plank: hold GO','');}
+      return;
+    }
+    if(S.ev.phase!=='run')return;
+    const dt=(t-d.prevT)/1000;d.prevT=t;
+    d.ok=d.sag<0.12*torsoPx&&d.dev<15;
+    if(d.ok){d.holdT+=dt;d.badT=0;}
+    else{
+      d.badT+=dt;
+      if(d.badT>0.4){EVT_PLANK.finish(S.ev,false);}
+    }
+  },
+  finish(ev,manual){
+    const d=ev.data;
+    if(d.holdT>1||manual)finishEvent('plank',Math.round(d.holdT),{avgDev:Math.round(d.dev),manual:manual?'':'form break'});
+    else stopEvent(false);
+  },
+  live(){
+    const d=S.ev.data;
+    return[S.ev.phase==='arm'?'GET INTO PLANK':(d.ok?'HOLDING ✓':'FORM BREAK!'),
+      Math.round(d.holdT)+' s held','sag '+(d.sag!=null?fmt(d.sag*currentScale(),2):'—')+' m','line Δ '+Math.round(d.dev)+'°'];
+  },
+  draw(ctx,t,V){
+    const d=S.ev.data;
+    if(S.ev.phase!=='run'&&S.ev.phase!=='arm')return;
+    if(d.sh&&d.an){
+      ctx.strokeStyle='rgba(34,211,238,0.8)';ctx.lineWidth=2*DPR;
+      ctx.setLineDash([6*DPR,5*DPR]);
+      ctx.beginPath();ctx.moveTo(d.sh.x,d.sh.y);ctx.lineTo(d.an.x,d.an.y);ctx.stroke();
+      ctx.setLineDash([]);
+      if(d.hip){
+        ctx.fillStyle=d.ok?'rgba(163,230,53,0.95)':'rgba(251,113,133,0.95)';
+        ctx.beginPath();ctx.arc(d.hip.x,d.hip.y,6*DPR,0,Math.PI*2);ctx.fill();
+      }
+    }
+    bigText(ctx,Math.round(S.ev.data.holdT)+' s',t);
+  }
+};
+
+/* ---------- PULL-UPS / ROWS ---------- */
+const EVT_PULLUP={
+  id:'pullup',title:'Pull-Ups / Inverted Rows',sub:'Strength · chin-to-bar reps',unit:'reps',worseIsBetter:false,needsScale:true,
+  manualStop:true,
+  icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18M8 4v3M16 4v3M12 7v7M9 14l-2 6M15 14l2 6"/></svg>',
+  prep:{
+    camera:'Side or front view with the bar fully in frame, 2–4 m.',
+    setup:['Drag the cyan line onto the bar.','Start from a full hang (arms fully extended).','Pull until the chin (nose) is above the bar line, lower to full hang.','Inverted rows: chest touching the bar counts as the top position.'],
+    measures:['Chin (nose) vs bar line — up position','Shoulder depth below bar — full hang (22% body height)','Completed reps (top → full hang)'],
+    math:'Rep = nose above bar line → shoulder below bar + 0.22·H. Max completed reps to exhaustion or manual stop.'
+  },
+  newData:()=>({barY:0.32,rep:0,st:'down',upDone:false,baseSh:null,ang:0}),
+  step(V,t){
+    const d=S.ev.data;
+    if(vis(V[0])<0.4||vis(V[11])<0.4||vis(V[12])<0.4)return;
+    const nose=V[0].y*S.vh;
+    const shY=(V[11].y+V[12].y)/2*S.vh;
+    const pxH=extPxH(V);
+    if(S.ev.phase==='arm'){
+      d.baseSh=d.baseSh==null?shY:lerp(d.baseSh,shY,0.1);
+      if(t-S.ev.t0>1000){S.ev.phase='run';beep(880,0.1);logEvent('EVT','Pull-ups: GO','to failure or stop');}
+      return;
+    }
+    if(S.ev.phase!=='run')return;
+    const bar=d.barY*S.vh;
+    const up=nose<bar;
+    const down=shY>bar+0.22*pxH;
+    if(up)d.st='up';
+    if(down){
+      if(d.st==='up'&&d.upDone){d.rep++;}
+      d.st='down';d.upDone=false;
+    }
+    if(d.st==='up')d.upDone=true;
+  },
+  finish(ev,manual){
+    const d=ev.data;
+    if(d.rep>0||manual)finishEvent('pullup',d.rep,{});
+    else stopEvent(false);
+  },
+  live(){
+    const d=S.ev.data;
+    return[S.ev.phase==='arm'?'FULL HANG — GET SET':(d.st==='up'?'▲ TOP':'▼ HANG'),
+      d.rep+' reps','bar @ '+(d.barY*100).toFixed(0)+'% H','tap STOP to finish'];
+  },
+  draw(ctx,t,V){
+    const d=S.ev.data;
+    if(S.ev.phase!=='run'&&S.ev.phase!=='arm')return;
+    const y=d.barY*S.vh*coverScale().s+coverScale().oy;
+    ctx.setLineDash([8*DPR,6*DPR]);
+    ctx.strokeStyle='rgba(34,211,238,0.95)';ctx.lineWidth=2.5*DPR;
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cv.width,y);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font=`800 ${9.5*DPR}px system-ui`;ctx.fillStyle='rgba(34,211,238,0.95)';
+    ctx.fillText('BAR (drag)',8*DPR,y-6*DPR);
+    if(vis(V[0])>0.4){
+      const[nx,ny]=mapPt(V[0].x,V[0].y);
+      ctx.fillStyle=ny<y?'rgba(163,230,53,0.95)':'rgba(232,238,245,0.9)';
+      ctx.beginPath();ctx.arc(nx,ny,5*DPR,0,Math.PI*2);ctx.fill();
+    }
+    bigText(ctx,d.rep+' REPS',t);
+  }
+};
+
+/* ---------- COOPER TEST ---------- */
+const EVT_COOPER={
+  id:'cooper',title:'Cooper / 1.5-Mile Run',sub:'Cardio · 30% of composite',unit:'m',worseIsBetter:false,needsScale:false,
+  manualStop:true,
+  icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="5" r="2"/><path d="M9 20l2-6-3-3 4-4 3 3 3 1M7 15l-2 5"/></svg>',
+  prep:{
+    camera:'Optional — frame the runner (treadmill or a loop around the phone) for the live cadence check.',
+    setup:['Choose 12-min run (enter distance after) or 1.5-mile (auto pace).','Start the test — big timer on stage.','Runner in frame → live cadence (steps/min) from vertical CoM oscillation.','On finish, enter the distance covered.'],
+    measures:['Total time (auto)','Distance (self-reported — course not visible to the phone)','Cadence steps/min (in-frame, live)'],
+    math:'1.5-mi converted to 12-min equivalent: d₁₂ = 2414 m ÷ time × 720 s. Scored against Cooper norms (age/gender adjusted).'
+  },
+  newData:()=>({mode:'12min',tEnd:0,cad:0,peaks:0,winT:0,base:null,prevSign:0,distEntered:false}),
+  step(V,t){
+    const d=S.ev.data;
+    if(!V||vis(V[23])<0.4||vis(V[24])<0.4)return;
+    const hipY=(V[23].y+V[24].y)/2*S.vh;
+    d.base=d.base==null?hipY:lerp(d.base,hipY,0.02);
+    const s=Math.sign(hipY-d.base)||1;
+    if(d.prevSign>0&&s<0)d.peaks++;
+    d.prevSign=s;
+    const w=t-d.winT;
+    if(w>1000){d.cad=Math.round(d.peaks*60*1000/w);d.peaks=0;d.winT=t;}
+  },
+  finish(ev,manual){
+    const d=ev.data;
+    ev.phase='await';
+    const secs=Math.max(1,Math.round((performance.now()-S.ev.t0)/1000));
+    logEvent('EVT','Cooper: run stopped',secs+' s');
+    renderEventCard('cooper');
+  },
+  scoreWith(distM){
+    const d=S.ev.data;
+    let raw;
+    if(d.mode==='12min')raw=Math.round(distM);
+    else{
+      const secs=Math.max(1,Math.round((performance.now()-S.ev.t0)/1000));
+      raw=Math.round(2414/secs*720);
+    }
+    finishEvent('cooper',raw,{mode:d.mode,cadence:d.cad,note:d.mode==='12min'?'12-min distance':'1.5-mi → 12-min equiv'});
+  },
+  live(){
+    const d=S.ev.data;
+    const el=(performance.now()-S.ev.t0)/1000;
+    const mm=String(Math.floor(el/60)).padStart(2,'0'),ss=String(Math.floor(el%60)).padStart(2,'0');
+    return[S.ev.phase==='await'?'ENTER DISTANCE BELOW':(d.mode==='12min'?'12-MIN RUN':'1.5-MILE RUN'),
+      mm+':'+ss,d.mode==='12min'?(Math.max(0,720-el)<720?Math.ceil(Math.max(0,720-el))+' s left':'time up!'):'',
+      d.cad?('cadence '+d.cad+' spm'):'cadence —','tap STOP to finish'];
+  },
+  draw(ctx,t){
+    if(S.ev.phase==='idle')return;
+    const el=(t-S.ev.t0)/1000;
+    bigText(ctx,Math.floor(el/60)+':'+String(Math.floor(el%60)).padStart(2,'0'),t);
+  }
+};
+
+/* ---------- SHUTTLE RUN ---------- */
+const EVT_SHUTTLE={
+  id:'shuttle',title:'10 m × 4 Shuttle',sub:'Agility · timed CoD',unit:'s',worseIsBetter:true,needsScale:true,
+  icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M4 12h16M14 8l4 4-4 4M4 6l3 3-3 3"/></svg>',
+  prep:{
+    camera:'Full course in frame — for a 10 m course stand ~12–15 m back, lens at chest height.',
+    setup:['Set course width (m). Lines auto-place ±width/2 from you via the height scale.','Stand on the left line; 2 s settle, then GO (beep).','Sprint line → line: 4 legs, touch each line (cross its zone).','Finish = touch of the 4th line. Total time is scored.'],
+    measures:['Total time (GO → 4th touch)','4 leg splits (auto zone touches)','Auto-scaled lines (m/px)'],
+    math:'t = t_GO → t_lastTouch; zone = ±10% of course width; lines at start ± width/2 · scale.'
+  },
+  newData:()=>({widthM:10,zL:null,zR:null,goT:0,legs:0,splits:[],lastTouch:-1e9,comX:null,fitNote:''}),
+  step(V,t){
+    const d=S.ev.data;
+    const com=comOf(V);if(!com)return;
+    const comX=com.x*S.vw;
+    d.comX=comX;
+    if(S.ev.phase==='arm'){
+      if(d.zL==null){
+        const mpp=currentScale();if(!mpp)return;
+        const half=(d.widthM/2)/mpp;
+        let zL=comX-half,zR=comX+half;
+        if(zL<0.03*S.vw||zR>0.97*S.vw){
+          zL=0.05*S.vw;zR=0.95*S.vw;
+          d.fitNote=' (course wider than frame — lines fitted)';
+        }
+        d.zL=zL;d.zR=zR;
+      }
+      if(t-S.ev.t0>2000){
+        S.ev.phase='run';d.goT=t;d.lastTouch=t;
+        beep(980,0.15);logEvent('EVT','Shuttle: GO',d.widthM+' m × 4');
+      }
+      return;
+    }
+    if(S.ev.phase!=='run')return;
+    const widthPx=d.zR-d.zL;
+    const target=d.legs%2===0?d.zR:d.zL;
+    if(Math.abs(comX-target)<0.10*widthPx&&t-d.lastTouch>400){
+      d.legs++;
+      d.splits.push(round2((t-d.goT)/1000));
+      d.lastTouch=t;
+      beep(700+d.legs*60,0.07);
+      if(d.legs>=4){
+        const total=round2((t-d.goT)/1000);
+        finishEvent('shuttle',total,{width:d.widthM,splits:d.splits,note:d.fitNote});
+      }
+    }
+    if(t-d.goT>90000){
+      if(d.legs>0)finishEvent('shuttle',round2((t-d.goT)/1000),{legs:d.legs,note:'stopped 90 s'});
+      else{toast('No movement detected — retest');stopEvent(false);}
+    }
+  },
+  live(){
+    const d=S.ev.data;
+    const el=S.ev.phase==='run'?round1((performance.now()-d.goT)/1000):0;
+    return[S.ev.phase==='arm'?'ON LEFT LINE…':el+' s','leg '+Math.min(4,d.legs)+'/4',
+      d.zL!=null?('course '+d.widthM+' m'):'placing lines…','splits '+(d.splits.length?d.splits.join(' '):'')];
+  },
+  draw(ctx,t,V){
+    const d=S.ev.data;
+    if(S.ev.phase!=='run'&&S.ev.phase!=='arm')return;
+    if(d.zL!=null){
+      const csc=coverScale();
+      for(const[z,side]of[[d.zL,'A'],[d.zR,'B']]){
+        const x=z*csc.s+csc.ox;
+        ctx.setLineDash([9*DPR,6*DPR]);
+        ctx.strokeStyle='rgba(163,230,53,0.7)';ctx.lineWidth=2.4*DPR;
+        ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font=`800 ${10*DPR}px system-ui`;ctx.fillStyle='rgba(163,230,53,0.9)';
+        ctx.fillText(side,x+5*DPR,16*DPR);
+      }
+      if(d.comX!=null){
+        const[cx,cy]=mapPt(d.comX/S.vw,0.5);
+        ctx.fillStyle='rgba(34,211,238,0.95)';
+        ctx.beginPath();ctx.arc(cx,cy,5*DPR,0,Math.PI*2);ctx.fill();
+      }
+    }
+    if(S.ev.phase==='run')bigText(ctx,Math.floor((t-d.goT)/1000)+' s · LEG '+Math.min(4,d.legs),t);
+    else bigText(ctx,'SETTLE ON LINE A',t);
+  }
+};
+
+/* ---------- SIT & REACH ---------- */
+const EVT_SITREACH={
+  id:'sitreach',title:'Sit & Reach',sub:'Agility/Mobility · flexibility',unit:'cm',worseIsBetter:false,needsScale:true,
+  manualStop:true,
+  icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16M6 18v-6M6 12h8M14 12l6 2"/></svg>',
+  prep:{
+    camera:'Side view, 2–3 m, hips-to-toes in frame, lens at hip height.',
+    setup:['Sit with legs fully extended and locked (knee gate enforced).','Reach forward with stacked hands as far as possible.','Multiple attempts OK — the BEST reach is recorded.','Stop to finish (60 s auto).'],
+    measures:['Fingertip (wrist) x vs knee reference, per frame','Best reach (m → cm via scale)','Knee-extension gate (∠hip–knee–ank >150°)'],
+    math:'Reach = (wrist x − knee x) × scale; 0 at the knee, positive past it. Gated on straight legs.'
+  },
+  newData:()=>({kneeX:null,kneeOk:false,best:-999,seated:false,reach:0,prevT:0}),
+  step(V,t){
+    const d=S.ev.data;
+    const hip=midOf(V,23,24),knee=midOf(V,25,26),ank=midOf(V,27,28);
+    if(!hip||!knee||!ank)return;
+    const wr=vis(V[15])>=vis(V[16])?V[15]:V[16];
+    if(vis(wr)<0.4)return;
+    d.seated=(knee.x-hip.x)>0.05&&Math.abs(knee.y-hip.y)<0.09&&hip.y>0.42;
+    d.kneeOk=angleAt({x:hip.x*S.vw,y:hip.y*S.vh},{x:knee.x*S.vw,y:knee.y*S.vh},{x:ank.x*S.vw,y:ank.y*S.vh})>150;
+    if(S.ev.phase==='arm'){
+      if(!d.seated&&t-S.ev.t0>1500){stopEvent(false);toast('Sit down with legs extended (side view)');return;}
+      if(d.seated){
+        d.kneeX=d.kneeX==null?knee.x:lerp(d.kneeX,knee.x,0.1);
+        if(t-S.ev.t0>1200){S.ev.phase='run';beep(880,0.1);logEvent('EVT','Sit & reach: GO','best of attempts');}
+      }
+      return;
+    }
+    if(S.ev.phase!=='run')return;
+    const mpp=currentScale();
+    if(!mpp)return;
+    d.reach=(wr.x-d.kneeX)*S.vw*mpp;
+    if(d.kneeOk&&d.reach>d.best)d.best=d.reach;
+    if(t-S.ev.t0>60000)EVT_SITREACH.finish(S.ev,true);
+  },
+  finish(ev,manual){
+    const d=ev.data;
+    if(d.best>-900||manual)finishEvent('sitreach',round1(d.best*100),{gate:d.kneeOk?'ok':'knee bent'});
+    else stopEvent(false);
+  },
+  live(){
+    const d=S.ev.data;
+    return[S.ev.phase==='arm'?'SIT, LEGS STRAIGHT':'REACH →',
+      'now '+(d.reach!=null?fmt(d.reach*100,1):'—')+' cm',
+      'best '+((d.best>-900?fmt(d.best*100,1):'—')+' cm'),
+      d.kneeOk?'knee gate ✓':'⚠ bend the knee straight'];
+  },
+  draw(ctx,t,V){
+    const d=S.ev.data;
+    if(S.ev.phase!=='run'&&S.ev.phase!=='arm')return;
+    if(d.kneeX!=null){
+      const csc=coverScale();
+      const x=d.kneeX*S.vw*csc.s+csc.ox;
+      ctx.setLineDash([6*DPR,5*DPR]);
+      ctx.strokeStyle='rgba(34,211,238,0.8)';ctx.lineWidth=2*DPR;
+      ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font=`800 ${9.5*DPR}px system-ui`;ctx.fillStyle='rgba(34,211,238,0.9)';
+      ctx.fillText('0 cm (knee)',x+5*DPR,16*DPR);
+    }
+    const wr=vis(V[15])>=vis(V[16])?V[15]:V[16];
+    if(vis(wr)>0.4){
+      const[wx,wy]=mapPt(wr.x,wr.y);
+      ctx.fillStyle='rgba(163,230,53,0.95)';
+      ctx.beginPath();ctx.arc(wx,wy,5*DPR,0,Math.PI*2);ctx.fill();
+    }
+    bigText(ctx,(d.best>-900?'BEST ':'')+((d.best>-900?fmt(d.best*100,1):fmt(d.reach*100,1))+' cm'),t);
+  }
+};
+
+const EVENTS={vert:EVT_VERT,broad:EVT_BROAD,pushup:EVT_PUSHUP,plank:EVT_PLANK,pullup:EVT_PULLUP,cooper:EVT_COOPER,shuttle:EVT_SHUTTLE,sitreach:EVT_SITREACH};
+const EVENT_ORDER=['vert','broad','pushup','plank','pullup','cooper','shuttle','sitreach'];
+
+/* ---------------- 9. demo synthetic athletes ---------------- */
+function demoStep(t){
+  const id=S.ev&&S.ev.phase!=='idle'?S.ev.id:null;
+  if(id==='vert')return demoVert(t);
+  if(id==='broad')return demoBroad(t);
+  if(id==='pushup')return demoPushup(t);
+  if(id==='plank')return demoPlank(t);
+  if(id==='pullup')return demoPullup(t);
+  if(id==='shuttle')return demoShuttle(t);
+  if(id==='sitreach')return demoSitreach(t);
+  if(id==='cooper')return demoRun(t);
+  return demoStand(t);
+}
+function mkV(spec){
+  const V=Array.from({length:33},()=>({x:0.5,y:0.5,z:0,visibility:0}));
+  for(const[k,v]of Object.entries(spec))V[k]={x:v[0],y:v[1],z:0,visibility:1};
+  return V;
+}
+function demoStand(t){
+  const s=Math.sin(t/880)*0.005,br=Math.sin(t/640)*0.0022;
+  return mkV({
+    0:[0.5+s*0.6,0.168],1:[0.487,0.162],2:[0.468,0.156],3:[0.476,0.153],4:[0.462,0.160],
+    5:[0.513,0.162],6:[0.532,0.156],7:[0.524,0.153],8:[0.538,0.160],
+    9:[0.447,0.170],10:[0.553,0.170],
+    11:[0.418+s,0.318+br],12:[0.582+s,0.318+br],
+    13:[0.398+s,0.452+br],14:[0.602+s,0.452+br],
+    15:[0.388+s,0.585],16:[0.612+s,0.585],
+    17:[0.386,0.600],18:[0.614,0.600],
+    19:[0.386,0.615],20:[0.614,0.615],
+    23:[0.452,0.566],24:[0.548,0.566],
+    25:[0.456,0.748],26:[0.544,0.748],
+    27:[0.460,0.918],28:[0.540,0.918],
+    29:[0.472,0.958],30:[0.528,0.958],
+    31:[0.447,0.952],32:[0.553,0.952],
+  });
+}
+function demoVert(t){
+  const c=(t-(S.ev?S.ev.t0:t)+1300)%2600; // start in rest phase
+  const base=demoStand(0);
+  let off=0,knee=0,shd=0;
+  if(c<500){const p=c/500;knee=0.045*p;shd=0.02*p;off=0.05*Math.pow(p,1.5);}
+  else if(c<1000){const u=(c-500)/500;off=0.05-0.15*4*u*(1-u);knee=0.03*(1-Math.abs(2*u-1));shd=0.02;}
+  else if(c<1300){const p=1-(c-1000)/300;off=0.05*Math.pow(p,1.5);knee=0.02*p;}
+  for(const k of[0,1,2,3,4,5,6,7,8,9,10])base[k].y+=off+shd*(k<2?0.5:1);
+  base[11].y+=off+shd;base[12].y+=off+shd;
+  base[13].y+=off*0.7;base[14].y+=off*0.7;
+  base[15].y+=off*0.85;base[16].y+=off*0.85;
+  base[23].y+=off+knee*0.5;base[24].y+=off+knee*0.5;
+  base[25].y+=off*0.6+knee;base[26].y+=off*0.6+knee;
+  base[27].y+=off;base[28].y+=off;
+  base[29].y+=off;base[30].y+=off;base[31].y+=off;base[32].y+=off;
+  return base;
+}
+function demoBroad(t){
+  const c=(t-(S.ev?S.ev.t0:t))%4600; // starts standing at takeoff zone
+  const base=demoStand(0);
+  for(const p of base)if(p.visibility>0)p.x=clamp(p.x-0.14,0.03,0.97); // shift stance left (x≈0.36)
+  let dx=0,dy=0,knee=0;
+  if(c<1200){const p=Math.min(1,c/400);knee=0.04*p;dy=0.03*p;}           // settle → crouch
+  else if(c<1900){const p=(c-1200)/700;knee=0.04+0.02*p;dy=0.03+0.02*p;}  // crouch
+  else if(c<2150){const p=(c-1900)/250;dx=0.06*p;dy=0.05-0.08*p;knee=0.06-0.06*p;} // extend
+  else if(c<3150){const u=(c-2150)/1000;dx=0.06+0.46*u;dy=-0.03-0.09*4*u*(1-u);knee=0.02*(1-u);} // flight
+  else if(c<3600){const p=(c-3150)/450;dx=0.52;dy=-0.03+0.07*p;knee=0.05*p;}               // land
+  else{const p=(c-3600)/1000;dx=0.52*(1-p);dy=0.04*(1-p);knee=0.02*(1-p);}                 // walk back
+  for(const p of base)if(p.visibility>0){p.x=clamp(p.x+dx,0.03,0.97);p.y+=dy;}
+  base[25].y+=knee;base[26].y+=knee;
+  return base;
+}
+function demoPushup(t){
+  const c=(t-(S.ev?S.ev.t0:t))%2000; // starts at top (arms extended)
+  const u=0.5-0.5*Math.cos(2*Math.PI*c/2000);
+  const shY=0.555+0.045*u;
+  const sh={x:0.46,y:shY},wr={x:0.415,y:0.715};
+  const dirx=wr.x-sh.x,diry=wr.y-sh.y;
+  const dl=Math.hypot(dirx,diry)||1;
+  const nx=-diry/dl,ny=dirx/dl; // perpendicular (points up when dirx<0,diry>0 → nx<0? check below)
+  // ensure n points upward (ny<0)
+  const nX=ny<0?nx:-nx,nY=ny<0?ny:-ny;
+  const d=0.01+0.06*u;
+  const ex=(sh.x+wr.x)/2+nX*d,ey=(sh.y+wr.y)/2+nY*d;
+  return mkV({
+    0:[0.505,0.512+0.045*u],1:[0.49,0.508+0.045*u],2:[0.478,0.506+0.045*u],3:[0.484,0.504+0.045*u],4:[0.472,0.509+0.045*u],
+    5:[0.51,0.508+0.045*u],6:[0.522,0.506+0.045*u],7:[0.516,0.504+0.045*u],8:[0.528,0.509+0.045*u],
+    11:[0.46,shY],12:[0.46,shY+0.004],
+    13:[ex,ey],14:[ex,ey+0.004],
+    15:[0.415,0.715],16:[0.415,0.715+0.006],
+    17:[0.41,0.72],18:[0.41,0.726],
+    23:[0.63,0.585+0.01*u],24:[0.63,0.589+0.01*u],
+    25:[0.77,0.63+0.02*u],26:[0.77,0.634+0.02*u],
+    27:[0.87,0.68+0.008*u],28:[0.87,0.684+0.008*u],
+    29:[0.885,0.705],30:[0.885,0.709],
+    31:[0.855,0.703],32:[0.855,0.707],
+  });
+}
+function demoPlank(t){
+  const t0=S.ev?S.ev.t0:t;
+  const u=0.02*Math.sin(t/900)+0.02; // micro-noise, shoulders stay
+  const shY=0.555+0.045*Math.min(u,0.05);
+  const sagY=Math.max(0,(t-t0-1000))*0.000002; // slow hip sag → form break ~18 s in
+  return mkV({
+    0:[0.505,0.512+0.045*Math.min(u,0.5)],11:[0.46,shY],12:[0.46,shY+0.004],
+    13:[0.44,0.63],14:[0.44,0.634],15:[0.415,0.715],16:[0.415,0.721],
+    23:[0.63,0.585+sagY],24:[0.63,0.589+sagY],
+    25:[0.77,0.63],26:[0.77,0.634],27:[0.87,0.68],28:[0.87,0.684],
+    29:[0.885,0.705],30:[0.885,0.709],31:[0.855,0.703],32:[0.855,0.707],
+  });
+}
+function demoPullup(t){
+  const c=(t-(S.ev?S.ev.t0:t))%2400;
+  const u=0.5+0.5*Math.cos(2*Math.PI*c/2400); // starts at full hang (u=1)
+  return mkV({
+    0:[0.50,0.30+0.14*u],1:[0.485,0.305+0.14*u],2:[0.473,0.303+0.14*u],3:[0.479,0.301+0.14*u],4:[0.467,0.306+0.14*u],
+    5:[0.515,0.305+0.14*u],6:[0.527,0.303+0.14*u],7:[0.521,0.301+0.14*u],8:[0.533,0.306+0.14*u],
+    11:[0.48,0.44+0.18*u],12:[0.48,0.445+0.18*u],
+    13:[0.45,0.30+0.09*u],14:[0.45,0.305+0.09*u],
+    15:[0.44,0.24],16:[0.45,0.24],
+    17:[0.44,0.225],18:[0.45,0.225],
+    23:[0.52,0.60+0.16*u],24:[0.52,0.605+0.16*u],
+    25:[0.56,0.75+0.13*u],26:[0.56,0.755+0.13*u],
+    27:[0.58,0.87+0.11*u],28:[0.58,0.875+0.11*u],
+    29:[0.59,0.915+0.1*u],30:[0.59,0.92+0.1*u],
+    31:[0.57,0.912+0.1*u],32:[0.57,0.917+0.1*u],
+  });
+}
+function demoRun(t){
+  const s=2*Math.PI*t/400;
+  const hy=0.52+0.022*Math.sin(s);
+  return mkV({
+    0:[0.5,0.20+0.012*Math.sin(s)],1:[0.485,0.205],2:[0.473,0.203],3:[0.479,0.201],4:[0.467,0.206],
+    5:[0.515,0.205],6:[0.527,0.203],7:[0.521,0.201],8:[0.533,0.206],
+    9:[0.455,0.215],10:[0.545,0.215],
+    11:[0.44,0.34+0.012*Math.sin(s)],12:[0.56,0.34+0.012*Math.sin(s)],
+    13:[0.40,0.47+0.05*Math.sin(s+Math.PI)],14:[0.60,0.47+0.05*Math.sin(s)],
+    15:[0.385,0.56+0.07*Math.sin(s+Math.PI)],16:[0.615,0.56+0.07*Math.sin(s)],
+    23:[0.47,hy],24:[0.53,hy],
+    25:[0.455,0.68+0.045*Math.sin(s)],26:[0.545,0.68+0.045*Math.sin(s+Math.PI)],
+    27:[0.45,0.85+0.04*Math.sin(s+1.2)],28:[0.55,0.85+0.04*Math.sin(s+1.2+Math.PI)],
+    29:[0.455,0.93+0.03*Math.sin(s+1.2)],30:[0.545,0.93+0.03*Math.sin(s+1.2+Math.PI)],
+    31:[0.44,0.925+0.028*Math.sin(s+1.2)],32:[0.56,0.925+0.028*Math.sin(s+1.2+Math.PI)],
+  });
+}
+function demoShuttle(t){
+  const t0=S.ev?S.ev.t0:t;
+  const st=demoStand(0);
+  for(const p of st)if(p.visibility>0){p.y+=0.004;}
+  let dx=0,lean=0;
+  if(S.ev&&S.ev.phase==='run'&&S.ev.data.goT){
+    const gt=t-S.ev.data.goT;
+    dx=0.444*Math.sin(2*Math.PI*gt/7000);
+    lean=0.02*Math.cos(2*Math.PI*gt/7000);
+  }
+  for(const p of st)if(p.visibility>0)p.x=clamp(p.x+dx,0.03,0.97);
+  st[11].x=clamp(st[11].x+lean,0.03,0.97);
+  st[0].x=clamp(st[0].x+lean*1.5,0.03,0.97);
+  return st;
+}
+function demoSitreach(t){
+  const c=t%4500;
+  const ext=0.5-0.5*Math.cos(2*Math.PI*c/4500);
+  return mkV({
+    0:[0.44,0.30+0.02*ext],1:[0.425,0.305],2:[0.413,0.303],3:[0.419,0.301],4:[0.407,0.306],
+    5:[0.455,0.305],6:[0.467,0.303],7:[0.461,0.301],8:[0.473,0.306],
+    11:[0.40,0.40+0.03*ext],12:[0.40,0.405+0.03*ext],
+    13:[0.43+0.10*ext,0.46+0.03*ext],14:[0.43+0.10*ext,0.465+0.03*ext],
+    15:[0.52+0.16*ext,0.47+0.02*ext],16:[0.52+0.16*ext,0.475+0.02*ext],
+    17:[0.52+0.17*ext,0.475+0.02*ext],18:[0.52+0.17*ext,0.48+0.02*ext],
+    23:[0.38,0.60],24:[0.38,0.605],
+    25:[0.60,0.60],26:[0.60,0.605],
+    27:[0.80,0.63],28:[0.80,0.635],
+    29:[0.83,0.665],30:[0.83,0.67],
+    31:[0.80,0.675],32:[0.80,0.68],
+  });
+}
+function toggleDemo(on){
+  S.demo=on!==undefined?on:!S.demo;
+  $('#demo-badge').classList.toggle('hidden',!S.demo);
+  $('#src-demo').classList.toggle('on',S.demo);
+  for(const b of['#src-live','#src-webcam','#src-file'])$(b).classList.toggle('on',false);
+  if(S.demo){
+    closeCamera();
+    if(S.fileUrl){video.removeAttribute('src');video.load();S.fileUrl=null;S.fileName='';$('#file-name').textContent='';}
+    if(!S.height.locked){
+      demoHeightLock();
+      logEvent('SETUP','Height locked (demo)','175.0 cm ±1.1 · conf 0.93');
+    }
+    renderHeightCard();
+    toast('Demo mode: synthetic athlete · offline');
+  }else{
+    toast('Live sources available — pick camera / webcam / file');
+  }
+  setChip('chip-engine',S.demo?'ENGINE DEMO':(S.engine.ready?('ENGINE '+S.engine.backend):'ENGINE OFFLINE'),S.demo?'warn':'cy');
+}
+
+/* ---------------- 10. payload & report ---------------- */
+function buildPayload(){
+  const rep=computeReport();
+  const events={};
+  const names={vert:'vertical_jump',broad:'standing_long_jump',pushup:'push_ups_60s',plank:'plank_hold',pullup:'pull_ups_rows',cooper:'cooper_12min',shuttle:'shuttle_10m_x4',sitreach:'sit_and_reach'};
+  for(const id of EVENT_ORDER){
+    const r=S.results[id];
+    events[names[id]]=r?{
+      raw:{value:r.raw,unit:NORMS[id].unit,
+        ...(id==='shuttle'?{width_m:r.detail.width||10}:{})},
+      age_adjusted:r.scored?r.scored.adj:null,
+      age_factor:r.scored?r.scored.f:null,
+      score_0_100:r.scored?r.scored.score:null,
+      tier:r.scored?tierOf(r.scored.score):null,
+      detail:r.detail,
+      timestamp:r.ts,
+    }:{raw:null,score_0_100:null,tier:null};
+  }
+  return{
+    athlete_profile:{
+      age:S.profile.age,gender:S.profile.gender,
+      height_cm:S.profile.height?(Math.round(S.profile.height*10)/10):null,
+      weight_kg:S.profile.weight?Math.round(S.profile.weight*10)/10:null,
+    },
+    events,
+    components:rep.comps,
+    overall_score:rep.overall,
+    overall_tier:rep.overall!=null?tierOf(rep.overall):null,
+    timestamp:new Date().toISOString(),
+  };
+}
+function setGauge(circleSel,numSel,score,tierTxt){
+  const C=364.42;
+  const el=$(circleSel);
+  el.style.strokeDashoffset=C*(1-clamp(score||0,0,100)/100);
+  el.style.stroke=(score||0)<45?'var(--bad)':(score||0)<70?'var(--warn)':'var(--acc)';
+  $(numSel).textContent=score?Math.round(score):'—';
+  if(tierTxt)$('#overall-tier').textContent=tierTxt;
+}
+function renderLog(){
+  const ul=$('#log-list');
+  if(!LOG.length){ul.innerHTML='<li class="muted">No events yet.</li>';return;}
+  ul.innerHTML=LOG.slice(-30).reverse().map(e=>
+    `<li><time>${e.t.toLocaleTimeString('en-GB')}</time><b>${e.mod}</b><span>${e.evt}${e.detail?' — '+e.detail:''}</span></li>`).join('');
+}
+function renderReport(){
+  const rep=computeReport();
+  setGauge('#g-over-c','#overall-score',rep.overall,rep.overall!=null?tierOf(rep.overall):'COMPOSITE');
+  $('#c-power').textContent='POWER '+(rep.comps.power!=null?Math.round(rep.comps.power):'—');
+  $('#c-strength').textContent='STR — END '+(rep.comps.strength!=null?Math.round(rep.comps.strength):'—');
+  $('#c-cardio').textContent='CARDIO '+(rep.comps.cardio!=null?Math.round(rep.comps.cardio):'—');
+  $('#c-agility').textContent='AGILITY '+(rep.comps.agility!=null?Math.round(rep.comps.agility):'—');
+  const rows=[];
+  for(const id of EVENT_ORDER){
+    const r=S.results[id];
+    if(!r)continue;
+    const sc=scoreEvent(id,r.best);
+    rows.push(`<tr><td>${EVENTS[id].title}</td><td class="r">${fmtRaw(id,r.best)}</td><td class="r">${sc?sc.adj:'—'}</td><td class="r">${sc?sc.score:'—'}</td><td>${sc?`<span class="tier tier-${tierOf(sc.score)}">${tierOf(sc.score)}</span>`:'<span class="muted">profile needed</span>'}</td></tr>`);
+  }
+  $('#rep-body').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5" class="muted">No completed events yet.</td></tr>';
+  // explanation
+  const pf=S.profile.age?`age ${S.profile.age}, ${S.profile.gender==='F'?'female':'male'}`:'no profile';
+  $('#explain-box').innerHTML=
+    `<b>1 · Raw → age/gender-adjusted.</b> Each raw result is divided by an age factor for its component (e.g. ${pf} → power ×${S.profile.age?ageFactor(S.profile.age,'power').toFixed(2):'—'}), then mapped on standardized norm bands: score 50 = population average, 100 = elite threshold, &lt;30 below average. A perfect 100 is only earned at the elite band.<br><br>
+    <b>2 · Event math.</b> Vertical jump: g·t²/8 from ankle flight time (±3–5 cm). Broad jump: line→closest heel × scale. Push-ups: strict elbow-angle reps with form gate. Plank: in-form hold time. Pull-ups/rows: chin-above-bar → full-hang reps. Cooper: 12-min distance (1.5-mi converted via 2414 m ÷ t × 720 s). Shuttle: GO→4th touch. Sit &amp; reach: wrist vs knee × scale.<br><br>
+    <b>3 · Composite.</b> Power 25% (vert + broad) · Strength &amp; Endurance 25% (push-ups + plank + pull-ups) · Cardio 30% (Cooper) · Agility &amp; Mobility 20% (shuttle + sit &amp; reach). Weights re-normalize over completed events.<br><br>
+    <span class="muted">Norms are approximate standardized screening bands (NSCA/Cooper-style), for relative assessment — not medical or certification grading.</span>`;
+  // recommendations
+  const recs=[];
+  const compInfo=rep.comps;
+  const order=Object.keys(COMP_W).sort((a,b)=>(compInfo[a]??999)-(compInfo[b]??999));
+  const ADVICE={
+    power:'<b>Power:</b> add 2×/week plyometrics (box jumps, depth jumps, bounds) plus 3–5 rep squat or clean cycles; retest vertical + broad in 4 weeks.',
+    strength:'<b>Strength &amp; endurance:</b> progressive push-up→dip progression, weighted rows 3×6–10, plank variations 3×/week; push to near-failure 2 sessions/week.',
+    cardio:'<b>Cardio:</b> 2×/week Zone-2 (~40 min) plus 1× interval session (6×4 min at ~85% HRmax) to raise aerobic ceiling.',
+    agility:'<b>Agility &amp; mobility:</b> ladder drills, 10 m shuttles and lateral bounds 3×/week; add daily hip-hinge + hamstring mobility to lift sit &amp; reach.',
+  };
+  for(const c of order){
+    if(compInfo[c]==null)continue;
+    if(recs.length<3)recs.push(ADVICE[c]);
+  }
+  if(!recs.length)recs.push('Complete at least one event per component to generate targeted recommendations.');
+  $('#rec-list').innerHTML=recs.map(r=>`<li>${r}</li>`).join('');
+  S.payload=buildPayload();
+  $('#json-view').textContent=JSON.stringify(S.payload,null,2);
+  renderLog();
+}
+
+/* ---------------- 11. rendering ---------------- */
+const cv=$('#overlay'),ctx=cv.getContext('2d');
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  const r=$('#stage').getBoundingClientRect();
+  cv.width=Math.round(r.width*DPR);cv.height=Math.round(r.height*DPR);
+  if(S.demo){S.vw=cv.width;S.vh=cv.height;}
+}
+window.addEventListener('resize',resize);
+function coverScale(){
+  if(S.demo||!S.vw)return{s:1,ox:0,oy:0};
+  const s=Math.max(cv.width/S.vw,cv.height/S.vh);
+  return{s,ox:(cv.width-S.vw*s)/2,oy:(cv.height-S.vh*s)/2};
+}
+function mapPt(nx,ny){
+  const c=coverScale();
+  return[nx*S.vw*c.s+c.ox,ny*S.vh*c.s+c.oy];
+}
+function lineFull(ctx,y,color){
+  const c=coverScale();
+  const yy=y*c.s+c.oy;
+  ctx.setLineDash([7*DPR,5*DPR]);
+  ctx.strokeStyle=color;ctx.lineWidth=2*DPR;
+  ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(cv.width,yy);ctx.stroke();
+  ctx.setLineDash([]);
+}
+function bigText(ctx,txt){
+  ctx.font=`800 ${15*DPR}px system-ui`;
+  const w=ctx.measureText(txt).width;
+  ctx.fillStyle='rgba(11,15,20,0.75)';
+  ctx.fillRect((cv.width-w)/2-10*DPR,8*DPR,w+20*DPR,26*DPR);
+  ctx.fillStyle='#A3E635';
+  ctx.fillText(txt,(cv.width-w)/2,26*DPR);
+}
+function drawDemoBG(t){
+  const g=ctx.createLinearGradient(0,0,0,cv.height);
+  g.addColorStop(0,'#0D141D');g.addColorStop(1,'#0A0E13');
+  ctx.fillStyle=g;ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+  for(let x=0;x<cv.width;x+=48*DPR){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();}
+  for(let y=0;y<cv.height;y+=48*DPR){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cv.width,y);ctx.stroke();}
+  ctx.fillStyle='rgba(163,230,53,0.4)';
+  ctx.font=`700 ${9*DPR}px system-ui`;
+  ctx.fillText('GS·SIM — SYNTHETIC ATHLETE',10*DPR,cv.height-10*DPR);
+}
+function drawSkeleton(V){
+  ctx.lineCap='round';ctx.lineJoin='round';
+  for(const[a,b]of LIMBS){
+    if(vis(V[a])<0.4||vis(V[b])<0.4)continue;
+    const[x1,y1]=mapPt(V[a].x,V[a].y),[x2,y2]=mapPt(V[b].x,V[b].y);
+    ctx.strokeStyle='rgba(163,230,53,0.92)';ctx.lineWidth=3*DPR;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  }
+  const eL=V[2],eR=V[5];
+  if(vis(eL)>0.4&&vis(eR)>0.4){
+    const[ex,ey]=mapPt((eL.x+eR.x)/2,(eL.y+eR.y)/2);
+    const dn=Math.hypot((eL.x-eR.x)*S.vw,(eL.y-eR.y)*S.vh);
+    const c=coverScale();
+    ctx.strokeStyle='rgba(34,211,238,0.9)';ctx.lineWidth=2.5*DPR;
+    ctx.beginPath();ctx.arc(ex,ey,Math.max(4,dn*0.75*c.s),0,Math.PI*2);ctx.stroke();
+  }
+  for(const i of MAIN_KP){
+    if(vis(V[i])<0.4)continue;
+    const[x,y]=mapPt(V[i].x,V[i].y);
+    const hot=(i===15||i===16||i===27||i===28);
+    ctx.fillStyle=hot?'#22D3EE':'#E8EEF5';
+    ctx.beginPath();ctx.arc(x,y,(hot?4.2:3.2)*DPR,0,Math.PI*2);ctx.fill();
+  }
+}
+function draw(t){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if(S.demo)drawDemoBG(t);
+  const V=S.lastV;
+  if(!V){
+    if((S.camOn||(S.fileUrl&&video.readyState>=2))&&S.engine.ready&&!S.demo){
+      ctx.font=`700 ${12*DPR}px system-ui`;
+      ctx.fillStyle='rgba(138,151,168,0.9)';
+      const msg='NO SUBJECT — CENTER FULL BODY';
+      ctx.fillText(msg,(cv.width-ctx.measureText(msg).width)/2,cv.height-18*DPR);
+    }
+    return;
+  }
+  drawSkeleton(V);
+  const E=S.ev&&S.ev.id?EVENTS[S.ev.id]:null;
+  if(E&&E.draw&&S.ev.phase!=='idle')E.draw(ctx,t,V);
+}
+
+/* draggable calibrations */
+let dragging=null;
+cv.addEventListener('pointerdown',e=>{
+  if(!S.ev||S.ev.phase==='idle')return;
+  const E=EVENTS[S.ev.id];
+  const r=cv.getBoundingClientRect();
+  const x=(e.clientX-r.left)*(cv.width/r.width);
+  const y=(e.clientY-r.top)*(cv.height/r.height);
+  const csc=coverScale();
+  if(S.ev.id==='broad'){
+    const lx=S.ev.data.lineX*S.vw*csc.s+csc.ox;
+    if(Math.abs(x-lx)<0.06*cv.width)dragging='lineX';
+  }else if(S.ev.id==='pullup'){
+    const by=S.ev.data.barY*S.vh*csc.s+csc.oy;
+    if(Math.abs(y-by)<0.06*cv.height)dragging='barY';
+  }
+  if(dragging)e.preventDefault();
+});
+window.addEventListener('pointermove',e=>{
+  if(!dragging||!S.ev)return;
+  const r=cv.getBoundingClientRect();
+  const x=(e.clientX-r.left)*(cv.width/r.width);
+  const y=(e.clientY-r.top)*(cv.height/r.height);
+  const csc=coverScale();
+  if(dragging==='lineX')S.ev.data.lineX=clamp((x-csc.ox)/(S.vw*csc.s),0.02,0.98);
+  if(dragging==='barY')S.ev.data.barY=clamp((y-csc.oy)/(S.vh*csc.s),0.02,0.98);
+});
+window.addEventListener('pointerup',()=>{dragging=null;});
+
+/* ---------------- 12. event card DOM ---------------- */
+function renderEventCards(){
+  const list=$('#event-list');
+  list.innerHTML='';
+  for(const id of EVENT_ORDER){
+    const E=EVENTS[id];
+    const n=NORMS[id];
+    const el=document.createElement('div');
+    el.className='evt';el.id='evt-'+id;
+    el.innerHTML=`
+      <div class="evt-head" data-open="${id}">
+        <span class="evt-ic">${E.icon}</span>
+        <div class="evt-tt"><b>${E.title}</b><small>${E.sub} · ${n.comp}</small></div>
+        <span class="chip evt-res" id="evr-${id}">—</span>
+        <span class="chev">▾</span>
+      </div>
+      <div class="evt-body hidden" id="evt-b-${id}">
+        <div class="prep">
+          <b>📷 Camera</b><p>${E.prep.camera}</p>
+          <b>🧍 Protocol</b><ol>${E.prep.setup.map(s=>`<li>${s}</li>`).join('')}</ol>
+          <b>📐 Measured</b><ul>${E.prep.measures.map(s=>`<li>${s}</li>`).join('')}</ul>
+          <b>🧮 How it's calculated</b><p>${E.prep.math}</p>
+        </div>
+        <div class="row" id="evt-ctl-${id}"></div>
+        <div class="evlive" id="evlive-${id}"></div>
+        <div class="evres hidden" id="evres-${id}"></div>
+      </div>`;
+    list.appendChild(el);
+  }
+  $$('.evt-head').forEach(h=>h.addEventListener('click',()=>{
+    const id=h.dataset.open;
+    const card=$('#evt-'+id);
+    const wasOpen=card.classList.contains('open');
+    $$('.evt').forEach(c=>{c.classList.remove('open');c.querySelector('.evt-body').classList.add('hidden');});
+    if(!wasOpen){card.classList.add('open');$('#evt-b-'+id).classList.remove('hidden');$('#evt-open').id='evt-b-'+id;}
+    else{$('#evt-open').id='';}
+  }));
+  // hidden marker for open card
+  const mk=document.createElement('span');mk.id='evt-open';mk.style.display='none';list.appendChild(mk);
+  renderEventChips();
+  for(const id of EVENT_ORDER)renderEventCard(id);
+}
+function renderEventChips(){
+  for(const id of EVENT_ORDER){
+    const r=S.results[id];
+    const el=$('#evr-'+id);if(!el)continue;
+    if(!r){el.textContent='—';el.className='chip evt-res';continue;}
+    const sc=scoreEvent(id,r.best);
+    el.textContent=fmtRaw(id,r.best)+(sc?` · ${Math.round(sc.score)}`:'');
+    el.className='chip evt-res '+(sc?(sc.score>=80?'acc':sc.score<35?'bad':''):'warn');
+  }
+}
+const _cardKeys={};
+function renderEventCard(id){
+  if(!id||!EVENTS[id])return;
+  const E=EVENTS[id];
+  const ctl=$('#evt-ctl-'+id);
+  const res=$('#evres-'+id);
+  const r=S.results[id];
+  // controls
+  let html='';
+  const running=S.ev&&S.ev.id===id&&S.ev.phase!=='idle'&&S.ev.phase!=='done';
+  html+=`<button class="btn primary small" id="e-start-${id}" ${running?'disabled':''}>${running?'Running…':'Start'}</button>`;
+  if(E.manualStop)html+=`<button class="btn ghost small" id="e-stop-${id}" ${running?'':'disabled'}>Stop</button>`;
+  if(id==='cooper'){
+    html+=`<select id="e-mode-${id}" style="background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px" ${running?'disabled':''}>
+      <option value="12min">12-min run</option><option value="15mi">1.5-mile run</option></select>`;
+  }
+  if(id==='shuttle'){
+    html+=`<label class="muted" style="display:flex;align-items:center;gap:6px">course <input id="e-width-${id}" type="number" value="10" min="4" max="20" step="1" style="width:52px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:6px"> m</label>`;
+  }
+  if(id==='cooper'&&S.ev&&S.ev.id==='cooper'&&S.ev.phase==='await'){
+    html+=`<label class="muted" style="display:flex;align-items:center;gap:6px">distance <input id="e-dist-${id}" type="number" value="" min="0" max="10000" placeholder="m" style="width:76px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:6px"> m</label>
+      <button class="btn primary small" id="e-score-${id}">Score</button>`;
+  }
+  html+=`<button class="btn ghost small" id="e-reset-${id}" ${r?'':'disabled'}>Reset result</button>`;
+  ctl.innerHTML=html;
+  $('#e-start-'+id).onclick=()=>startEvent(id);
+  if(E.manualStop)$('#e-stop-'+id).onclick=()=>stopEvent(true);
+  const msel=$('#e-mode-'+id);
+  if(msel){
+    msel.onchange=()=>{if(S.ev&&S.ev.id==='cooper'&&S.ev.phase!=='idle'){S.ev.data.mode=msel.value==='15mi'?'15mi':'12min';}};
+    if(S.ev&&S.ev.id==='cooper')msel.value=S.ev.data.mode==='15mi'?'15mi':'12min';
+  }
+  const wsel=$('#e-width-'+id);
+  if(wsel){
+    if(S.ev&&S.ev.id==='shuttle')wsel.value=S.ev.data.widthM;
+    wsel.onchange=()=>{const v=parseFloat(wsel.value)||10;if(S.ev&&S.ev.id==='shuttle'&&S.ev.phase==='arm'){S.ev.data.widthM=v;S.ev.data.zL=null;}};
+  }
+  const sbtn=$('#e-score-'+id);
+  if(sbtn)sbtn.onclick=()=>{
+    const din=$('#e-dist-'+id);
+    let v=parseFloat(din.value);
+    if(S.demo&&(!Number.isFinite(v)||v===0))v=2200; // demo fill
+    if(!Number.isFinite(v)||v<100){toast('Enter the distance covered (m)');return;}
+    EVT_COOPER.scoreWith.call(null,v);
+    // rebind: finishEvent sets phase done
+    renderEventCard('cooper');
+  };
+  $('#e-reset-'+id).onclick=()=>{delete S.results[id];renderEventCard(id);renderEventChips();renderReport();};
+  // result box
+  if(r){
+    const sc=scoreEvent(id,r.best);
+    res.classList.remove('hidden');
+    res.innerHTML=`<b>${fmtRaw(id,r.best)}</b>
+      <span class="muted">${r.detail.note||''}</span>
+      <div class="sc">${sc?`<b>${sc.score}</b>/100<br><span class="tier tier-${tierOf(sc.score)}">${tierOf(sc.score)}</span>`:'<span class="muted">set profile for score</span>'}</div>`;
+  }else{
+    res.classList.add('hidden');
+  }
+}
+function renderLive(id){
+  const E=EVENTS[id];
+  const box=$('#evlive-'+id);
+  if(!box)return;
+  if(!S.ev||S.ev.id!==id||S.ev.phase==='idle'){box.innerHTML='';return;}
+  box.innerHTML=E.live().filter(Boolean).map(x=>`<span class="evchip ${/⚠|FAULT|BREAK/i.test(x)?'bad':/✓|GO|BEST/i.test(x)?'ok':''}">${x}</span>`).join('');
+}
+
+/* ---------------- 13. UI (throttled) ---------------- */
+function updateUI(t){
+  if(!$('#view-setup').classList.contains('hidden'))renderHeightCard();
+  if(!$('#view-events').classList.contains('hidden')){
+    for(const id of EVENT_ORDER)renderLive(id);
+    if(S.ev&&S.ev.id){
+      const r=S.results[S.ev.id];
+      const d=S.ev.data;
+      const key=[S.ev.phase,r?r.ts:null,d.rep||d.legs||0,d.lineX||0,d.barY||0].join('|');
+      if(_cardKeys[S.ev.id]!==key){_cardKeys[S.ev.id]=key;renderEventCard(S.ev.id);}
+    }
+  }
+  if(!$('#view-report').classList.contains('hidden'))renderReport();
+}
+
+/* ---------------- 14. main loop ---------------- */
+let lastVideoT=-1,lastDetect=0,lastDetTs=0,uiT=0,payT=0,fpsN=0,lastFpsT=performance.now();
+function loop(t){
+  requestAnimationFrame(loop);
+  fpsN++;
+  if(t-lastFpsT>500){
+    setChip('chip-fps','FPS '+Math.round(fpsN*1000/(t-lastFpsT)),'');
+    fpsN=0;lastFpsT=t;
+  }
+  let V=null;
+  if(S.demo){
+    if(!S.vw)resize();
+    S.vw=cv.width;S.vh=cv.height;
+    V=demoStep(t);
+  }else if(S.camOn&&S.engine.ready&&video.readyState>=2){
+    if(video.currentTime!==lastVideoT&&t-lastDetect>30){
+      lastVideoT=video.currentTime;lastDetect=t;
+      try{
+        const ts=Math.max(t,lastDetTs+1);lastDetTs=ts;
+        const res=S.plm.detectForVideo(video,ts);
+        if(res.landmarks&&res.landmarks.length)V=res.landmarks[0];
+      }catch(err){}
+    }
+  }else if(S.fileUrl&&S.engine.ready&&video.readyState>=2){
+    if(video.currentTime!==lastVideoT&&t-lastDetect>30){
+      lastVideoT=video.currentTime;lastDetect=t;
+      try{
+        const ts=Math.max(t,lastDetTs+1);lastDetTs=ts;
+        const res=S.plm.detectForVideo(video,ts);
+        if(res.landmarks&&res.landmarks.length)V=res.landmarks[0];
+      }catch(err){}
+    }
+  }
+  S.lastV=V;
+  if(V){
+    S.lastVT=t;
+    S.vw=video.videoWidth||S.vw;S.vh=video.videoHeight||S.vh;
+    onPose(V,t);
+  }else if((S.camOn||(S.fileUrl&&video.readyState>=2))&&S.engine.ready&&t-(S.lastVT||0)>500){
+    S.lastV=null;
+  }
+  if(S.lock.active&&t-(S.lock.lastPoseT||S.lock.t0)>1500)finishLock(true);
+  draw(t);
+  if(t-uiT>250){uiT=t;updateUI(t);}
+  if(t-payT>1000){
+    payT=t;
+    S.payload=buildPayload();
+    if(!$('#view-report').classList.contains('hidden'))$('#json-view').textContent=JSON.stringify(S.payload,null,2);
+  }
+}
+function onPose(V,t){
+  const ext=bodyExtents(V);
+  const up=isUpright(V);
+  if(S.height.locked&&up&&ext){
+    const d=0.85*S.vw*S.height.v/(ext.px*S.vh);
+    S.scale.distM=S.scale.distM?lerp(S.scale.distM,d,0.15):d;
+  }
+  if(S.lock.active){
+    S.lock.lastPoseT=t;
+    const p=clamp((t-S.lock.t0)/S.lock.need,0,1);
+    if(up&&ext){
+      const est=heightEstimate(ext.px*S.vh);
+      if(!S.lock.kf)S.lock.kf=KF1d(est.h,0.0004);
+      kfUpdate(S.lock.kf,est.h,est.gyro?0.0009:0.0025);
+      S.lock.upCount++;
+      (S.lock.pxSamples=S.lock.pxSamples||[]).push(ext.px*S.vh);
+      if(est.gyro&&S.lock.src==='prior')S.lock.src=est.src;
+      if(!est.gyro&&S.lock.src==='prior')S.lock.src='prior';
+    }
+    $('#lock-bar').style.width=(p*100)+'%';
+    const live=S.lock.kf?` · est ${(S.lock.kf.x*100).toFixed(0)} cm`:'';
+    $('#lock-label').textContent=`Collecting… ${Math.round(p*100)}% (${S.lock.upCount} upright${live})`;
+    if(p>=1)finishLock();
+  }
+  if(S.ev&&S.ev.phase!=='idle'&&S.ev.id){
+    EVENTS[S.ev.id].step(V,t);
+  }
+}
+
+/* ---------------- 15. wiring ---------------- */
+function setView(v){
+  S.mode=v;
+  for(const b of $$('#nav button'))b.classList.toggle('on',b.dataset.view===v);
+  $('#view-setup').classList.toggle('hidden',v!=='setup');
+  $('#view-events').classList.toggle('hidden',v!=='events');
+  $('#view-report').classList.toggle('hidden',v!=='report');
+  const names={setup:'SETUP',events:'EVENTS',report:'REPORT'};
+  if(!S.ev||S.ev.phase==='idle')$('#mode-badge').textContent=names[v];
+  if(v==='report')renderReport();
+  resize();
+}
+$$('#nav button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+
+$('#btn-camera').addEventListener('click',()=>{
+  if(S.demo)toggleDemo(false);
+  if(S.src==='webcam')openCamera(true);else openCamera(false);
+});
+$('#src-live').addEventListener('click',()=>setSrc('live'));
+$('#src-webcam').addEventListener('click',()=>setSrc('webcam'));
+$('#src-file').addEventListener('click',()=>setSrc('file'));
+$('#src-demo').addEventListener('click',()=>toggleDemo());
+$('#file-input').addEventListener('change',e=>loadFile(e.target.files[0]));
+$('#btn-replay').addEventListener('click',()=>{video.currentTime=0;video.play().catch(()=>{});toast('Replaying…');});
+
+$('#btn-lock').addEventListener('click',startLock);
+$('#btn-manual').addEventListener('click',()=>$('#manual-row').classList.toggle('hidden'));
+$('#h-set').addEventListener('click',()=>{
+  const v=parseFloat($('#h-input').value);
+  if(!Number.isFinite(v)||v<120||v>230){toast('Enter height 120–230 cm');return;}
+  setManualHeight(v);
+});
+if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+  $('#btn-motion').classList.remove('hidden');
+}
+$('#btn-motion').addEventListener('click',async()=>{
+  try{
+    const r=await DeviceOrientationEvent.requestPermission();
+    toast(r==='granted'?'Motion enabled (gyro-assisted height lock)':'Motion denied — using optics prior');
+  }catch(e){toast('Motion permission unavailable');}
+});
+window.addEventListener('deviceorientation',e=>{
+  if(e.beta!=null)S.gyro={beta:e.beta,gamma:e.gamma||0,alpha:e.alpha||0,t:performance.now()};
+},{passive:true});
+
+/* profile */
+function saveProfile(){
+  lsSet('gs_profile',JSON.stringify(S.profile));
+  const ok=S.profile.age&&(S.profile.gender==='M'||S.profile.gender==='F');
+  $('#prof-state').textContent=ok?'COMPLETE':'INCOMPLETE';
+  $('#prof-state').className='tag '+(ok?'ok':'');
+}
+function loadProfile(){
+  try{
+    const p=JSON.parse(lsGet('gs_profile')||'null');
+    if(p)S.profile={...S.profile,...p};
+  }catch(e){}
+  $('#pf-age').value=S.profile.age||'';
+  $('#pf-h').value=S.profile.height||'';
+  $('#pf-w').value=S.profile.weight||'';
+  $('#pf-m').classList.toggle('on',S.profile.gender!=='F');
+  $('#pf-f').classList.toggle('on',S.profile.gender==='F');
+  saveProfile();
+}
+$('#pf-age').addEventListener('input',e=>{S.profile.age=parseFloat(e.target.value)||null;saveProfile();renderReport();});
+$('#pf-h').addEventListener('input',e=>{S.profile.height=parseFloat(e.target.value)||null;saveProfile();});
+$('#pf-w').addEventListener('input',e=>{S.profile.weight=parseFloat(e.target.value)||null;saveProfile();});
+$('#pf-m').addEventListener('click',()=>{S.profile.gender='M';$('#pf-m').classList.add('on');$('#pf-f').classList.remove('on');saveProfile();renderReport();});
+$('#pf-f').addEventListener('click',()=>{S.profile.gender='F';$('#pf-f').classList.add('on');$('#pf-m').classList.remove('on');saveProfile();renderReport();});
+$('#pf-hcam').addEventListener('click',()=>{
+  if(S.height.locked){S.profile.height=Math.round(S.height.v*1000)/10;$('#pf-h').value=S.profile.height;saveProfile();toast('Height taken from camera: '+S.profile.height+' cm');}
+  else toast('Lock height first (or use manual)');
+});
+
+/* report exports */
+$('#btn-copy').addEventListener('click',async()=>{
+  const txt=JSON.stringify(S.payload||buildPayload(),null,2);
+  try{await navigator.clipboard.writeText(txt);toast('Payload copied');}
+  catch(e){
+    const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');toast('Payload copied');}catch(e2){toast('Copy failed — use JSON export');}
+    ta.remove();
+  }
+});
+$('#btn-json').addEventListener('click',()=>{download('gscout_report.json',JSON.stringify(S.payload||buildPayload(),null,2));toast('JSON downloaded');});
+$('#btn-csv').addEventListener('click',()=>{
+  const rep=computeReport();
+  const rows=[['event','raw','unit','age_adjusted','age_factor','score_0_100','tier','timestamp']];
+  for(const id of EVENT_ORDER){
+    const r=S.results[id];if(!r)continue;
+    const sc=scoreEvent(id,r.best);
+    rows.push([id,String(r.raw),NORMS[id].unit,sc?sc.adj:'',sc?sc.f:'',sc?sc.score:'',sc?tierOf(sc.score):'',r.ts]);
+  }
+  rows.push(['overall','','','','',String(rep.overall||''),rep.overall!=null?tierOf(rep.overall):'',new Date().toISOString()]);
+  download('gscout_pft_results.csv',rows.map(r=>r.join(',')).join('\n'),'text/csv');
+  toast('CSV exported');
+});
+$('#btn-share').addEventListener('click',async()=>{
+  const p=S.payload||buildPayload();
+  const lines=[
+    'Grassroots Scout — PFT Report',
+    `Overall: ${p.overall_score==null?'—':p.overall_score+'/100'} (${p.overall_tier||'—'})`,
+    `Profile: ${p.athlete_profile.age||'?'} yrs, ${p.athlete_profile.gender}, ${p.athlete_profile.height_cm||'?'} cm, ${p.athlete_profile.weight_kg||'?'} kg`,
+    'Components:',
+  ];
+  for(const c of['power','strength','cardio','agility'])lines.push(`  ${c}: ${p.components[c]==null?'—':Math.round(p.components[c])}`);
+  for(const id of EVENT_ORDER){
+    const e=p.events[Object.keys(p.events).find(k=>k===({vert:'vertical_jump',broad:'standing_long_jump',pushup:'push_ups_60s',plank:'plank_hold',pullup:'pull_ups_rows',cooper:'cooper_12min',shuttle:'shuttle_10m_x4',sitreach:'sit_and_reach'})[id])];
+    if(e&&e.raw)lines.push(`${EVENTS[id].title}: ${e.raw.value} ${e.raw.unit} → ${e.score_0_100} (${e.tier})`);
+  }
+  const txt=lines.join('\n')+'\nJSON: '+JSON.stringify(p);
+  if(navigator.share){try{await navigator.share({text:txt});}catch(e){}}
+  else{try{await navigator.clipboard.writeText(txt);toast('Copied (share unavailable)');}catch(e){download('gscout_report.txt',txt,'text/plain');}}
+});
+
+$('#btn-help').addEventListener('click',()=>{
+  showModal('How the analyzer works',
+`<ul>
+<li><b>1 · Pose</b> — BlazePose 33-keypoint landmarker (MediaPipe, on-device; GPU→CPU fallback), 30 fps VIDEO mode.</li>
+<li><b>2 · Scale</b> — monocular optics: fx ≈ 0.85·W (~62° HFOV). Auto height = Kalman filter over 45–75 frames of an exact tilted-camera projection solve: phone held tilted down (lens ≈1.45 m) or floor-placed tilted up (lens ≈0.15 m), both auto-detected from the gyroscope. Without motion data it falls back to a 3 m optics prior (lower confidence). Coach override available. This is the unit-of-measure for all metric events.</li>
+<li><b>3 · Events</b> — each pipeline reads joint geometry per frame: vertical (ankle flight → g·t²/8), broad (toe-off → heel × scale), push-ups/plank/pull-ups (angle & line state machines with form gates), Cooper (time + self-reported distance, live cadence from CoM oscillation), shuttle (auto-scaled zone touches), sit &amp; reach (wrist vs knee × scale).</li>
+<li><b>4 · Scoring</b> — raw → age/gender-adjusted → standardized norm bands (50 = average, 100 = elite, &lt;30 below average) → component weights (25/25/30/20) → composite.</li>
+</ul>
+RGB only. No depth sensor, wearables or markers. Video never leaves the device.`,
+[{label:'Got it',primary:true,cb:()=>{}}]);
+});
+
+/* PWA */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  const b=document.createElement('button');
+  b.className='btn small primary';b.textContent='Install';
+  b.style.cssText='margin-left:2px;min-height:28px;padding:4px 10px;font-size:11px';
+  b.onclick=async()=>{
+    deferredPrompt.prompt();
+    const c=await deferredPrompt.userChoice;
+    if(c.outcome==='accepted'){toast('Installed');b.remove();}
+    deferredPrompt=null;
+  };
+  $('#chips').appendChild(b);
+});
+if('serviceWorker' in navigator){
+  try{
+    const swCode="self.addEventListener('fetch',function(e){})";
+    const url=URL.createObjectURL(new Blob([swCode],{type:'text/javascript'}));
+    navigator.serviceWorker.register(url).catch(()=>{});
+  }catch(e){}
+}
+
+/* debug/test hook — only with ?debug=1 */
+if(typeof location!=='undefined'&&location.search&&location.search.indexOf('debug')>=0){
+  globalThis.__gs=()=>({S,LOG,EVENTS,NORMS,onPose,buildPayload,computeReport,
+    bodyExtents,isUpright,isLying,comOf,angleAt,heightEstimate,currentScale,
+    startEvent,stopEvent,finishEvent,scoreEvent,tierOf,ageFactor,scaleScore,saveResult,
+    startLock,finishLock,setManualHeight});
+}
+
+/* ---------------- 16. init ---------------- */
+(async function init(){
+  resize();
+  loadProfile();
+  renderHeightCard();
+  renderEventCards();
+  setView('setup');
+  S.payload=buildPayload();
+  logEvent('SETUP','Session started','');
+  requestAnimationFrame(loop); // UI loop must never wait on the model download
+  initEngine();
+  if(!lsGet('gs_seen')){
+    lsSet('gs_seen','1');
+    setTimeout(()=>{
+      showModal('Welcome to Grassroots Scout',
+`<p><b>Multi-Sport AI Performance &amp; Kinematics Analyzer.</b></p>
+<ul>
+<li><b>Setup</b> — athlete profile (age/gender), camera source, auto height lock</li>
+<li><b>Events</b> — 8 standardized tests: vertical &amp; broad jump, push-ups, plank, pull-ups/rows, Cooper run, 10 m×4 shuttle, sit &amp; reach</li>
+<li><b>Report</b> — age/gender-adjusted scores, weighted composite (Power 25 · Str 25 · Cardio 30 · Agility 20), recommendations</li>
+</ul>
+<p>Inputs: live camera, webcam, or pre-recorded video file. Best in Chrome (Android) / Safari (iOS) over HTTPS. The ~5 MB pose model loads once; all inference is on-device.</p>`,
+[
+  {label:'Open Camera & Start',primary:true,cb:()=>{setView('setup');openCamera(false);}},
+  {label:'Explore in Demo mode',cb:()=>{setSrc('demo');setView('events');}},
+]);
+    },400);
+  }
+})();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a402161a9e537f0f',t:'MTc5MDI1NjAyNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
