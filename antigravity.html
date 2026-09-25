@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SportIQ – AI Sports Analyzer</title>
+<style>
+:root {
+  --bg:#050810; --bg2:#0a0f1e;
+  --glass:rgba(255,255,255,0.04);
+  --glass2:rgba(255,255,255,0.08);
+  --border:rgba(255,255,255,0.08);
+  --blue:#4f8ef7; --cyan:#00d4ff;
+  --green:#00e676; --gold:#ffd700;
+  --red:#ef4444; --purple:#a855f7;
+  --text:#e2e8f0; --muted:#64748b;
+  --glow-blue:0 0 30px rgba(79,142,247,0.3);
+  --glow-green:0 0 30px rgba(0,230,118,0.3);
+  --glow-gold:0 0 30px rgba(255,215,0,0.3);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%,rgba(79,142,247,0.07) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%,rgba(168,85,247,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 50%,rgba(0,212,255,0.03) 0%,transparent 70%);
+}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--blue);border-radius:3px;}
+.particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.particle{position:absolute;border-radius:50%;animation:floatUp linear infinite;opacity:0;}
+@keyframes floatUp{0%{transform:translateY(100vh);opacity:0;}10%{opacity:0.5;}90%{opacity:0.2;}100%{transform:translateY(-100px) translateX(20px);opacity:0;}}
+/* CONSENT */
+#consentModal{position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(20px);}
+.consent-box{background:linear-gradient(145deg,rgba(10,15,30,0.99),rgba(15,20,40,0.99));border:1px solid rgba(79,142,247,0.35);border-radius:24px;padding:44px;max-width:500px;width:92%;text-align:center;box-shadow:0 0 60px rgba(79,142,247,0.15),0 30px 80px rgba(0,0,0,0.7);animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+.consent-logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:var(--glow-blue);}
+.consent-logo svg{width:32px;height:32px;}
+.consent-box h2{font-size:1.7rem;font-weight:900;margin-bottom:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.consent-box p{color:var(--muted);margin-bottom:20px;line-height:1.7;font-size:0.9rem;}
+.consent-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:24px;}
+.cpill{padding:6px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);color:#4ade80;}
+.cpill.bad{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:#f87171;}
+.consent-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-accept{background:linear-gradient(135deg,#166534,#22c55e);color:#000;border:none;border-radius:12px;padding:13px 34px;font-size:0.95rem;font-weight:800;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(34,197,94,0.3);display:flex;align-items:center;gap:8px;}
+.btn-accept:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(34,197,94,0.5);}
+.btn-decline{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:13px 22px;font-size:0.95rem;cursor:pointer;transition:all 0.2s;}
+.btn-decline:hover{background:rgba(239,68,68,0.1);color:#f87171;border-color:#f87171;}
+/* HEADER */
+header{position:relative;z-index:10;background:rgba(5,8,16,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);padding:0 26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;min-height:68px;}
+.header-brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;box-shadow:var(--glow-blue);flex-shrink:0;}
+.brand-icon svg{width:22px;height:22px;}
+.brand-name{font-size:1.4rem;font-weight:900;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--blue),var(--cyan),#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.brand-tag{font-size:0.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.header-stats{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.hstat{text-align:center;background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:6px 14px;}
+.hstat-val{font-size:1rem;font-weight:800;color:var(--cyan);}
+.hstat-lbl{font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(5,8,16,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);padding:0 16px;display:flex;overflow-x:auto;gap:2px;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.nav-btn{padding:14px 18px;border:none;background:transparent;color:var(--muted);font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.22s;display:flex;align-items:center;gap:7px;}
+.nav-btn svg{width:15px;height:15px;opacity:0.7;}
+.nav-btn.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+.nav-btn.active svg{opacity:1;}
+.nav-btn:hover{color:var(--text);}
+/* PAGES */
+.page{display:none;padding:28px 20px;max-width:1100px;margin:0 auto;position:relative;z-index:1;}
+.page.active{display:block;animation:fadeSlide 0.32s ease;}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{transform:scale(0.75);opacity:0}to{transform:scale(1);opacity:1}}
+.section-title{font-size:1.5rem;font-weight:800;margin-bottom:5px;background:linear-gradient(135deg,#fff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.section-sub{color:var(--muted);font-size:0.85rem;margin-bottom:22px;}
+.glass-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(12px);padding:20px;transition:border-color 0.25s;}
+.glass-card:hover{border-color:rgba(79,142,247,0.25);}
+
+/* ═══ CAMERA SYSTEM ═══ */
+.cam-block{border-radius:14px;overflow:hidden;border:1px solid var(--border);background:rgba(10,14,28,0.98);}
+.cam-toolbar{display:flex;align-items:center;justify-content:space-between;background:rgba(8,12,24,0.99);border-bottom:1px solid var(--border);padding:10px 14px;gap:10px;flex-wrap:wrap;}
+.cam-toolbar-left{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.cam-toolbar-right{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+.cam-status-label{display:flex;align-items:center;gap:8px;font-size:0.78rem;font-weight:600;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;display:none;flex-shrink:0;animation:livePulse 1.2s ease-in-out infinite;}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.5);}50%{box-shadow:0 0 0 5px rgba(239,68,68,0);}}
+/* CAMERA TOGGLE BTN */
+.cam-toggle-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:linear-gradient(135deg,rgba(15,25,55,0.95),rgba(20,35,75,0.95));
+  border:1px solid rgba(79,142,247,0.4);border-radius:9px;
+  padding:7px 14px;color:#93c5fd;font-size:0.78rem;font-weight:700;
+  cursor:pointer;transition:all 0.22s;white-space:nowrap;user-select:none;
+}
+.cam-toggle-btn:hover{background:linear-gradient(135deg,rgba(25,45,100,0.95),rgba(35,60,130,0.95));border-color:var(--blue);color:#fff;box-shadow:0 0 14px rgba(79,142,247,0.35);}
+.cam-toggle-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.cam-toggle-btn svg{width:14px;height:14px;flex-shrink:0;}
+.cam-toggle-btn .spin{animation:spinIcon 0.4s ease;display:inline-block;}
+@keyframes spinIcon{from{transform:rotate(0deg);}to{transform:rotate(180deg);}}
+/* CAMERA INDICATOR PILL */
+.cam-indicator{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;
+  background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);
+  color:#93c5fd;transition:all 0.3s;
+}
+.cam-indicator.rear{background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.2);color:#c084fc;}
+.cam-indicator .cam-dot{width:6px;height:6px;border-radius:50%;background:#4f8ef7;flex-shrink:0;}
+.cam-indicator.rear .cam-dot{background:#a855f7;}
+/* CAMERA WRAP */
+.cam-wrap{position:relative;overflow:hidden;background:#000;aspect-ratio:4/3;}
+.cam-wrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+.cam-wrap canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;display:block;}
+/* CRITICAL: Mirror only front camera video, canvas follows */
+.cam-wrap video.mirrored{transform:scaleX(-1);}
+.cam-wrap canvas.mirrored{transform:scaleX(-1);}
+/* Status bar */
+.cam-status-bar{position:absolute;bottom:0;left:0;right:0;z-index:3;background:linear-gradient(transparent,rgba(0,0,0,0.88));padding:22px 14px 10px;font-size:0.78rem;color:#94a3b8;text-align:center;pointer-events:none;}
+/* Top badges */
+.cam-badge-row{position:absolute;top:10px;left:10px;right:10px;z-index:3;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;}
+.cam-badge{background:rgba(0,0,0,0.72);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:4px 10px;font-size:0.7rem;font-weight:600;color:var(--muted);backdrop-filter:blur(8px);}
+.cam-badge.rec{color:#ef4444;border-color:rgba(239,68,68,0.3);display:flex;align-items:center;gap:5px;}
+.cam-badge.rec::before{content:'';width:6px;height:6px;border-radius:50%;background:#ef4444;animation:livePulse 1s infinite;flex-shrink:0;}
+/* No camera placeholder */
+.cam-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:12px;}
+.cam-placeholder svg{width:48px;height:48px;opacity:0.2;}
+.cam-placeholder p{font-size:0.82rem;opacity:0.5;}
+/* BUTTONS */
+.btn{padding:8px 18px;border:none;border-radius:9px;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.22s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn svg{width:14px;height:14px;flex-shrink:0;}
+.btn-green{background:linear-gradient(135deg,#14532d,#22c55e);color:#000;box-shadow:0 3px 12px rgba(34,197,94,0.25);}
+.btn-green:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(34,197,94,0.4);}
+.btn-red{background:linear-gradient(135deg,#7f1d1d,#ef4444);color:#fff;box-shadow:0 3px 12px rgba(239,68,68,0.25);}
+.btn-red:hover{transform:translateY(-2px);}
+.btn-blue{background:linear-gradient(135deg,#1e3a8a,var(--blue));color:#fff;box-shadow:0 3px 12px rgba(79,142,247,0.25);}
+.btn-blue:hover{transform:translateY(-2px);}
+.btn-gold{background:linear-gradient(135deg,#78350f,var(--gold));color:#000;font-weight:800;box-shadow:0 3px 12px rgba(255,215,0,0.2);}
+.btn-gold:hover{transform:translateY(-2px);}
+.btn-ghost{background:var(--glass);color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:rgba(79,142,247,0.4);}
+.btn:disabled{opacity:0.35;cursor:not-allowed;transform:none!important;}
+/* INSTR CARD */
+.instr-card{background:linear-gradient(145deg,rgba(15,25,50,0.8),rgba(10,18,38,0.9));border:1px solid rgba(79,142,247,0.2);border-radius:14px;padding:16px 18px;margin-bottom:16px;}
+.instr-card .instr-title{color:#93c5fd;font-weight:700;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.instr-steps{list-style:none;display:flex;flex-direction:column;gap:7px;}
+.instr-steps li{display:flex;align-items:flex-start;gap:10px;color:#94a3b8;font-size:0.83rem;line-height:1.5;}
+.step-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);color:#60a5fa;font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+/* ACTIVITIES */
+.activities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:22px;}
+.act-card{background:linear-gradient(145deg,rgba(15,20,40,0.92),rgba(10,14,28,0.96));border:1px solid var(--border);border-radius:13px;padding:14px 10px 12px;text-align:center;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden;}
+.act-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--cyan));transform:scaleX(0);transform-origin:left;transition:transform 0.22s;}
+.act-card:hover::after,.act-card.selected::after{transform:scaleX(1);}
+.act-card:hover{border-color:rgba(79,142,247,0.4);transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,0.4);}
+.act-card.selected{border-color:rgba(0,212,255,0.45);background:linear-gradient(145deg,rgba(0,50,100,0.28),rgba(0,30,70,0.45));box-shadow:0 0 18px rgba(0,212,255,0.12);}
+.act-icon-wrap{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
+.act-icon-wrap svg{width:20px;height:20px;}
+.act-name{font-size:0.73rem;font-weight:700;color:#cbd5e1;line-height:1.3;margin-bottom:3px;}
+.act-pts{font-size:0.65rem;color:var(--muted);}
+.act-diff{position:absolute;top:6px;right:6px;font-size:0.56rem;font-weight:700;padding:2px 6px;border-radius:7px;text-transform:uppercase;}
+.diff-easy{background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.18);}
+.diff-medium{background:rgba(245,158,11,0.12);color:#fbbf24;border:1px solid rgba(245,158,11,0.18);}
+.diff-hard{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.18);}
+/* METRICS */
+.metric-card{background:linear-gradient(145deg,rgba(15,20,40,0.92),rgba(10,14,28,0.96));border:1px solid var(--border);border-radius:14px;padding:18px 16px;text-align:center;transition:border-color 0.25s;}
+.metric-card.highlight{border-color:rgba(79,142,247,0.35);background:linear-gradient(145deg,rgba(20,40,80,0.45),rgba(10,20,50,0.55));box-shadow:0 0 22px rgba(79,142,247,0.1);}
+.metric-icon-wrap{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+.metric-icon-wrap svg{width:20px;height:20px;}
+.metric-label{font-size:0.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}
+.metric-value{font-size:1.9rem;font-weight:900;line-height:1;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.metric-unit{font-size:0.7rem;color:#475569;margin-top:4px;}
+/* LIVE PANEL */
+.live-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+.live-act-name{font-size:1.2rem;font-weight:800;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.live-act-sub{font-size:0.77rem;color:var(--muted);margin-top:2px;}
+.live-timer{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:9px;padding:5px 14px;color:#f87171;font-size:0.95rem;font-weight:800;font-family:monospace;}
+.live-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.live-stat{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+.live-stat-val{font-size:1.8rem;font-weight:900;line-height:1;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.live-stat-val.green{background:linear-gradient(135deg,#14532d,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.live-stat-val.gold{background:linear-gradient(135deg,#78350f,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.live-stat-lbl{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+.prog-bar-wrap{background:rgba(255,255,255,0.05);border-radius:20px;height:6px;margin:10px 0;overflow:hidden;}
+.prog-bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--blue),var(--cyan),#22c55e);transition:width 0.4s ease;}
+.phase-bar{background:linear-gradient(145deg,rgba(15,20,40,0.95),rgba(10,14,28,0.98));border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:13px;margin-bottom:14px;}
+.phase-dot{width:9px;height:9px;border-radius:50%;background:var(--blue);flex-shrink:0;animation:livePulse 1.5s ease-in-out infinite;}
+.phase-dot.green{background:#22c55e;}
+.phase-dot.amber{background:#f59e0b;}
+.phase-text{font-size:0.95rem;font-weight:700;color:#e2e8f0;}
+.phase-sub{font-size:0.76rem;color:var(--muted);margin-top:2px;}
+.cam-container{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start;}
+.side-panel{display:flex;flex-direction:column;gap:12px;}
+@media(max-width:820px){.cam-container{grid-template-columns:1fr;}}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px;}
+.dash-card{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;align-items:center;gap:13px;cursor:pointer;transition:all 0.25s;}
+.dash-card:hover{border-color:rgba(79,142,247,0.35);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+.dash-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dash-icon svg{width:22px;height:22px;}
+.dash-val{font-size:1.3rem;font-weight:900;line-height:1;}
+.dash-lbl{font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+/* HEIGHT LAYOUT */
+.ht-layout{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start;}
+.ht-metrics{display:flex;flex-direction:column;gap:12px;}
+@media(max-width:760px){.ht-layout{grid-template-columns:1fr;}}
+/* MANUAL PANEL */
+.manual-panel{background:linear-gradient(145deg,rgba(15,20,40,0.95),rgba(10,14,28,0.98));border:1px solid var(--border);border-radius:16px;padding:22px;margin-top:20px;}
+.manual-panel-title{font-size:0.8rem;font-weight:700;color:#93c5fd;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.manual-field label{display:block;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.manual-row{display:flex;gap:6px;align-items:center;}
+.manual-inp{flex:1;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-size:0.95rem;font-weight:600;outline:none;transition:border-color 0.2s;-moz-appearance:textfield;min-width:0;}
+.manual-inp::-webkit-inner-spin-button,.manual-inp::-webkit-outer-spin-button{-webkit-appearance:none;}
+.manual-inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,0.1);}
+.manual-unit{font-size:0.72rem;color:#94a3b8;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:7px;padding:5px 9px;white-space:nowrap;}
+.manual-results{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+.manual-res-item{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:11px;text-align:center;}
+.manual-res-val{font-size:1.15rem;font-weight:800;color:#38bdf8;}
+.manual-res-lbl{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+.bmi-bar-track{height:8px;border-radius:20px;background:linear-gradient(90deg,#3b82f6 0%,#22c55e 30%,#eab308 60%,#ef4444 100%);position:relative;margin-bottom:8px;}
+.bmi-marker{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #0f172a;box-shadow:0 0 0 2px var(--blue);transform:translate(-50%,-50%);transition:left 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+.bmi-labels{display:flex;justify-content:space-between;font-size:0.6rem;color:#475569;}
+.bmi-advice{margin-top:12px;padding:11px 13px;border-radius:10px;font-size:0.8rem;line-height:1.6;}
+/* REACTION */
+.react-layout{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start;}
+@media(max-width:760px){.react-layout{grid-template-columns:1fr;}}
+.react-prompt{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:150px;border-radius:14px;margin-bottom:14px;border:1px solid var(--border);background:linear-gradient(145deg,rgba(15,20,40,0.92),rgba(10,14,28,0.96));text-align:center;padding:20px;}
+.react-prompt.active{display:flex;animation:popIn 0.3s ease;}
+.react-prompt-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;animation:pulse 0.8s ease-in-out infinite;}
+.react-prompt-icon svg{width:28px;height:28px;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.react-cmd{font-size:1.25rem;font-weight:800;color:var(--gold);}
+.react-sub{font-size:0.83rem;color:var(--muted);margin-top:6px;}
+.react-speed-badge{margin-top:9px;padding:4px 14px;border-radius:20px;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);color:var(--gold);font-size:0.78rem;font-weight:700;}
+.react-hist-item{display:inline-flex;align-items:center;gap:6px;background:var(--glass);border:1px solid var(--border);border-radius:7px;padding:4px 10px;margin:3px;font-size:0.78rem;}
+/* LEADERBOARD */
+.lb-hero{background:linear-gradient(135deg,rgba(79,142,247,0.1),rgba(168,85,247,0.07));border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:22px;text-align:center;margin-bottom:22px;}
+.lb-hero h2{font-size:1.8rem;font-weight:900;background:linear-gradient(135deg,var(--gold),#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.lb-hero p{color:var(--muted);margin-top:5px;font-size:0.85rem;}
+.lb-hero-stats{display:flex;gap:20px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.lb-hero-stat-val{font-size:1.4rem;font-weight:800;}
+.lb-hero-stat-lbl{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.lb-filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
+.lb-filter{padding:6px 14px;border-radius:18px;border:1px solid var(--border);background:var(--glass);color:var(--muted);font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.lb-filter.active{background:rgba(79,142,247,0.15);border-color:rgba(79,142,247,0.4);color:var(--cyan);}
+.lb-wrap{background:var(--glass);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.lb-head{display:grid;grid-template-columns:50px 1fr 120px 70px 80px 90px;padding:11px 16px;background:rgba(79,142,247,0.08);border-bottom:1px solid var(--border);font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+.lb-row{display:grid;grid-template-columns:50px 1fr 120px 70px 80px 90px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03);align-items:center;transition:background 0.18s;font-size:0.85rem;}
+.lb-row:hover{background:rgba(255,255,255,0.02);}
+.lb-row:last-child{border-bottom:none;}
+@media(max-width:620px){.lb-head,.lb-row{grid-template-columns:44px 1fr 70px 70px;}.lb-hide{display:none;}}
+.rank-num{font-weight:800;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;}
+.r1{background:linear-gradient(135deg,#78350f,var(--gold));color:#000;}
+.r2{background:linear-gradient(135deg,#6b7280,#d1d5db);color:#000;}
+.r3{background:linear-gradient(135deg,#7c3c0e,#cd7f32);color:#fff;}
+.rn{background:var(--glass);color:var(--muted);border:1px solid var(--border);font-size:0.72rem;}
+.lb-name{font-weight:600;color:#e2e8f0;}
+.lb-act-tag{padding:3px 9px;border-radius:10px;font-size:0.7rem;font-weight:600;display:inline-flex;align-items:center;gap:5px;}
+.lb-score{font-weight:800;color:#4ade80;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.18);border-radius:7px;padding:3px 9px;font-size:0.82rem;display:inline-block;}
+.lb-empty{text-align:center;padding:44px;color:var(--muted);}
+/* SAVE MODAL */
+#saveModal{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;z-index:9000;backdrop-filter:blur(16px);}
+#saveModal.open{display:flex;}
+.save-box{background:linear-gradient(145deg,rgba(10,15,30,0.99),rgba(15,20,40,0.99));border:1px solid rgba(79,142,247,0.35);border-radius:20px;padding:34px;max-width:420px;width:92%;animation:popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+.save-box h3{font-size:1.3rem;font-weight:800;margin-bottom:5px;background:linear-gradient(135deg,var(--gold),#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.save-result-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0;}
+.save-res-item{background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+.save-res-val{font-size:1.2rem;font-weight:800;color:var(--cyan);}
+.save-res-lbl{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.name-inp{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;color:#e2e8f0;font-size:0.95rem;margin-bottom:13px;outline:none;transition:border-color 0.2s;}
+.name-inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,0.1);}
+.save-btns{display:flex;gap:9px;}
+.privacy-note{display:flex;align-items:center;gap:9px;background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.12);border-radius:9px;padding:10px 13px;margin-top:13px;font-size:0.76rem;color:var(--muted);}
+.privacy-note svg{width:14px;height:14px;flex-shrink:0;color:#22d3ee;}
+/* TOAST */
+#toast{position:fixed;bottom:28px;right:28px;z-index:9999;background:linear-gradient(135deg,#14532d,#22c55e);color:#000;font-weight:700;padding:13px 22px;border-radius:11px;font-size:0.88rem;box-shadow:0 8px 28px rgba(34,197,94,0.35);transform:translateY(80px);opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);display:flex;align-items:center;gap:8px;}
+#toast.show{transform:translateY(0);opacity:1;}
+.achievement-popup{position:fixed;top:78px;right:-320px;z-index:9998;background:linear-gradient(145deg,rgba(10,15,30,0.99),rgba(15,20,40,0.99));border:1px solid rgba(255,215,0,0.35);border-radius:14px;padding:14px 18px;width:270px;box-shadow:var(--glow-gold);transition:right 0.5s cubic-bezier(0.34,1.56,0.64,1);display:flex;align-items:center;gap:12px;}
+.achievement-popup.show{right:18px;}
+.ach-icon-wrap{width:40px;height:40px;border-radius:11px;flex-shrink:0;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);display:flex;align-items:center;justify-content:center;}
+.ach-icon-wrap svg{width:20px;height:20px;}
+.ach-title{font-size:0.65rem;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
+.ach-name{font-size:0.88rem;font-weight:700;color:#e2e8f0;margin-top:2px;}
+.confetti-piece{position:fixed;top:-12px;z-index:9999;border-radius:2px;animation:confettiFall linear forwards;}
+@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+/* ERROR ALERT */
+.cam-error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:12px 14px;margin-top:10px;font-size:0.8rem;color:#f87171;display:none;align-items:center;gap:8px;}
+.cam-error.show{display:flex;}
+.cam-error svg{width:16px;height:16px;flex-shrink:0;}
+@media(max-width:600px){.live-stats-row{grid-template-columns:repeat(2,1fr);}.manual-grid{grid-template-columns:1fr;}.activities-grid{grid-template-columns:repeat(3,1fr);}.act-card{padding:10px 6px 9px;}.act-icon-wrap{width:32px;height:32px;}.act-icon-wrap svg{width:16px;height:16px;}.act-name{font-size:0.65rem;}header{padding:0 14px;}.page{padding:18px 14px;}}
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="achievement-popup" id="achPopup">
+  <div class="ach-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M8 14l-2 7 6-3 6 3-2-7"/></svg></div>
+  <div><div class="ach-title">Achievement Unlocked</div><div class="ach-name" id="achName">First Rep!</div></div>
+</div>
+
+<div id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">Score saved!</span>
+</div>
+
+<!-- CONSENT -->
+<div id="consentModal">
+  <div class="consent-box">
+    <div class="consent-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+    <h2>SportIQ — AI Analyzer</h2>
+    <p>This app uses your camera to track body movements and calculate fitness scores in real time. Your privacy is our priority.</p>
+    <div class="consent-pills">
+      <span class="cpill">No video recorded</span>
+      <span class="cpill">On-device only</span>
+      <span class="cpill">Only score saved</span>
+      <span class="cpill bad">No inappropriate content</span>
+      <span class="cpill bad">No data sold</span>
+    </div>
+    <div class="consent-btns">
+      <button class="btn-accept" onclick="acceptConsent()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+        Accept &amp; Enter
+      </button>
+      <button class="btn-decline" onclick="declineConsent()">Decline</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE MODAL -->
+<div id="saveModal">
+  <div class="save-box">
+    <h3>Save Your Score</h3>
+    <p style="color:var(--muted);font-size:0.82rem;margin-bottom:4px;">Submit to the leaderboard!</p>
+    <div class="save-result-row">
+      <div class="save-res-item"><div class="save-res-val" id="sv-reps">0</div><div class="save-res-lbl">Reps</div></div>
+      <div class="save-res-item"><div class="save-res-val" id="sv-score">0</div><div class="save-res-lbl">Score</div></div>
+      <div class="save-res-item"><div class="save-res-val" id="sv-act" style="font-size:0.85rem;">—</div><div class="save-res-lbl">Activity</div></div>
+    </div>
+    <input class="name-inp" id="playerName" type="text" placeholder="Enter your name..." maxlength="25"/>
+    <div class="save-btns">
+      <button class="btn btn-gold" style="flex:1;justify-content:center;" onclick="saveScore()">Submit Score</button>
+      <button class="btn btn-ghost" onclick="closeSaveModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-brand">
+    <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+    <div><div class="brand-name">SportIQ</div><div class="brand-tag">AI Fitness Analyzer</div></div>
+  </div>
+  <div class="header-stats">
+    <div class="hstat"><div class="hstat-val" id="h-total-reps">0</div><div class="hstat-lbl">Total Reps</div></div>
+    <div class="hstat"><div class="hstat-val" id="h-total-score">0</div><div class="hstat-lbl">Session Score</div></div>
+    <div class="hstat"><div class="hstat-val" id="h-activities">0</div><div class="hstat-lbl">Activities</div></div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav>
+  <button class="nav-btn active" onclick="showPage('dashboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
+  <button class="nav-btn" onclick="showPage('height',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 3H3M21 21H3M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>Height &amp; Distance</button>
+  <button class="nav-btn" onclick="showPage('activity',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M9 10H6M15 10h3M9 17l-2 4M15 17l2 4"/></svg>Exercise Tracker</button>
+  <button class="nav-btn" onclick="showPage('reaction',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Reaction Tests</button>
+  <button class="nav-btn" onclick="showPage('leaderboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h8M8 12h8M8 18h8M3 6h.01M3 12h.01M3 18h.01"/></svg>Leaderboard</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="section-title">Welcome to SportIQ</div>
+  <div class="section-sub">AI-powered real-time fitness analyzer — 20 activities, reaction tests, global leaderboard.</div>
+  <div class="dash-grid">
+    <div class="dash-card" onclick="showPage('height',document.querySelectorAll('.nav-btn')[1])">
+      <div class="dash-icon" style="background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.2);"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"><path d="M21 3H3M21 21H3M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg></div>
+      <div><div class="dash-val" style="color:var(--blue);">Measure</div><div class="dash-lbl">Height &amp; Distance</div></div>
+    </div>
+    <div class="dash-card" onclick="showPage('activity',document.querySelectorAll('.nav-btn')[2])">
+      <div class="dash-icon" style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.2);"><svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M9 10H6M15 10h3M9 17l-2 4M15 17l2 4"/></svg></div>
+      <div><div class="dash-val" style="color:var(--green);">20 Tests</div><div class="dash-lbl">Exercise Tracker</div></div>
+    </div>
+    <div class="dash-card" onclick="showPage('reaction',document.querySelectorAll('.nav-btn')[3])">
+      <div class="dash-icon" style="background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.2);"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+      <div><div class="dash-val" style="color:var(--gold);">Reaction</div><div class="dash-lbl">Speed Tests</div></div>
+    </div>
+    <div class="dash-card" onclick="showPage('leaderboard',document.querySelectorAll('.nav-btn')[4])">
+      <div class="dash-icon" style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.2);"><svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round"><path d="M8 6h8M8 12h8M8 18h8M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+      <div><div class="dash-val" style="color:var(--purple);">Global</div><div class="dash-lbl">Leaderboard</div></div>
+    </div>
+  </div>
+  <div class="glass-card">
+    <div style="font-size:1rem;font-weight:700;color:var(--cyan);margin-bottom:14px;display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>All 20 Activities</div>
+    <div class="activities-grid" id="dashActGrid"></div>
+  </div>
+</div>
+
+<!-- HEIGHT PAGE -->
+<div id="page-height" class="page">
+  <div class="section-title">Height &amp; Distance Analyzer</div>
+  <div class="section-sub">Stand straight facing the camera — full body in frame. Results auto-calculate.</div>
+  <div class="instr-card">
+    <div class="instr-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Quick Setup</div>
+    <ol class="instr-steps">
+      <li><span class="step-num">1</span>Place your device 2–3 metres away at chest height</li>
+      <li><span class="step-num">2</span>Make sure your head AND feet are both fully visible in frame</li>
+      <li><span class="step-num">3</span>Stand straight, arms at sides, facing the camera</li>
+      <li><span class="step-num">4</span>Press Start — height and distance appear automatically</li>
+    </ol>
+  </div>
+  <div class="ht-layout">
+    <div>
+      <!-- HEIGHT CAMERA -->
+      <div class="cam-block">
+        <div class="cam-toolbar">
+          <div class="cam-toolbar-left">
+            <div class="cam-status-label">
+              <span class="live-dot" id="htLiveDot"></span>
+              <span id="htStatusLabel" style="color:var(--muted);">Camera Off</span>
+            </div>
+            <div class="cam-indicator" id="htCamIndicator">
+              <span class="cam-dot"></span>
+              <span id="htCamIndicatorText">Front</span>
+            </div>
+          </div>
+          <div class="cam-toolbar-right">
+            <button class="cam-toggle-btn" id="htToggleBtn" onclick="CamManager.toggle('ht')" title="Switch camera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 7h-3a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="13" r="3"/></svg>
+              <span id="htToggleTxt">Switch to Rear</span>
+            </button>
+            <button class="btn btn-green" onclick="CamManager.start('ht')" id="htStartBtn"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start</button>
+            <button class="btn btn-red" onclick="CamManager.stop('ht')" id="htStopBtn" disabled><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Stop</button>
+          </div>
+        </div>
+        <div class="cam-wrap" id="htCamWrap">
+          <video id="htVideo" autoplay playsinline muted></video>
+          <canvas id="htCanvas"></canvas>
+          <div class="cam-badge-row">
+            <div class="cam-badge rec" id="htRecBadge" style="display:none;">LIVE</div>
+            <div class="cam-badge" id="htConfBadge">Confidence: —</div>
+          </div>
+          <div class="cam-status-bar" id="htStatus">Click Start to activate camera</div>
+          <div class="cam-placeholder" id="htPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M20 7h-3a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="13" r="3"/></svg>
+            <p>Camera will appear here</p>
+          </div>
+        </div>
+        <div class="cam-error" id="htError"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="htErrorMsg">Camera error</span></div>
+      </div>
+
+      <!-- MANUAL PANEL -->
+      <div class="manual-panel">
+        <div class="manual-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M12 2v20M2 12h20"/></svg>Manual Height &amp; BMI Calculator</div>
+        <div class="manual-grid">
+          <div class="manual-field"><label>Height (feet + inches)</label><div class="manual-row"><input class="manual-inp" id="manualFt" type="number" placeholder="5" min="3" max="8"/><span class="manual-unit">ft</span><input class="manual-inp" id="manualIn" type="number" placeholder="8" min="0" max="11"/><span class="manual-unit">in</span></div></div>
+          <div class="manual-field"><label>Weight</label><div class="manual-row"><input class="manual-inp" id="manualKg" type="number" placeholder="70" min="20" max="300" step="0.1"/><span class="manual-unit">kg</span></div></div>
+          <div class="manual-field"><label>Height in cm (alternative)</label><div class="manual-row"><input class="manual-inp" id="manualCm" type="number" placeholder="175" min="50" max="280" step="0.5"/><span class="manual-unit">cm</span></div></div>
+          <div class="manual-field"><label>Age (optional)</label><div class="manual-row"><input class="manual-inp" id="manualAge" type="number" placeholder="22" min="5" max="100"/><span class="manual-unit">yrs</span></div></div>
+        </div>
+        <button class="btn btn-blue" onclick="calcManual()" style="width:100%;justify-content:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Calculate</button>
+        <div class="manual-results" id="manualResultRow" style="display:none;">
+          <div class="manual-res-item"><div class="manual-res-val" id="mr-cm">—</div><div class="manual-res-lbl">Height (cm)</div></div>
+          <div class="manual-res-item"><div class="manual-res-val" id="mr-bmi">—</div><div class="manual-res-lbl">BMI</div></div>
+          <div class="manual-res-item"><div class="manual-res-val" id="mr-cat" style="font-size:0.8rem;">—</div><div class="manual-res-lbl">Category</div></div>
+        </div>
+        <div id="bmiBarSection" style="display:none;margin-top:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">BMI Scale</span><span id="bmiScaleVal" style="font-size:0.72rem;font-weight:700;"></span></div>
+          <div class="bmi-bar-track"><div class="bmi-marker" id="bmiMarker" style="left:0%"></div></div>
+          <div class="bmi-labels"><span>Underweight<br>&lt;18.5</span><span style="text-align:center;">Normal<br>18.5–24.9</span><span style="text-align:center;">Overweight<br>25–29.9</span><span style="text-align:right;">Obese<br>&gt;30</span></div>
+          <div class="bmi-advice" id="manualAdvice"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ht-metrics">
+      <div class="metric-card highlight"><div class="metric-icon-wrap" style="background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.2);"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M8 6l4-4 4 4M8 18l4 4 4-4"/></svg></div><div class="metric-label">Estimated Height</div><div class="metric-value" id="htVal">—</div><div class="metric-unit">centimetres</div></div>
+      <div class="metric-card"><div class="metric-icon-wrap" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.18);"><svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M17 7l5 5-5 5"/></svg></div><div class="metric-label">Distance from Camera</div><div class="metric-value" id="distVal" style="font-size:1.5rem;">—</div><div class="metric-unit">metres</div></div>
+      <div class="metric-card"><div class="metric-icon-wrap" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.18);"><svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="metric-label">Detection Confidence</div><div class="metric-value" id="confVal" style="font-size:1.5rem;">—</div><div class="metric-unit">percent</div></div>
+      <div class="metric-card"><div class="metric-icon-wrap" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.18);"><svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="metric-label">Height Category</div><div class="metric-value" id="htCatVal" style="font-size:1rem;color:#c084fc;-webkit-text-fill-color:#c084fc;">—</div><div class="metric-unit">based on detection</div></div>
+    </div>
+  </div>
+  <div class="privacy-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Camera processed entirely on your device. No images or video are uploaded or stored.</div>
+</div>
+
+<!-- ACTIVITY PAGE -->
+<div id="page-activity" class="page">
+  <div class="section-title">Exercise Tracker</div>
+  <div class="section-sub">Select an exercise, start the camera, and perform — reps counted automatically.</div>
+  <div class="activities-grid" id="actGrid"></div>
+  <div id="livePanelWrap">
+    <div class="live-header">
+      <div><div class="live-act-name" id="liveActName">Push-ups</div><div class="live-act-sub" id="liveActInstr">Lower chest until elbows reach 90°, then push back up</div></div>
+      <div class="live-timer" id="liveTimer">00:00</div>
+    </div>
+    <div class="live-stats-row">
+      <div class="live-stat"><div class="live-stat-val" id="ls-reps">0</div><div class="live-stat-lbl">Reps</div></div>
+      <div class="live-stat"><div class="live-stat-val green" id="ls-score">0</div><div class="live-stat-lbl">Score</div></div>
+      <div class="live-stat"><div class="live-stat-val gold" id="ls-angle">—</div><div class="live-stat-lbl">Angle</div></div>
+      <div class="live-stat"><div class="live-stat-val" id="ls-best">0</div><div class="live-stat-lbl">Best</div></div>
+    </div>
+    <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progBar" style="width:0%"></div></div>
+    <div class="phase-bar"><div class="phase-dot" id="phaseDot"></div><div><div class="phase-text" id="phaseText">Select an exercise and press Start</div><div class="phase-sub" id="phaseSub">Camera will detect your movements automatically</div></div></div>
+    <div class="cam-container">
+      <div>
+        <div class="cam-block">
+          <div class="cam-toolbar">
+            <div class="cam-toolbar-left">
+              <div class="cam-status-label">
+                <span class="live-dot" id="actLiveDot"></span>
+                <span id="actStatusLabel" style="color:var(--muted);">Camera Off</span>
+              </div>
+              <div class="cam-indicator" id="actCamIndicator">
+                <span class="cam-dot"></span>
+                <span id="actCamIndicatorText">Front</span>
+              </div>
+            </div>
+            <div class="cam-toolbar-right">
+              <button class="cam-toggle-btn" id="actToggleBtn" onclick="CamManager.toggle('act')" title="Switch camera">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 7h-3a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="13" r="3"/></svg>
+                <span id="actToggleTxt">Switch to Rear</span>
+              </button>
+              <button class="btn btn-green" onclick="CamManager.start('act')"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start</button>
+              <button class="btn btn-red" onclick="CamManager.stop('act')" id="actStopBtn" disabled><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Stop</button>
+              <button class="btn btn-gold" onclick="openSaveModal()" style="padding:7px 13px;">Save</button>
+              <button class="btn btn-ghost" onclick="resetActivity()" style="padding:7px 11px;">Reset</button>
+            </div>
+          </div>
+          <div class="cam-wrap" id="actCamWrap">
+            <video id="actVideo" autoplay playsinline muted></video>
+            <canvas id="actCanvas"></canvas>
+            <div class="cam-badge-row">
+              <div class="cam-badge rec" id="actRecBadge" style="display:none;">LIVE</div>
+              <div class="cam-badge" id="actAngleBadge">Angle: —</div>
+            </div>
+            <div class="cam-status-bar" id="actStatus">Select an exercise above, then press Start</div>
+            <div class="cam-placeholder" id="actPlaceholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M20 7h-3a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="13" r="3"/></svg><p>Camera will appear here</p></div>
+          </div>
+          <div class="cam-error" id="actError"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="actErrorMsg">Camera error</span></div>
+        </div>
+      </div>
+      <div class="side-panel">
+        <div class="instr-card" id="actInstrCard">
+          <div class="instr-title" id="actInstrTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Push-up Guide</div>
+          <ol class="instr-steps" id="actInstrList">
+            <li><span class="step-num">1</span>Face camera from side or front</li>
+            <li><span class="step-num">2</span>Get into push-up position</li>
+            <li><span class="step-num">3</span>Lower until elbows reach 90°</li>
+            <li><span class="step-num">4</span>Push back up — rep counted!</li>
+          </ol>
+        </div>
+        <div class="metric-card"><div class="metric-label">Calories Burned (est.)</div><div class="metric-value" id="calorieVal" style="font-size:1.5rem;">0</div><div class="metric-unit">kcal</div></div>
+        <div class="metric-card"><div class="metric-label">Rep Rate</div><div class="metric-value" id="repRateVal" style="font-size:1.5rem;">0</div><div class="metric-unit">reps / min</div></div>
+      </div>
+    </div>
+    <div class="privacy-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>All pose processing runs locally. Zero video data is transmitted.</div>
+  </div>
+</div>
+
+<!-- REACTION PAGE -->
+<div id="page-reaction" class="page">
+  <div class="section-title">Reaction Speed Tests</div>
+  <div class="section-sub">Follow on-screen commands as fast as possible. Speed measured in milliseconds.</div>
+  <div class="instr-card">
+    <div class="instr-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>How It Works</div>
+    <ol class="instr-steps">
+      <li><span class="step-num">1</span>Start the camera and stand facing it, full body visible</li>
+      <li><span class="step-num">2</span>Press Begin Test — a random command appears</li>
+      <li><span class="step-num">3</span>Perform the action as quickly as possible</li>
+      <li><span class="step-num">4</span>Reaction time is measured and scored automatically</li>
+    </ol>
+  </div>
+  <div class="react-layout">
+    <div>
+      <div class="react-prompt active" id="reactPrompt">
+        <div class="react-prompt-icon" id="reactIconWrap" style="background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="react-cmd" id="reactCmd">Press Begin Test to Start!</div>
+        <div class="react-sub" id="reactSub">Start camera first, then click Begin Test</div>
+        <div class="react-speed-badge" id="reactSpeed" style="display:none;"></div>
+      </div>
+      <div class="cam-block">
+        <div class="cam-toolbar">
+          <div class="cam-toolbar-left">
+            <div class="cam-status-label">
+              <span class="live-dot" id="reactLiveDot"></span>
+              <span id="reactStatusLabel" style="color:var(--muted);">Camera Off</span>
+            </div>
+            <div class="cam-indicator" id="reactCamIndicator">
+              <span class="cam-dot"></span>
+              <span id="reactCamIndicatorText">Front</span>
+            </div>
+          </div>
+          <div class="cam-toolbar-right">
+            <button class="cam-toggle-btn" id="reactToggleBtn" onclick="CamManager.toggle('react')" title="Switch camera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 7h-3a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="13" r="3"/></svg>
+              <span id="reactToggleTxt">Switch to Rear</span>
+            </button>
+            <button class="btn btn-green" onclick="CamManager.start('react')"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start</button>
+            <button class="btn btn-gold" onclick="beginReactionTest()" id="beginTestBtn" disabled style="padding:7px 13px;">Begin Test</button>
+            <button class="btn btn-red" onclick="CamManager.stop('react')" id="reactStopBtn" disabled><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Stop</button>
+          </div>
+        </div>
+        <div class="cam-wrap" id="reactCamWrap">
+          <video id="reactVideo" autoplay playsinline muted></video>
+          <canvas id="reactCanvas"></canvas>
+          <div class="cam-badge-row"><div class="cam-badge rec" id="reactRecBadge" style="display:none;">LIVE</div></div>
+          <div class="cam-status-bar" id="reactStatus">Click Start to activate camera</div>
+          <div class="cam-placeholder" id="reactPlaceholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M20 7h-3a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="13" r="3"/></svg><p>Camera will appear here</p></div>
+        </div>
+        <div class="cam-error" id="reactError"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="reactErrorMsg">Camera error</span></div>
+      </div>
+      <div class="glass-card" style="margin-top:16px;">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--cyan);margin-bottom:10px;">Test History</div>
+        <div id="reactHistory" style="color:var(--muted);font-size:0.83rem;min-height:30px;">No tests yet.</div>
+      </div>
+    </div>
+    <div class="side-panel">
+      <div class="metric-card highlight"><div class="metric-icon-wrap" style="background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.2);"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="metric-label">Avg Reaction Time</div><div class="metric-value" id="reactAvg" style="font-size:1.4rem;">—</div><div class="metric-unit">milliseconds</div></div>
+      <div class="metric-card"><div class="metric-icon-wrap" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.18);"><svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M8 14l-2 7 6-3 6 3-2-7"/></svg></div><div class="metric-label">Best Time</div><div class="metric-value" id="reactBest" style="font-size:1.4rem;">—</div><div class="metric-unit">milliseconds</div></div>
+      <div class="metric-card"><div class="metric-label">Tests Completed</div><div class="metric-value" id="reactCount" style="font-size:1.4rem;">0</div><div class="metric-unit">rounds</div></div>
+      <div class="metric-card"><div class="metric-label">Reaction Score</div><div class="metric-value" id="reactScore" style="font-size:1.4rem;background:linear-gradient(135deg,#14532d,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">0</div><div class="metric-unit">points</div></div>
+      <button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="saveReactScore()">Save Reaction Score</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="page-leaderboard" class="page">
+  <div class="lb-hero"><h2>Leaderboard</h2><p>Top scores from all SportIQ players</p><div class="lb-hero-stats"><div><div class="lb-hero-stat-val" id="lb-total" style="color:var(--gold);">—</div><div class="lb-hero-stat-lbl">Total Entries</div></div><div><div class="lb-hero-stat-val" id="lb-top" style="color:var(--cyan);">—</div><div class="lb-hero-stat-lbl">Top Score</div></div></div></div>
+  <div class="lb-filters">
+    <button class="lb-filter active" onclick="filterLB('all',this)">All</button>
+    <button class="lb-filter" onclick="filterLB('pushup',this)">Push-ups</button>
+    <button class="lb-filter" onclick="filterLB('squat',this)">Squats</button>
+    <button class="lb-filter" onclick="filterLB('jumping',this)">Jumping Jacks</button>
+    <button class="lb-filter" onclick="filterLB('pullup',this)">Pull-ups</button>
+    <button class="lb-filter" onclick="filterLB('burpee',this)">Burpees</button>
+    <button class="lb-filter" onclick="filterLB('reaction',this)">Reaction</button>
+    <button class="lb-filter" onclick="loadLeaderboard()">Refresh</button>
+  </div>
+  <div class="lb-wrap">
+    <div class="lb-head"><span>#</span><span>Player</span><span class="lb-hide">Activity</span><span>Reps</span><span>Score</span><span class="lb-hide">Date</span></div>
+    <div id="lbBody"><div class="lb-empty">Loading...</div></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════
+   PARTICLES
+═══════════════════════════════════════════════════════════ */
+(function(){
+  const c=document.getElementById('particles');
+  const cols=['#4f8ef7','#00d4ff','#a855f7','#22c55e'];
+  for(let i=0;i<30;i++){
+    const p=document.createElement('div');p.className='particle';
+    p.style.cssText=`left:${Math.random()*100}%;background:${cols[i%4]};width:${Math.random()*2.5+1}px;height:${Math.random()*2.5+1}px;animation-duration:${Math.random()*18+10}s;animation-delay:${Math.random()*18}s;`;
+    c.appendChild(p);
+  }
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   ACTIVITY CONFIG
+═══════════════════════════════════════════════════════════ */
+const ACT_CONFIG={
+  pushup:       {name:'Push-ups',         instr:'Lower chest until elbows reach 90°, then push back up',steps:['Face camera from side or front','Get into push-up position on floor','Lower until elbows reach 90°','Push back up — rep counted!'],pts:4.5,cal:0.30,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"><path d="M6 19V7M6 7l4-4M6 7l-4 4M18 5v12M18 5l4 4M18 5l-4 4"/></svg>',bg:'rgba(79,142,247,0.12)',border:'rgba(79,142,247,0.2)',diff:'medium'},
+  squat:        {name:'Squats',            instr:'Squat until knees reach 90°, stand back up',steps:['Face camera sideways','Feet shoulder-width apart','Squat until thighs are parallel','Stand back up — rep counted!'],pts:3.5,cal:0.25,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v6l-3 6M12 12l3 6M5 10h4M15 10h4"/></svg>',bg:'rgba(168,85,247,0.12)',border:'rgba(168,85,247,0.2)',diff:'easy'},
+  jumping:      {name:'Jumping Jacks',     instr:'Raise both arms above shoulders, lower back down',steps:['Stand facing camera','Spread legs and raise arms','Return to start','Each full cycle = 1 rep'],pts:2.0,cal:0.15,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v7M5 3l7 10 7-10M5 21l7-4 7 4"/></svg>',bg:'rgba(0,212,255,0.1)',border:'rgba(0,212,255,0.2)',diff:'easy'},
+  pullup:       {name:'Pull-ups',          instr:'Pull chin above bar, lower all the way back down',steps:['Mount a pull-up bar','Camera from side','Raise until elbows fully bend','Lower slowly — rep counted!'],pts:6.0,cal:0.50,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round"><path d="M4 3h16M8 3v5l4 4 4-4V3M12 12v9"/></svg>',bg:'rgba(249,115,22,0.12)',border:'rgba(249,115,22,0.2)',diff:'hard'},
+  situp:        {name:'Sit-ups',           instr:'Rise from lying until torso is vertical, lower back',steps:['Lie down knees bent','Camera from side','Rise until shoulders above hips','Lower — rep counted!'],pts:3.0,cal:0.22,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v6M6 20l6-8 6 8M6 14h12"/></svg>',bg:'rgba(16,185,129,0.12)',border:'rgba(16,185,129,0.2)',diff:'easy'},
+  highknee:     {name:'High Knees',        instr:'Alternate raising each knee above hip height',steps:['Stand facing camera','March in place','Raise each knee above hip','Each knee lift = 1 rep'],pts:2.0,cal:0.12,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v5l-4 5M12 11l4 5M8 21h8"/></svg>',bg:'rgba(234,179,8,0.12)',border:'rgba(234,179,8,0.2)',diff:'easy'},
+  lunge:        {name:'Lunges',            instr:'Step forward, lower back knee toward floor, return',steps:['Stand facing camera','Step forward with one leg','Lower back knee to floor','Return and alternate — rep counted!'],pts:3.0,cal:0.22,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6l-3 8h6M9 14l-4 7M15 14l4 7"/></svg>',bg:'rgba(244,63,94,0.12)',border:'rgba(244,63,94,0.2)',diff:'medium'},
+  plank:        {name:'Plank Hold',        instr:'Hold plank position — scored by seconds held',steps:['Get into plank position','Camera from side','Keep body straight','Score = seconds × 1 pt'],pts:1.0,cal:0.10,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><path d="M3 14h18M7 14V9M17 14V9M7 9h10"/></svg>',bg:'rgba(100,116,139,0.15)',border:'rgba(100,116,139,0.25)',diff:'medium'},
+  shoulderpress:{name:'Shoulder Press',    instr:'Press arms straight overhead, lower to shoulders',steps:['Stand facing camera','Hands at shoulder height','Press arms straight overhead','Lower — rep counted!'],pts:4.0,cal:0.20,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"><path d="M5 8h4V4M15 4v4h4M9 8h6M12 8v13"/></svg>',bg:'rgba(79,142,247,0.12)',border:'rgba(79,142,247,0.2)',diff:'medium'},
+  bicep:        {name:'Bicep Curls',       instr:'Curl wrist up to shoulder, lower back down',steps:['Stand sideways to camera','Arms at sides','Curl one arm up to shoulder','Lower — rep counted!'],pts:3.0,cal:0.18,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"><path d="M6 20V8a4 4 0 0 1 8 0v2a3 3 0 0 1-3 3H6"/></svg>',bg:'rgba(34,211,238,0.1)',border:'rgba(34,211,238,0.2)',diff:'easy'},
+  mountain:     {name:'Mountain Climbers', instr:'Drive each knee toward chest alternately in plank',steps:['Get into plank position','Camera from side','Drive each knee to chest alternately','Each knee drive = 1 rep'],pts:2.0,cal:0.15,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"><path d="M3 20l9-16 9 16M7 16l5-8 5 8"/></svg>',bg:'rgba(245,158,11,0.12)',border:'rgba(245,158,11,0.2)',diff:'medium'},
+  burpee:       {name:'Burpees',           instr:'Stand → Squat → Plank → Jump — full cycle = 1 rep',steps:['Stand upright facing camera','Squat and place hands on floor','Jump legs to plank','Jump up — 1 burpee done!'],pts:8.0,cal:0.80,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v4l4 3M12 10l-4 3M5 20h14M8 13l-3 7M16 13l3 7"/></svg>',bg:'rgba(239,68,68,0.12)',border:'rgba(239,68,68,0.2)',diff:'hard'},
+  balance:      {name:'Balance Test',      instr:'Stand on one leg — scored by seconds balanced',steps:['Stand facing camera','Lift one foot off ground','Hold as long as possible','Score = seconds × 5 pts'],pts:5.0,cal:0.05,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v8M8 14l4 6M16 14l-4 6M9 10H6M15 10h3"/></svg>',bg:'rgba(16,185,129,0.12)',border:'rgba(16,185,129,0.2)',diff:'medium'},
+  tpose:        {name:'T-Pose Hold',       instr:'Extend both arms horizontally — hold for score',steps:['Stand facing camera','Extend both arms fully sideways','Keep arms horizontal','Score = seconds × 2 pts'],pts:2.0,cal:0.03,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v14M3 11h18"/></svg>',bg:'rgba(139,92,246,0.12)',border:'rgba(139,92,246,0.2)',diff:'easy'},
+  calf:         {name:'Calf Raises',       instr:'Rise up on tiptoes, lower back to flat feet',steps:['Stand sideways to camera','Feet flat on ground','Rise up on tiptoes fully','Lower — rep counted!'],pts:2.0,cal:0.10,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round"><path d="M12 3v14M9 17l3 4 3-4M8 10l4-7 4 7"/></svg>',bg:'rgba(168,85,247,0.12)',border:'rgba(168,85,247,0.2)',diff:'easy'},
+  tricep:       {name:'Tricep Dips',       instr:'Lower body by bending elbows to 90°, push back up',steps:['Use a chair or step','Camera facing sideways','Lower by bending elbows to 90°','Push up — rep counted!'],pts:4.0,cal:0.28,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"><path d="M5 5h14M7 5v7a5 5 0 0 0 10 0V5M12 17v4"/></svg>',bg:'rgba(79,142,247,0.12)',border:'rgba(79,142,247,0.2)',diff:'medium'},
+  longjump:     {name:'Long Jump',         instr:'Crouch then jump as far forward as possible',steps:['Stand at start facing camera','Mark feet position','Crouch and jump forward','Distance measured automatically'],pts:10,cal:0.50,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"><path d="M3 17l5-10 5 5 5-8M21 17H3"/></svg>',bg:'rgba(251,191,36,0.12)',border:'rgba(251,191,36,0.2)',diff:'hard'},
+  highjump:     {name:'High Jump',         instr:'Crouch then jump as high as possible',steps:['Stand facing camera','Bend knees slightly','Jump as high as you can','Peak height tracked automatically'],pts:10,cal:0.50,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round"><path d="M12 20V4M8 8l4-4 4 4M5 20h14"/></svg>',bg:'rgba(239,68,68,0.12)',border:'rgba(239,68,68,0.2)',diff:'hard'},
+  deepbreath:   {name:'Breathing Sync',    instr:'Inhale raising shoulders, exhale lowering them',steps:['Stand facing camera','Breathe in deeply — shoulders rise','Breathe out — shoulders fall','Each full breath = 1 rep'],pts:3.0,cal:0.02,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"><path d="M12 2C8 2 5 6 5 10c0 5 7 12 7 12s7-7 7-12c0-4-3-8-7-8z"/></svg>',bg:'rgba(16,185,129,0.1)',border:'rgba(16,185,129,0.18)',diff:'easy'},
+  armcircle:    {name:'Arm Circles',       instr:'Extend arms sideways and make large full rotations',steps:['Stand facing camera','Extend arms to sides','Make large slow circles','Each full rotation = 1 rep'],pts:1.0,cal:0.05,icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 4v2M12 18v2M4 12h2M18 12h2"/></svg>',bg:'rgba(34,211,238,0.1)',border:'rgba(34,211,238,0.18)',diff:'easy'},
+};
+
+/* ═══════════════════════════════════════════════════════════
+   BUILD GRIDS
+═══════════════════════════════════════════════════════════ */
+function buildGrid(id,clickFn){
+  const c=document.getElementById(id);if(!c)return;c.innerHTML='';
+  Object.entries(ACT_CONFIG).forEach(([aid,cfg])=>{
+    const d=document.createElement('div');
+    d.className='act-card'+(aid==='pushup'&&id==='actGrid'?' selected':'');
+    if(id==='actGrid')d.setAttribute('data-id',aid);
+    d.onclick=()=>clickFn(d,aid);
+    d.innerHTML=`<span class="act-diff diff-${cfg.diff}">${cfg.diff.toUpperCase()}</span><div class="act-icon-wrap" style="background:${cfg.bg};border:1px solid ${cfg.border};">${cfg.icon}</div><div class="act-name">${cfg.name}</div><div class="act-pts">${cfg.pts} pts/rep</div>`;
+    c.appendChild(d);
+  });
+}
+buildGrid('dashActGrid',(el,id)=>{
+  showPage('activity',document.querySelectorAll('.nav-btn')[2]);
+  setTimeout(()=>{
+    document.querySelectorAll('#actGrid .act-card').forEach(c=>c.classList.remove('selected'));
+    const t=document.querySelector(`#actGrid [data-id="${id}"]`);
+    if(t){t.classList.add('selected');selectAct(t,id);}
+  },120);
+});
+buildGrid('actGrid',selectAct);
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL STATE
+═══════════════════════════════════════════════════════════ */
+let consentGiven=false;
+let currentAct='pushup';
+let reps=0,repState='up',score=0;
+let sessionReps=0,sessionScore=0,sessionActs=0;
+let timerInterval=null,timerSec=0;
+let plankActive=false,burpeePhase=0,jumpBaseY=0,jumpPeakY=Infinity;
+let htBuffer=[];
+let reactActive=false,reactPromptTime=0,reactCount=0,reactTimes=[],reactTotalScore=0;
+let reactTimeout=null,currentReactCmd=null,reactLandmarks=null,shoulderRefWidth=null;
+let lbFilterCurrent='all';
+
+/* ═══════════════════════════════════════════════════════════
+   ██████ CAMERA MANAGER — FULLY REBUILT ██████
+   Handles device enumeration, front/rear switching,
+   MediaPipe lifecycle, mirroring, error recovery
+═══════════════════════════════════════════════════════════ */
+const CamManager = (() => {
+
+  // Per-camera state objects
+  const cams = {
+    ht:    { videoId:'htVideo',    canvasId:'htCanvas',    wrapId:'htCamWrap',    statusId:'htStatus',    liveDotId:'htLiveDot',    statusLabelId:'htStatusLabel', recBadgeId:'htRecBadge',    indicatorId:'htCamIndicator',    indicatorTxtId:'htCamIndicatorText',    toggleBtnId:'htToggleBtn',    toggleTxtId:'htToggleTxt',    stopBtnId:'htStopBtn',   errorId:'htError',    errorMsgId:'htErrorMsg',    placeholderId:'htPlaceholder',    facing:'user',   stream:null, pose:null, mpCam:null, running:false },
+    act:   { videoId:'actVideo',   canvasId:'actCanvas',   wrapId:'actCamWrap',   statusId:'actStatus',   liveDotId:'actLiveDot',   statusLabelId:'actStatusLabel', recBadgeId:'actRecBadge',   indicatorId:'actCamIndicator',   indicatorTxtId:'actCamIndicatorText',   toggleBtnId:'actToggleBtn',   toggleTxtId:'actToggleTxt',   stopBtnId:'actStopBtn',   errorId:'actError',   errorMsgId:'actErrorMsg',   placeholderId:'actPlaceholder',   facing:'user',   stream:null, pose:null, mpCam:null, running:false },
+    react: { videoId:'reactVideo', canvasId:'reactCanvas', wrapId:'reactCamWrap', statusId:'reactStatus', liveDotId:'reactLiveDot', statusLabelId:'reactStatusLabel',recBadgeId:'reactRecBadge', indicatorId:'reactCamIndicator', indicatorTxtId:'reactCamIndicatorText', toggleBtnId:'reactToggleBtn', toggleTxtId:'reactToggleTxt', stopBtnId:'reactStopBtn', errorId:'reactError', errorMsgId:'reactErrorMsg', placeholderId:'reactPlaceholder', facing:'user',   stream:null, pose:null, mpCam:null, running:false },
+  };
+
+  // Enumerate all video input devices once
+  let deviceList = [];
+  async function enumerateDevices() {
+    try {
+      // Request permission first so labels are populated
+      const tmp = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+      tmp.getTracks().forEach(t=>t.stop());
+    } catch(_){}
+    try {
+      const all = await navigator.mediaDevices.enumerateDevices();
+      deviceList = all.filter(d => d.kind === 'videoinput');
+    } catch(e) {
+      deviceList = [];
+    }
+  }
+
+  // Get the best constraint for desired facing mode
+  // Returns { deviceId } when possible, falls back to { facingMode }
+  function getConstraint(facing) {
+    if (deviceList.length === 0) {
+      return { facingMode: { ideal: facing } };
+    }
+    if (deviceList.length === 1) {
+      // Only one camera — just use it
+      return { deviceId: { exact: deviceList[0].deviceId } };
+    }
+    // Try to find by label keywords
+    const rearKeywords = ['back','rear','environment','main','wide'];
+    const frontKeywords = ['front','face','selfie','user','facetime'];
+    const keywords = facing === 'environment' ? rearKeywords : frontKeywords;
+    const match = deviceList.find(d =>
+      keywords.some(k => d.label.toLowerCase().includes(k))
+    );
+    if (match) {
+      return { deviceId: { exact: match.deviceId } };
+    }
+    // Fallback: for rear use last device, for front use first
+    const dev = facing === 'environment'
+      ? deviceList[deviceList.length - 1]
+      : deviceList[0];
+    return { deviceId: { exact: dev.deviceId } };
+  }
+
+  // Apply/remove CSS mirror class
+  function applyMirror(cam) {
+    const video  = document.getElementById(cam.videoId);
+    const canvas = document.getElementById(cam.canvasId);
+    // Front camera: mirror both video and canvas so pose overlay aligns
+    const shouldMirror = cam.facing === 'user';
+    if (shouldMirror) {
+      video.classList.add('mirrored');
+      canvas.classList.add('mirrored');
+    } else {
+      video.classList.remove('mirrored');
+      canvas.classList.remove('mirrored');
+    }
+  }
+
+  // Update all UI labels for a camera
+  function updateUI(cam) {
+    const isRear  = cam.facing === 'environment';
+    const label   = isRear ? 'Rear' : 'Front';
+    const running = cam.running;
+
+    // Indicator pill
+    const ind = document.getElementById(cam.indicatorId);
+    if (ind) {
+      ind.className = 'cam-indicator' + (isRear ? ' rear' : '');
+      document.getElementById(cam.indicatorTxtId).textContent = label + ' Camera';
+    }
+
+    // Toggle button text
+    const tTxt = document.getElementById(cam.toggleTxtId);
+    if (tTxt) tTxt.textContent = isRear ? 'Switch to Front' : 'Switch to Rear';
+
+    // Live dot + status label
+    const dot = document.getElementById(cam.liveDotId);
+    const lbl = document.getElementById(cam.statusLabelId);
+    if (dot) dot.style.display = running ? 'inline-block' : 'none';
+    if (lbl) lbl.style.color   = running ? '#4ade80' : 'var(--muted)';
+    if (lbl && !running) lbl.textContent = 'Camera Off';
+    else if (lbl && running) lbl.textContent = label + ' Camera Active';
+
+    // Rec badge
+    const rec = document.getElementById(cam.recBadgeId);
+    if (rec) rec.style.display = running ? 'flex' : 'none';
+
+    // Placeholder
+    const ph = document.getElementById(cam.placeholderId);
+    if (ph) ph.style.display = running ? 'none' : 'flex';
+
+    // Stop button
+    const sb = document.getElementById(cam.stopBtnId);
+    if (sb) sb.disabled = !running;
+  }
+
+  function showError(cam, msg) {
+    const el  = document.getElementById(cam.errorId);
+    const msg_ = document.getElementById(cam.errorMsgId);
+    const st  = document.getElementById(cam.statusId);
+    if (el)  { el.classList.add('show'); }
+    if (msg_){ msg_.textContent = msg; }
+    if (st)  { st.textContent = '❌ ' + msg; }
+  }
+
+  function clearError(cam) {
+    const el = document.getElementById(cam.errorId);
+    if (el) el.classList.remove('show');
+  }
+
+  // Fully stop a camera — stream, mediapipe, all
+  async function stop(key) {
+    const cam = cams[key];
+    if (!cam) return;
+
+    cam.running = false;
+
+    // Stop MediaPipe camera wrapper first
+    if (cam.mpCam) {
+      try { cam.mpCam.stop(); } catch(_){}
+      cam.mpCam = null;
+    }
+
+    // Stop raw stream tracks
+    if (cam.stream) {
+      cam.stream.getTracks().forEach(t => { try { t.stop(); } catch(_){} });
+      cam.stream = null;
+    }
+
+    // Clear video src
+    const video = document.getElementById(cam.videoId);
+    if (video) {
+      video.srcObject = null;
+      video.load();
+    }
+
+    // Clear canvas
+    const canvas = document.getElementById(cam.canvasId);
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Destroy pose (must recreate to avoid stale state)
+    cam.pose = null;
+
+    // UI
+    updateUI(cam);
+    clearError(cam);
+
+    const st = document.getElementById(cam.statusId);
+    if (st) st.textContent = 'Camera stopped';
+
+    // Key-specific cleanup
+    if (key === 'act') {
+      clearInterval(timerInterval);
+      document.getElementById('actStopBtn').disabled = true;
+    }
+    if (key === 'react') {
+      reactActive = false;
+      clearTimeout(reactTimeout);
+      document.getElementById('beginTestBtn').disabled = true;
+      document.getElementById('reactStopBtn').disabled = true;
+    }
+    if (key === 'ht') {
+      htBuffer = [];
+      document.getElementById('htLiveDot').style.display = 'none';
+    }
+  }
+
+  // Start a camera with current facing mode
+  async function start(key) {
+    if (!consentGiven) { alert('Please accept the privacy notice first.'); return; }
+    const cam = cams[key];
+    if (!cam) return;
+
+    // Stop first if already running
+    if (cam.running) { await stop(key); await new Promise(r=>setTimeout(r,300)); }
+
+    clearError(cam);
+    const st = document.getElementById(cam.statusId);
+    if (st) st.textContent = 'Starting camera…';
+
+    const video  = document.getElementById(cam.videoId);
+    const canvas = document.getElementById(cam.canvasId);
+    const ctx    = canvas.getContext('2d');
+
+    // Enumerate devices if not done yet
+    if (deviceList.length === 0) await enumerateDevices();
+
+    const videoConstraint = getConstraint(cam.facing);
+
+    try {
+      cam.stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          ...videoConstraint,
+          width:  { ideal: 1280, min: 640 },
+          height: { ideal: 720,  min: 480 },
+          frameRate: { ideal: 30, min: 15 },
+        },
+        audio: false
+      });
+    } catch(err) {
+      // If deviceId exact fails, fallback to facingMode
+      console.warn('[CamManager] Exact constraint failed, trying facingMode fallback:', err);
+      try {
+        cam.stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: cam.facing },
+            width:  { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false
+        });
+      } catch(err2) {
+        // Final fallback — any camera
+        try {
+          cam.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          console.warn('[CamManager] Using any available camera as last resort');
+        } catch(err3) {
+          showError(cam, getReadableError(err3));
+          updateUI(cam);
+          return;
+        }
+      }
+    }
+
+    // Detect actual facing from track settings
+    const track    = cam.stream.getVideoTracks()[0];
+    const settings = track ? track.getSettings() : {};
+    if (settings.facingMode) {
+      cam.facing = settings.facingMode; // trust what the browser reports
+    }
+
+    // Attach stream to video
+    video.srcObject = cam.stream;
+    video.muted     = true;
+    video.playsInline = true;
+
+    // Wait for metadata
+    await new Promise((resolve, reject) => {
+      video.onloadedmetadata = resolve;
+      video.onerror = reject;
+      setTimeout(resolve, 5000); // timeout failsafe
+    });
+
+    // Explicitly play (needed on some browsers)
+    try { await video.play(); } catch(_) {}
+
+    // Match canvas to actual video dimensions
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+
+    // Apply mirror for front cam
+    applyMirror(cam);
+
+    cam.running = true;
+    updateUI(cam);
+
+    if (st) st.textContent = getReadyMessage(key, cam.facing);
+
+    // Build fresh MediaPipe Pose instance
+    cam.pose = new Pose({
+      locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`
+    });
+    cam.pose.setOptions({
+      modelComplexity: key === 'ht' ? 2 : 1,
+      smoothLandmarks: true,
+      enableSegmentation: false,
+      minDetectionConfidence: 0.50,
+      minTrackingConfidence:  0.50,
+    });
+    cam.pose.onResults(results => handlePoseResults(key, results, canvas, ctx));
+
+    // Use MediaPipe Camera wrapper for frame loop
+    cam.mpCam = new Camera(video, {
+      onFrame: async () => {
+        if (cam.pose && cam.running) {
+          try {
+            await cam.pose.send({ image: video });
+          } catch(e) {
+            // Silently ignore frame errors
+          }
+        }
+      },
+      width:  video.videoWidth  || 640,
+      height: video.videoHeight || 480,
+    });
+    cam.mpCam.start();
+
+    // Key-specific post-start
+    if (key === 'act') {
+      startActivityTimer();
+      document.getElementById('actStopBtn').disabled = false;
+    }
+    if (key === 'react') {
+      document.getElementById('beginTestBtn').disabled = false;
+      document.getElementById('reactStopBtn').disabled = false;
+    }
+    if (key === 'ht') {
+      document.getElementById('htLiveDot').style.display = 'inline-block';
+    }
+
+  } // end start()
+
+  // Toggle between front and rear
+  async function toggle(key) {
+    const cam = cams[key];
+    if (!cam) return;
+
+    // Prevent rapid toggling
+    const btn = document.getElementById(cam.toggleBtnId);
+    if (btn) {
+      btn.disabled = true;
+      const svgEl = btn.querySelector('svg');
+      if (svgEl) svgEl.classList.add('spin');
+    }
+
+    const wasRunning = cam.running;
+    const newFacing  = cam.facing === 'user' ? 'environment' : 'user';
+    cam.facing = newFacing;
+
+    if (wasRunning) {
+      await stop(key);
+      await new Promise(r => setTimeout(r, 400));
+      await start(key);
+    } else {
+      // Just update UI labels without starting
+      updateUI(cam);
+      const tTxt = document.getElementById(cam.toggleTxtId);
+      if (tTxt) tTxt.textContent = newFacing === 'environment' ? 'Switch to Front' : 'Switch to Rear';
+      const ind = document.getElementById(cam.indicatorId);
+      if (ind) {
+        ind.className = 'cam-indicator' + (newFacing === 'environment' ? ' rear' : '');
+        document.getElementById(cam.indicatorTxtId).textContent = (newFacing === 'environment' ? 'Rear' : 'Front') + ' Camera';
+      }
+    }
+
+    // Re-enable toggle button
+    setTimeout(() => {
+      if (btn) {
+        btn.disabled = false;
+        const svgEl = btn.querySelector('svg');
+        if (svgEl) svgEl.classList.remove('spin');
+      }
+    }, 800);
+  }
+
+  function getReadyMessage(key, facing) {
+    const side = facing === 'environment' ? 'Rear' : 'Front';
+    if (key === 'ht')    return `${side} camera active — Stand straight, full body in frame`;
+    if (key === 'act')   return `${side} camera active — ${ACT_CONFIG[currentAct]?.instr || ''}`;
+    if (key === 'react') return `${side} camera active — Press Begin Test!`;
+    return `${side} camera active`;
+  }
+
+  function getReadableError(err) {
+    if (!err) return 'Unknown camera error';
+    const name = err.name || '';
+    if (name === 'NotAllowedError'  || name === 'PermissionDeniedError') return 'Camera permission denied — please allow camera access in your browser settings';
+    if (name === 'NotFoundError'    || name === 'DevicesNotFoundError')  return 'No camera found on this device';
+    if (name === 'NotReadableError' || name === 'TrackStartError')       return 'Camera is in use by another app — close it and try again';
+    if (name === 'OverconstrainedError')                                  return 'Camera does not support the requested settings — try switching cameras';
+    if (name === 'SecurityError')                                         return 'Camera blocked — use HTTPS or localhost';
+    return err.message || 'Camera error — please try again';
+  }
+
+  // Public interface
+  return { start, stop, toggle, cams };
+
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   POSE RESULT ROUTER
+═══════════════════════════════════════════════════════════ */
+function handlePoseResults(key, results, canvas, ctx) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!results.poseLandmarks) {
+    const msgs = {
+      ht:    'No person detected — move back until full body is visible',
+      act:   'No person detected — move into frame',
+      react: 'No person detected — stand facing the camera',
+    };
+    setStatusText(key, msgs[key] || 'No person detected');
+    return;
+  }
+
+  drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS,
+    { color: 'rgba(79,142,247,0.5)', lineWidth: 2 });
+  drawLandmarks(ctx, results.poseLandmarks,
+    { color: '#ffd700', lineWidth: 1, radius: 3 });
+
+  if (key === 'ht')    processHeightFrame(results.poseLandmarks, canvas, ctx);
+  if (key === 'act')   processActivityFrame(results.poseLandmarks, canvas, ctx);
+  if (key === 'react') {
+    reactLandmarks = results.poseLandmarks;
+    if (reactActive) checkReaction(results.poseLandmarks);
+  }
+}
+
+function setStatusText(key, msg) {
+  const ids = { ht:'htStatus', act:'actStatus', react:'reactStatus' };
+  const el = document.getElementById(ids[key]);
+  if (el) el.textContent = msg;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HEIGHT PROCESSING
+═══════════════════════════════════════════════════════════ */
+function processHeightFrame(lm, canvas, ctx) {
+  const W = canvas.width, H = canvas.height;
+  const nose = lm[0], lA = lm[27], rA = lm[28];
+  const lS = lm[11], rS = lm[12], lE = lm[7], rE = lm[8];
+
+  // Lowered visibility threshold from 0.45 to 0.35 to reduce false errors
+  const vis = [nose, lA, rA, lS, rS].every(p => p.visibility > 0.35);
+  if (!vis) {
+    setStatusText('ht', 'Move back — ensure HEAD and FEET are both fully visible');
+    return;
+  }
+
+  // Use nose as the top reference point
+  const noseY   = nose.y * H;
+  const bottomY = Math.max(lA.y, rA.y) * H;
+  const bodyPx  = bottomY - noseY;
+  if (bodyPx < 30) return; // body too small to measure
+
+  const sPx = Math.abs(lS.x - rS.x) * W;
+  if (sPx < 10) return;
+
+  // === IMPROVED HEIGHT ESTIMATION ===
+
+  // Reference shoulder width: average biacromial breadth ~38 cm (was 44, too high)
+  const REF_SHOULDER_CM = 38;
+
+  // Pixels-per-cm calibration from shoulders
+  const ppc = sPx / REF_SHOULDER_CM;
+
+  // Estimate distance using pinhole camera model
+  // Focal length heuristic: ~85% of frame width gives a good approximation
+  // for typical phone/laptop cameras with ~60-70° horizontal FOV
+  const focalPx = W * 0.85;
+  const distCm  = (REF_SHOULDER_CM * focalPx) / sPx;
+
+  // Convert body pixel height (nose to ankles) to cm
+  const bodyCm = bodyPx / ppc;
+
+  // Add proportional scalp offset (top of head above nose)
+  // Anatomically, nose-to-top-of-head is ~12-14% of total height
+  // So nose-to-ankle is ~86-88% of total height
+  // Total height = bodyCm / 0.87
+  const htCm = bodyCm / 0.87;
+
+  htBuffer.push({ h: htCm, d: distCm });
+  if (htBuffer.length > 25) htBuffer.shift();
+
+  // === OUTLIER REJECTION using IQR ===
+  let heights = htBuffer.map(b => b.h).sort((a, b) => a - b);
+  let dists   = htBuffer.map(b => b.d).sort((a, b) => a - b);
+  let avgH, avgD;
+
+  if (heights.length >= 6) {
+    const q1i = Math.floor(heights.length * 0.25);
+    const q3i = Math.floor(heights.length * 0.75);
+    const iqr = heights[q3i] - heights[q1i];
+    const lo  = heights[q1i] - 1.5 * iqr;
+    const hi  = heights[q3i] + 1.5 * iqr;
+    const filtered = htBuffer.filter(b => b.h >= lo && b.h <= hi);
+    if (filtered.length > 0) {
+      avgH = filtered.reduce((a, b) => a + b.h, 0) / filtered.length;
+      avgD = filtered.reduce((a, b) => a + b.d, 0) / filtered.length;
+    } else {
+      avgH = htBuffer.reduce((a, b) => a + b.h, 0) / htBuffer.length;
+      avgD = htBuffer.reduce((a, b) => a + b.d, 0) / htBuffer.length;
+    }
+  } else {
+    avgH = htBuffer.reduce((a, b) => a + b.h, 0) / htBuffer.length;
+    avgD = htBuffer.reduce((a, b) => a + b.d, 0) / htBuffer.length;
+  }
+
+  const conf = Math.min(99, Math.round((lm[0].visibility + lm[27].visibility + lm[28].visibility) / 3 * 100));
+
+  // Update metrics
+  document.getElementById('htVal').textContent     = avgH.toFixed(1);
+  document.getElementById('distVal').textContent   = (avgD / 100).toFixed(2);
+  document.getElementById('confVal').textContent   = conf + '%';
+  document.getElementById('htConfBadge').textContent = 'Confidence: ' + conf + '%';
+  document.getElementById('htCatVal').textContent  = avgH < 155 ? 'Short' : avgH < 168 ? 'Average' : avgH < 183 ? 'Tall' : 'Very Tall';
+  setStatusText('ht', 'Detecting — hold still for best accuracy');
+
+  // Draw guide lines
+  const topY = noseY - (bodyPx * 0.15); // visual guide for estimated top-of-head
+  ctx.save();
+  ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(16, topY);    ctx.lineTo(W - 16, topY);    ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(16, bottomY); ctx.lineTo(W - 16, bottomY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Arrow
+  const mx = W - 28;
+  ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(mx, topY); ctx.lineTo(mx, bottomY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(mx-5, topY+9);    ctx.lineTo(mx, topY);    ctx.lineTo(mx+5, topY+9);    ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(mx-5, bottomY-9); ctx.lineTo(mx, bottomY); ctx.lineTo(mx+5, bottomY-9); ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(8, topY - 22, 178, 20);
+  ctx.fillStyle = '#22c55e'; ctx.font = 'bold 12px Segoe UI';
+  ctx.fillText(`Height: ${avgH.toFixed(1)} cm`, 14, topY - 7);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(8, bottomY + 4, 196, 20);
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillText(`Distance: ${(avgD / 100).toFixed(2)} m`, 14, bottomY + 18);
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MANUAL BMI CALCULATOR
+═══════════════════════════════════════════════════════════ */
+function calcManual() {
+  const ft  = parseFloat(document.getElementById('manualFt').value) || 0;
+  const inc = parseFloat(document.getElementById('manualIn').value) || 0;
+  const cm  = parseFloat(document.getElementById('manualCm').value) || 0;
+  const kg  = parseFloat(document.getElementById('manualKg').value) || 0;
+  let hCm   = cm > 0 ? cm : (ft * 30.48 + inc * 2.54);
+  if (hCm < 50 || hCm > 280) { alert('Please enter a valid height.'); return; }
+  const hM  = hCm / 100;
+  const bmi = kg > 0 ? +(kg / (hM * hM)).toFixed(1) : null;
+  let cat = '—', cc = '#94a3b8', adv = '';
+  if (bmi !== null) {
+    if      (bmi < 18.5) { cat='Underweight'; cc='#60a5fa'; adv='Consider a high-protein diet and strength training to build muscle mass safely.'; }
+    else if (bmi < 25)   { cat='Normal';      cc='#4ade80'; adv='Excellent BMI range! Maintain with regular exercise and a balanced diet.'; }
+    else if (bmi < 30)   { cat='Overweight';  cc='#fbbf24'; adv='Consider 30 min of cardio 4x per week and monitoring caloric intake.'; }
+    else                 { cat='Obese';        cc='#f87171'; adv='Consult a healthcare professional for a personalised plan.'; }
+    const imin = +(18.5*hM*hM).toFixed(1), imax = +(24.9*hM*hM).toFixed(1);
+    if (bmi < 18.5 || bmi >= 25) adv += ` Ideal weight for your height: ${imin}–${imax} kg.`;
+  }
+  document.getElementById('mr-cm').textContent   = hCm.toFixed(1) + ' cm';
+  document.getElementById('mr-bmi').textContent  = bmi !== null ? bmi : '—';
+  document.getElementById('mr-cat').textContent  = cat;
+  document.getElementById('mr-cat').style.color  = cc;
+  document.getElementById('manualResultRow').style.display = 'grid';
+  document.getElementById('bmiBarSection').style.display   = '';
+  if (bmi !== null) {
+    const pct = Math.min(100, Math.max(0, ((bmi - 15) / 25) * 100));
+    document.getElementById('bmiMarker').style.left    = pct + '%';
+    document.getElementById('bmiScaleVal').textContent = `BMI ${bmi} — ${cat}`;
+    document.getElementById('bmiScaleVal').style.color = cc;
+    const a = document.getElementById('manualAdvice');
+    a.textContent = adv;
+    a.style.cssText = `background:${cc}18;border:1px solid ${cc}30;color:${cc};border-radius:10px;padding:11px 13px;font-size:0.8rem;line-height:1.6;margin-top:12px;`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACTIVITY TIMER
+═══════════════════════════════════════════════════════════ */
+function startActivityTimer() {
+  clearInterval(timerInterval);
+  timerSec = 0;
+  timerInterval = setInterval(() => {
+    timerSec++;
+    document.getElementById('liveTimer').textContent =
+      String(Math.floor(timerSec/60)).padStart(2,'0') + ':' +
+      String(timerSec%60).padStart(2,'0');
+    if (timerSec > 0)
+      document.getElementById('repRateVal').textContent =
+        Math.round(reps / (timerSec / 60)) || 0;
+    if ((currentAct==='plank'||currentAct==='balance'||currentAct==='tpose') && plankActive) {
+      score = Math.round(timerSec * ACT_CONFIG[currentAct].pts);
+      document.getElementById('ls-score').textContent = score;
+    }
+  }, 1000);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACTIVITY LOGIC
+═══════════════════════════════════════════════════════════ */
+function selectAct(el, id) {
+  document.querySelectorAll('#actGrid .act-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  currentAct = id;
+  resetActivity();
+  const cfg = ACT_CONFIG[id];
+  document.getElementById('liveActName').textContent  = cfg.name;
+  document.getElementById('liveActInstr').textContent = cfg.instr;
+  document.getElementById('actInstrTitle').innerHTML  =
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${cfg.name} Guide`;
+  document.getElementById('actInstrList').innerHTML =
+    cfg.steps.map((s,i)=>`<li><span class="step-num">${i+1}</span>${s}</li>`).join('');
+}
+
+function resetActivity() {
+  reps=0; repState='up'; score=0;
+  timerSec=0; plankActive=false; burpeePhase=0; jumpBaseY=0; jumpPeakY=Infinity;
+  clearInterval(timerInterval);
+  ['ls-reps','ls-score','ls-angle','ls-best','calorieVal','repRateVal'].forEach(id=>{
+    document.getElementById(id).textContent = id==='ls-angle' ? '—' : '0';
+  });
+  document.getElementById('liveTimer').textContent = '00:00';
+  document.getElementById('progBar').style.width   = '0%';
+  document.getElementById('phaseText').textContent = 'Select an exercise and press Start';
+  document.getElementById('phaseSub').textContent  = 'Camera will detect your movements automatically';
+  document.getElementById('phaseDot').className    = 'phase-dot';
+}
+
+function ang3(a,b,c){
+  const ab={x:a.x-b.x,y:a.y-b.y}, cb={x:c.x-b.x,y:c.y-b.y};
+  const d=ab.x*cb.x+ab.y*cb.y;
+  const m=Math.sqrt((ab.x**2+ab.y**2))*Math.sqrt((cb.x**2+cb.y**2));
+  return m===0 ? 0 : Math.acos(Math.max(-1,Math.min(1,d/m)))*(180/Math.PI);
+}
+
+function drawAL(ctx,lm,i,a,W,H){
+  const x=lm[i].x*W, y=lm[i].y*H;
+  ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(x+8,y-20,52,20);
+  ctx.fillStyle='#ffd700'; ctx.font='bold 11px Segoe UI';
+  ctx.fillText(Math.round(a)+'°', x+12, y-5);
+}
+
+function addRep(){
+  reps++; sessionReps++;
+  score = Math.round(reps * ACT_CONFIG[currentAct].pts);
+  const best = Math.max(score, parseInt(document.getElementById('ls-best').textContent)||0);
+  document.getElementById('ls-reps').textContent   = reps;
+  document.getElementById('ls-score').textContent  = score;
+  document.getElementById('ls-best').textContent   = best;
+  document.getElementById('calorieVal').textContent= (Math.round(reps*ACT_CONFIG[currentAct].cal*10)/10).toFixed(1);
+  document.getElementById('progBar').style.width   = Math.min(100,(reps/20)*100)+'%';
+  document.getElementById('h-total-reps').textContent  = sessionReps;
+  sessionScore += ACT_CONFIG[currentAct].pts;
+  document.getElementById('h-total-score').textContent = Math.round(sessionScore);
+  if(reps===1)  triggerAch('First Rep! Keep going!');
+  if(reps===10) triggerAch('10 Reps — On Fire!');
+  if(reps===25) triggerAch('25 Reps — Beast Mode!');
+  if(reps===50) triggerAch('50 Reps — Legendary!');
+}
+
+function setPhase(t,s,d=''){
+  document.getElementById('phaseText').textContent = t;
+  document.getElementById('phaseSub').textContent  = s || ACT_CONFIG[currentAct].instr;
+  document.getElementById('phaseDot').className    = 'phase-dot'+(d?' '+d:'');
+}
+
+function processActivityFrame(lm, canvas, ctx) {
+  const W=canvas.width, H=canvas.height;
+  let ang=null;
+
+  switch(currentAct){
+    case 'pushup':{const a=ang3(lm[11],lm[13],lm[15]);ang=a;drawAL(ctx,lm,13,a,W,H);if(a<85&&repState==='up'){repState='down';setPhase('Lower — good form!','Keep going down');}else if(a>155&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Great push-up!','green');}else setPhase(repState==='up'?'Lower your chest':'Push back up!','');break;}
+    case 'squat':{const a=ang3(lm[23],lm[25],lm[27]);ang=a;drawAL(ctx,lm,25,a,W,H);if(a<100&&repState==='up'){repState='down';setPhase('Good squat!','Now stand back up');}else if(a>162&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Squat again','green');}else setPhase(repState==='up'?'Squat down':'Stand up fully!','');break;}
+    case 'jumping':{const up=lm[15].y<lm[11].y-0.06&&lm[16].y<lm[12].y-0.06;if(up&&repState==='up'){repState='down';setPhase('Arms raised!','Lower them back down');}else if(!up&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Raise arms again','green');}else setPhase(repState==='up'?'Raise both arms!':'Lower arms down','');break;}
+    case 'pullup':{const a=ang3(lm[11],lm[13],lm[15]);ang=a;drawAL(ctx,lm,13,a,W,H);if(a<70&&repState==='up'){repState='down';setPhase('Chin above bar!','Now lower down');}else if(a>155&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Pull again','green');}else setPhase(repState==='up'?'Pull yourself up!':'Lower all the way','');break;}
+    case 'situp':{const a=ang3(lm[11],lm[23],lm[25]);ang=a;drawAL(ctx,lm,23,a,W,H);if(a<70&&repState==='up'){repState='down';setPhase('Top!','Lower back down');}else if(a>140&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Sit up again','green');}else setPhase(repState==='up'?'Sit up!':'Lower back down','');break;}
+    case 'highknee':{const up=lm[25].y<lm[23].y-0.05||lm[26].y<lm[24].y-0.05;if(up&&repState==='up'){repState='down';setPhase('Knee up!','Lower it');}else if(!up&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Raise again','green');}else setPhase(repState==='up'?'Raise a knee high!':'Lower foot down','');break;}
+    case 'lunge':{const a=ang3(lm[23],lm[25],lm[27]);ang=a;drawAL(ctx,lm,25,a,W,H);if(a<100&&repState==='up'){repState='down';setPhase('Deep lunge!','Return to standing');}else if(a>160&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Lunge again','green');}else setPhase(repState==='up'?'Step forward and lunge':'Stand back up','');break;}
+    case 'plank':{const ok=Math.abs((lm[11].y-lm[27].y))<0.2;plankActive=ok;if(ok){setPhase('Perfect Plank — Holding!','Score increases every second','green');}else setPhase('Straighten your body!','Keep hips aligned','amber');break;}
+    case 'shoulderpress':{const up=lm[15].y<lm[11].y-0.15&&lm[16].y<lm[12].y-0.15;if(up&&repState==='up'){repState='down';setPhase('Arms fully pressed!','Lower to shoulders');}else if(!up&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Press again','green');}else setPhase(repState==='up'?'Press arms overhead!':'Lower to shoulders','');break;}
+    case 'bicep':{const a=ang3(lm[11],lm[13],lm[15]);ang=a;drawAL(ctx,lm,13,a,W,H);if(a<60&&repState==='up'){repState='down';setPhase('Fully curled!','Lower arm back down');}else if(a>155&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Curl again','green');}else setPhase(repState==='up'?'Curl arm up!':'Lower arm fully','');break;}
+    case 'mountain':{const in_=lm[25].y<lm[23].y-0.07||lm[26].y<lm[24].y-0.07;if(in_&&repState==='up'){repState='down';setPhase('Knee driven in!','Extend back out');}else if(!in_&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Drive again','green');}else setPhase(repState==='up'?'Drive knee to chest!':'Extend leg back','');break;}
+    case 'burpee':{const hy=lm[0].y,ay=(lm[27].y+lm[28].y)/2,ea=ang3(lm[11],lm[13],lm[15]);const standing=hy<0.4&&(ay-hy)>0.5,planking=hy>0.35&&ea>140;if(standing&&burpeePhase===0){burpeePhase=1;setPhase('Drop to plank!','Place hands on floor');}else if(planking&&burpeePhase===1){burpeePhase=2;setPhase('Jump up!','Explode upward');}else if(standing&&burpeePhase===2){burpeePhase=0;addRep();setPhase('Burpee done!','','green');}else setPhase('Burpee in progress...','');break;}
+    case 'balance':{const ok=Math.abs(lm[27].y-lm[28].y)>0.08;plankActive=ok;if(ok){setPhase('Balanced — Scoring!','Hold steady','green');}else setPhase('Lift one foot!','Balance on one leg','');break;}
+    case 'tpose':{const flat=Math.abs(lm[15].y-lm[11].y)<0.08&&Math.abs(lm[16].y-lm[12].y)<0.08;plankActive=flat;if(flat){setPhase('Perfect T-Pose — Scoring!','Hold arms horizontal','green');}else setPhase('Extend both arms sideways!','Keep arms horizontal','');break;}
+    case 'calf':{const tip=lm[27].y<lm[25].y-0.01;if(tip&&repState==='up'){repState='down';setPhase('On tiptoes!','Lower heels down');}else if(!tip&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Rise again','green');}else setPhase(repState==='up'?'Rise on tiptoes!':'Lower heels down','');break;}
+    case 'tricep':{const a=ang3(lm[11],lm[13],lm[15]);ang=a;drawAL(ctx,lm,13,a,W,H);if(a<90&&repState==='up'){repState='down';setPhase('Lowered!','Push back up');}else if(a>155&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Lower again','green');}else setPhase(repState==='up'?'Lower body down':'Push back up!','');break;}
+    case 'longjump':{const sp=Math.abs(lm[27].x-lm[28].x)*W,cr=ang3(lm[23],lm[25],lm[27])<120;if(cr&&repState==='up'){repState='down';setPhase('Crouched — JUMP!','Explode forward!');}else if(sp>W*0.22&&repState==='down'){repState='up';addRep();setPhase(`Jump ~${Math.round(sp/4)}cm!`,'Jump again','green');}else setPhase(repState==='up'?'Crouch to prepare':'Jump as far as you can!','');break;}
+    case 'highjump':{const hy=lm[0].y*H;if(!jumpBaseY)jumpBaseY=hy;if(hy<jumpPeakY)jumpPeakY=hy;const cr=ang3(lm[23],lm[25],lm[27])<120;if(cr&&repState==='up'){repState='down';jumpPeakY=Infinity;setPhase('Crouched — JUMP!','Go!');}else if(hy<jumpBaseY-25&&repState==='down'){const h=Math.round((jumpBaseY-jumpPeakY)*0.35);repState='up';addRep();setPhase(`Jump ~${h}cm high!`,'Jump again','green');jumpPeakY=Infinity;}else setPhase(repState==='up'?'Crouch to prepare':'Jump as high as possible!','');break;}
+    case 'deepbreath':{const sy=(lm[11].y+lm[12].y)/2;if(sy<0.38&&repState==='up'){repState='down';setPhase('Full inhale!','Breathe out slowly');}else if(sy>0.44&&repState==='down'){repState='up';addRep();setPhase('Breath cycle done!','Inhale again','green');}else setPhase(repState==='up'?'Breathe in deeply...':'Breathe out slowly...','');break;}
+    case 'armcircle':{const out=Math.abs(lm[15].y-lm[11].y)<0.1&&Math.abs(lm[16].y-lm[12].y)<0.1,down=lm[15].y>lm[11].y+0.12&&lm[16].y>lm[12].y+0.12;if(out&&repState==='up'){repState='down';setPhase('Arms out — circle!','Complete the rotation');}else if(down&&repState==='down'){repState='up';addRep();setPhase('Rep counted!','Circle again','green');}else setPhase('Make large arm circles!','');break;}
+  }
+
+  if (ang !== null) {
+    document.getElementById('ls-angle').textContent    = Math.round(ang) + '°';
+    document.getElementById('actAngleBadge').textContent = 'Angle: ' + Math.round(ang) + '°';
+  }
+
+  // Canvas overlay
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(8,8,158,56);
+  ctx.fillStyle = '#60a5fa'; ctx.font = 'bold 13px Segoe UI'; ctx.fillText('Reps: '+reps, 16, 30);
+  ctx.fillStyle = '#4ade80'; ctx.fillText('Score: '+score, 16, 52);
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REACTION TESTS
+═══════════════════════════════════════════════════════════ */
+const REACT_CMDS=[
+  {cmd:'Raise LEFT Hand UP!',  color:'#60a5fa',detect:'leftUp',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"><path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>'},
+  {cmd:'Raise RIGHT Hand UP!', color:'#4ade80',detect:'rightUp',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round"><path d="M6 11V6a2 2 0 0 1 4 0M10 10V4a2 2 0 0 1 4 0v2M14 10.5V6a2 2 0 0 1 4 0v8"/><path d="M6 11a2 2 0 1 0-4 0v3a8 8 0 0 0 8 8h2c2.8 0 4.5-.86 5.99-2.34l3.6-3.6a2 2 0 0 0-2.83-2.82L17 15"/></svg>'},
+  {cmd:'Both Hands UP!',       color:'#fbbf24',detect:'bothUp',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"><path d="M12 2v8M8 6l4-4 4 4M5 14h14M8 14v6M16 14v6"/></svg>'},
+  {cmd:'Touch your HEAD!',     color:'#f87171',detect:'touchHead',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>'},
+  {cmd:'Hands on HIPS!',       color:'#c084fc',detect:'handsHips',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M9 12H5M15 12h4M9 21l3-7 3 7"/></svg>'},
+  {cmd:'SQUAT Down!',          color:'#34d399',detect:'squat',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v6l-3 6M12 12l3 6"/></svg>'},
+  {cmd:'STAND Straight!',      color:'#22d3ee',detect:'stand',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v14M9 20h6"/></svg>'},
+  {cmd:'Step FORWARD!',        color:'#fb923c',detect:'forward',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'},
+  {cmd:'Step BACK!',           color:'#a78bfa',detect:'back',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'},
+  {cmd:'Arms CROSS on Chest!', color:'#f472b6',detect:'crossChest',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'},
+];
+
+function beginReactionTest(){
+  if(!reactLandmarks){alert('Stand in camera view first!');return;}
+  shoulderRefWidth=Math.abs(reactLandmarks[11].x-reactLandmarks[12].x);
+  showNextReact();
+}
+
+function showNextReact(){
+  const cmd=REACT_CMDS[Math.floor(Math.random()*REACT_CMDS.length)];
+  currentReactCmd=cmd; reactActive=false;
+  const iw=document.getElementById('reactIconWrap');
+  iw.innerHTML=cmd.icon; iw.style.background=cmd.color+'22'; iw.style.borderColor=cmd.color+'44';
+  document.getElementById('reactCmd').textContent=cmd.cmd;
+  document.getElementById('reactCmd').style.color=cmd.color;
+  document.getElementById('reactSub').textContent='Get ready...';
+  document.getElementById('reactSpeed').style.display='none';
+  clearTimeout(reactTimeout);
+  reactTimeout=setTimeout(()=>{
+    reactActive=true; reactPromptTime=Date.now();
+    document.getElementById('reactSub').textContent='GO! Perform the action NOW!';
+  }, 1500+Math.random()*2000);
+}
+
+function checkReaction(lm){
+  if(!currentReactCmd||!reactActive)return;
+  const d=currentReactCmd.detect; let ok=false;
+  switch(d){
+    case 'leftUp':    ok=lm[15].y<lm[11].y-0.08; break;
+    case 'rightUp':   ok=lm[16].y<lm[12].y-0.08; break;
+    case 'bothUp':    ok=lm[15].y<lm[11].y-0.08&&lm[16].y<lm[12].y-0.08; break;
+    case 'touchHead': ok=lm[15].y<lm[0].y+0.06||lm[16].y<lm[0].y+0.06; break;
+    case 'handsHips': ok=Math.abs(lm[15].y-lm[23].y)<0.09||Math.abs(lm[16].y-lm[24].y)<0.09; break;
+    case 'squat':     ok=ang3(lm[23],lm[25],lm[27])<110; break;
+    case 'stand':     ok=ang3(lm[23],lm[25],lm[27])>165; break;
+    case 'forward':   {const sw=Math.abs(lm[11].x-lm[12].x);ok=shoulderRefWidth&&sw>shoulderRefWidth*1.18;break;}
+    case 'back':      {const sw=Math.abs(lm[11].x-lm[12].x);ok=shoulderRefWidth&&sw<shoulderRefWidth*0.82;break;}
+    case 'crossChest':{const mx=(lm[11].x+lm[12].x)/2;ok=Math.abs(lm[15].x-mx)<0.12&&Math.abs(lm[16].x-mx)<0.12;break;}
+  }
+  if(!ok)return;
+  reactActive=false;
+  const elapsed=Date.now()-reactPromptTime;
+  reactTimes.push(elapsed); reactCount++;
+  const pts=elapsed<400?20:elapsed<700?15:elapsed<1000?10:elapsed<1500?5:2;
+  reactTotalScore+=pts;
+  const best=Math.min(...reactTimes);
+  const avg=Math.round(reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length);
+  document.getElementById('reactAvg').textContent=avg+'ms';
+  document.getElementById('reactBest').textContent=best+'ms';
+  document.getElementById('reactCount').textContent=reactCount;
+  document.getElementById('reactScore').textContent=reactTotalScore;
+  const sp=document.getElementById('reactSpeed');
+  sp.style.display=''; sp.textContent=`${elapsed}ms — +${pts} pts`;
+  document.getElementById('reactSub').textContent='Detected! Next test loading...';
+  sessionScore+=pts; document.getElementById('h-total-score').textContent=Math.round(sessionScore);
+  const hist=document.getElementById('reactHistory');
+  if(hist.textContent.trim()==='No tests yet.')hist.innerHTML='';
+  hist.innerHTML+=`<span class="react-hist-item">${currentReactCmd.cmd}<span style="color:var(--cyan)">${elapsed}ms</span><span style="color:#4ade80">+${pts}pts</span></span>`;
+  if(elapsed<400)triggerAch('Lightning Reflexes!');
+  if(reactCount===5)triggerAch('5 Reaction Tests Complete!');
+  clearTimeout(reactTimeout);
+  setTimeout(showNextReact,1800);
+}
+
+function saveReactScore(){
+  if(reactTotalScore===0){alert('Complete at least one reaction test!');return;}
+  reps=reactCount; score=reactTotalScore; currentAct='reaction';
+  openSaveModal();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SAVE / LEADERBOARD
+═══════════════════════════════════════════════════════════ */
+function openSaveModal(){
+  if(score===0&&reps===0){alert('Complete some reps or score first!');return;}
+  document.getElementById('sv-reps').textContent  = reps;
+  document.getElementById('sv-score').textContent = score;
+  document.getElementById('sv-act').textContent   = (ACT_CONFIG[currentAct]?.name||currentAct).slice(0,8);
+  document.getElementById('saveModal').classList.add('open');
+  document.getElementById('playerName').focus();
+}
+function closeSaveModal(){document.getElementById('saveModal').classList.remove('open');}
+
+function saveScore(){
+  const raw=document.getElementById('playerName').value.trim();
+  if(!raw){alert('Please enter your name!');return;}
+  const name=raw.replace(/[<>\"'&]/g,'').substring(0,25);
+  if(!name){alert('Invalid name.');return;}
+  const entry={name,activity:currentAct,reps,score,date:new Date().toLocaleDateString('en-IN'),ts:Date.now()};
+  let local=JSON.parse(localStorage.getItem('sportiqLB')||'[]');
+  local.push({...entry,id:Date.now()});
+  localStorage.setItem('sportiqLB',JSON.stringify(local));
+  closeSaveModal(); showToast('Score saved!'); showConfetti();
+  sessionActs++; document.getElementById('h-activities').textContent=sessionActs;
+  document.getElementById('playerName').value='';
+  loadLeaderboard();
+}
+
+function filterLB(f,el){
+  lbFilterCurrent=f;
+  document.querySelectorAll('.lb-filter').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  loadLeaderboard();
+}
+
+function loadLeaderboard(){
+  const body=document.getElementById('lbBody');
+  body.innerHTML='<div class="lb-empty">Loading...</div>';
+  let data=JSON.parse(localStorage.getItem('sportiqLB')||'[]');
+  if(lbFilterCurrent!=='all')data=data.filter(e=>e.activity===lbFilterCurrent);
+  data.sort((a,b)=>b.score-a.score); data=data.slice(0,100);
+  document.getElementById('lb-total').textContent=JSON.parse(localStorage.getItem('sportiqLB')||'[]').length;
+  document.getElementById('lb-top').textContent=data[0]?.score||'—';
+  if(!data.length){body.innerHTML='<div class="lb-empty">No entries yet — be the first!</div>';return;}
+  body.innerHTML=data.map((e,i)=>{
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+    const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    return `<div class="lb-row"><span><span class="rank-num ${rc}">${med||i+1}</span></span><span class="lb-name">${esc(e.name)}</span><span class="lb-hide"><span class="lb-act-tag" style="background:rgba(79,142,247,0.1);color:#93c5fd;">${esc(ACT_CONFIG[e.activity]?.name||e.activity)}</span></span><span style="color:var(--muted);">${e.reps}</span><span><span class="lb-score">${e.score}</span></span><span class="lb-hide" style="color:var(--muted);font-size:0.78rem;">${e.date||'—'}</span></div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════ */
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function showPage(name,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');if(btn&&btn.classList)btn.classList.add('active');if(name==='leaderboard')loadLeaderboard();}
+function acceptConsent(){consentGiven=true;document.getElementById('consentModal').style.display='none';}
+function declineConsent(){document.getElementById('consentModal').innerHTML='<div class="consent-box"><h2 style="color:#ef4444">Access Denied</h2><p style="color:var(--muted);margin-top:14px;">Camera access is required. Reload to try again.</p></div>';}
+function showToast(msg){document.getElementById('toastMsg').textContent=msg;const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+function triggerAch(name){document.getElementById('achName').textContent=name;const p=document.getElementById('achPopup');p.classList.add('show');setTimeout(()=>p.classList.remove('show'),3500);}
+function showConfetti(){const cols=['#ffd700','#4f8ef7','#22c55e','#a855f7','#f97316','#00d4ff'];for(let i=0;i<55;i++){const el=document.createElement('div');el.className='confetti-piece';el.style.cssText=`left:${Math.random()*100}vw;background:${cols[i%6]};width:${6+Math.random()*7}px;height:${6+Math.random()*7}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*.4}s;`;document.body.appendChild(el);setTimeout(()=>el.remove(),4000);}}
+
+// Init
+setTimeout(loadLeaderboard, 500);
+</script>
+</body>
+</html>
