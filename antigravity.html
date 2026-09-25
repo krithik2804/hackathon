@@ -739,9 +739,9 @@ const CamManager = (() => {
 
   // Per-camera state objects
   const cams = {
-    ht:    { videoId:'htVideo',    canvasId:'htCanvas',    wrapId:'htCamWrap',    statusId:'htStatus',    liveDotId:'htLiveDot',    statusLabelId:'htStatusLabel', recBadgeId:'htRecBadge',    indicatorId:'htCamIndicator',    indicatorTxtId:'htCamIndicatorText',    toggleBtnId:'htToggleBtn',    toggleTxtId:'htToggleTxt',    stopBtnId:'htStopBtn',   errorId:'htError',    errorMsgId:'htErrorMsg',    placeholderId:'htPlaceholder',    facing:'user',   stream:null, pose:null, mpCam:null, running:false },
-    act:   { videoId:'actVideo',   canvasId:'actCanvas',   wrapId:'actCamWrap',   statusId:'actStatus',   liveDotId:'actLiveDot',   statusLabelId:'actStatusLabel', recBadgeId:'actRecBadge',   indicatorId:'actCamIndicator',   indicatorTxtId:'actCamIndicatorText',   toggleBtnId:'actToggleBtn',   toggleTxtId:'actToggleTxt',   stopBtnId:'actStopBtn',   errorId:'actError',   errorMsgId:'actErrorMsg',   placeholderId:'actPlaceholder',   facing:'user',   stream:null, pose:null, mpCam:null, running:false },
-    react: { videoId:'reactVideo', canvasId:'reactCanvas', wrapId:'reactCamWrap', statusId:'reactStatus', liveDotId:'reactLiveDot', statusLabelId:'reactStatusLabel',recBadgeId:'reactRecBadge', indicatorId:'reactCamIndicator', indicatorTxtId:'reactCamIndicatorText', toggleBtnId:'reactToggleBtn', toggleTxtId:'reactToggleTxt', stopBtnId:'reactStopBtn', errorId:'reactError', errorMsgId:'reactErrorMsg', placeholderId:'reactPlaceholder', facing:'user',   stream:null, pose:null, mpCam:null, running:false },
+    ht:    { videoId:'htVideo',    canvasId:'htCanvas',    wrapId:'htCamWrap',    statusId:'htStatus',    liveDotId:'htLiveDot',    statusLabelId:'htStatusLabel', recBadgeId:'htRecBadge',    indicatorId:'htCamIndicator',    indicatorTxtId:'htCamIndicatorText',    toggleBtnId:'htToggleBtn',    toggleTxtId:'htToggleTxt',    stopBtnId:'htStopBtn',   errorId:'htError',    errorMsgId:'htErrorMsg',    placeholderId:'htPlaceholder',    facing:'user',   stream:null, pose:null, rafId:null, running:false },
+    act:   { videoId:'actVideo',   canvasId:'actCanvas',   wrapId:'actCamWrap',   statusId:'actStatus',   liveDotId:'actLiveDot',   statusLabelId:'actStatusLabel', recBadgeId:'actRecBadge',   indicatorId:'actCamIndicator',   indicatorTxtId:'actCamIndicatorText',   toggleBtnId:'actToggleBtn',   toggleTxtId:'actToggleTxt',   stopBtnId:'actStopBtn',   errorId:'actError',   errorMsgId:'actErrorMsg',   placeholderId:'actPlaceholder',   facing:'user',   stream:null, pose:null, rafId:null, running:false },
+    react: { videoId:'reactVideo', canvasId:'reactCanvas', wrapId:'reactCamWrap', statusId:'reactStatus', liveDotId:'reactLiveDot', statusLabelId:'reactStatusLabel',recBadgeId:'reactRecBadge', indicatorId:'reactCamIndicator', indicatorTxtId:'reactCamIndicatorText', toggleBtnId:'reactToggleBtn', toggleTxtId:'reactToggleTxt', stopBtnId:'reactStopBtn', errorId:'reactError', errorMsgId:'reactErrorMsg', placeholderId:'reactPlaceholder', facing:'user',   stream:null, pose:null, rafId:null, running:false },
   };
 
   // Enumerate all video input devices once
@@ -861,10 +861,10 @@ const CamManager = (() => {
 
     cam.running = false;
 
-    // Stop MediaPipe camera wrapper first
-    if (cam.mpCam) {
-      try { cam.mpCam.stop(); } catch(_){}
-      cam.mpCam = null;
+    // Cancel our manual frame loop
+    if (cam.rafId) {
+      cancelAnimationFrame(cam.rafId);
+      cam.rafId = null;
     }
 
     // Stop raw stream tracks
@@ -921,7 +921,7 @@ const CamManager = (() => {
     if (!cam) return;
 
     // Stop first if already running
-    if (cam.running) { await stop(key); await new Promise(r=>setTimeout(r,300)); }
+    if (cam.running) { await stop(key); await new Promise(r=>setTimeout(r,400)); }
 
     clearError(cam);
     const st = document.getElementById(cam.statusId);
@@ -936,52 +936,67 @@ const CamManager = (() => {
 
     const videoConstraint = getConstraint(cam.facing);
 
+    // === MOBILE-FRIENDLY CAMERA ACQUISITION ===
+    // Try progressively simpler constraints to maximise compatibility
+    let stream = null;
+
+    // Attempt 1: ideal resolution (no min — min causes failures on some phones)
     try {
-      cam.stream = await navigator.mediaDevices.getUserMedia({
+      stream = await navigator.mediaDevices.getUserMedia({
         video: {
           ...videoConstraint,
-          width:  { ideal: 1280, min: 640 },
-          height: { ideal: 720,  min: 480 },
-          frameRate: { ideal: 30, min: 15 },
+          width:  { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 },
         },
         audio: false
       });
     } catch(err) {
-      // If deviceId exact fails, fallback to facingMode
-      console.warn('[CamManager] Exact constraint failed, trying facingMode fallback:', err);
+      console.warn('[CamManager] Attempt 1 failed:', err.name);
+    }
+
+    // Attempt 2: facingMode only (no deviceId, no resolution)
+    if (!stream) {
       try {
-        cam.stream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: cam.facing },
-            width:  { ideal: 1280 },
-            height: { ideal: 720 },
+            width:  { ideal: 640 },
+            height: { ideal: 480 },
           },
           audio: false
         });
       } catch(err2) {
-        // Final fallback — any camera
-        try {
-          cam.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-          console.warn('[CamManager] Using any available camera as last resort');
-        } catch(err3) {
-          showError(cam, getReadableError(err3));
-          updateUI(cam);
-          return;
-        }
+        console.warn('[CamManager] Attempt 2 failed:', err2.name);
       }
     }
+
+    // Attempt 3: absolute minimum — just give me any camera
+    if (!stream) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        console.warn('[CamManager] Using any available camera as last resort');
+      } catch(err3) {
+        showError(cam, getReadableError(err3));
+        updateUI(cam);
+        return;
+      }
+    }
+
+    cam.stream = stream;
 
     // Detect actual facing from track settings
     const track    = cam.stream.getVideoTracks()[0];
     const settings = track ? track.getSettings() : {};
     if (settings.facingMode) {
-      cam.facing = settings.facingMode; // trust what the browser reports
+      cam.facing = settings.facingMode;
     }
 
     // Attach stream to video
     video.srcObject = cam.stream;
     video.muted     = true;
-    video.playsInline = true;
+    video.setAttribute('playsinline', '');  // critical for iOS
+    video.setAttribute('webkit-playsinline', '');  // older iOS
 
     // Wait for metadata
     await new Promise((resolve, reject) => {
@@ -990,8 +1005,11 @@ const CamManager = (() => {
       setTimeout(resolve, 5000); // timeout failsafe
     });
 
-    // Explicitly play (needed on some browsers)
+    // Explicitly play (needed on mobile browsers)
     try { await video.play(); } catch(_) {}
+
+    // Small extra wait for mobile — ensures video frames are flowing
+    await new Promise(r => setTimeout(r, 300));
 
     // Match canvas to actual video dimensions
     canvas.width  = video.videoWidth  || 640;
@@ -1018,21 +1036,25 @@ const CamManager = (() => {
     });
     cam.pose.onResults(results => handlePoseResults(key, results, canvas, ctx));
 
-    // Use MediaPipe Camera wrapper for frame loop
-    cam.mpCam = new Camera(video, {
-      onFrame: async () => {
-        if (cam.pose && cam.running) {
-          try {
-            await cam.pose.send({ image: video });
-          } catch(e) {
-            // Silently ignore frame errors
-          }
-        }
-      },
-      width:  video.videoWidth  || 640,
-      height: video.videoHeight || 480,
-    });
-    cam.mpCam.start();
+    // === MANUAL FRAME LOOP (replaces MediaPipe Camera wrapper) ===
+    // The Camera wrapper internally calls getUserMedia again, which
+    // causes NotReadableError on mobile phones. This manual loop
+    // reuses our existing stream — no double-acquisition conflict.
+    let sending = false;
+    function frameLoop() {
+      if (!cam.running || !cam.pose) return;
+      cam.rafId = requestAnimationFrame(frameLoop);
+      if (sending) return; // skip if previous frame still processing
+      if (video.readyState >= 2) { // HAVE_CURRENT_DATA
+        sending = true;
+        cam.pose.send({ image: video }).then(() => {
+          sending = false;
+        }).catch(() => {
+          sending = false;
+        });
+      }
+    }
+    cam.rafId = requestAnimationFrame(frameLoop);
 
     // Key-specific post-start
     if (key === 'act') {
