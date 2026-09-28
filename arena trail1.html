@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1"/>
+<meta name="theme-color" content="#060913"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="description" content="AI Fitness Pro — on-device computer-vision coach: calibrated height measurement, 20 guided exercises with rep & form scoring, reaction-time testing and privacy-first modesty screening. No frame ever leaves your device."/>
+<title>AI Fitness Pro — On-Device AI Fitness Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   AI FITNESS PRO — Design System
+   ============================================================ */
+:root{
+  --brand:#6366f1; --brand-2:#22d3ee; --brand-3:#a855f7;
+  --lime:#a3e635; --amber:#fbbf24; --rose:#fb7185; --emerald:#34d399; --red:#f43f5e;
+  --bg:#05070f; --bg-2:#080c18;
+  --surface:rgba(19,26,45,.72); --surface-2:rgba(13,19,35,.72);
+  --surface-solid:#0d1325;
+  --line:rgba(148,163,184,.16); --line-2:rgba(148,163,184,.28);
+  --txt:#eef2ff; --txt-2:#a5b0cd; --txt-3:#6b7899;
+  --r-s:10px; --r-m:16px; --r-l:22px; --r-xl:30px;
+  --sh:0 20px 60px -20px rgba(0,0,0,.85);
+  --glow:0 0 0 1px rgba(99,102,241,.35), 0 12px 40px -12px rgba(99,102,241,.55);
+  --ff:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --fd:'Sora','Inter',sans-serif;
+  --fm:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --nav-h:64px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--ff); background:var(--bg); color:var(--txt);
+  min-height:100vh; overflow-x:hidden; line-height:1.55;
+  -webkit-font-smoothing:antialiased; padding-bottom:env(safe-area-inset-bottom);
+}
+/* animated aurora field */
+body::before{
+  content:''; position:fixed; inset:-20% -10%; z-index:-2; pointer-events:none;
+  background:
+    radial-gradient(45% 38% at 12% 8%, rgba(99,102,241,.30), transparent 62%),
+    radial-gradient(40% 34% at 88% 4%, rgba(34,211,238,.22), transparent 60%),
+    radial-gradient(48% 40% at 76% 92%, rgba(168,85,247,.20), transparent 62%),
+    radial-gradient(38% 30% at 18% 86%, rgba(163,230,53,.10), transparent 60%);
+  filter:blur(20px); animation:drift 26s ease-in-out infinite alternate;
+}
+body::after{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.42;
+  background-image:linear-gradient(rgba(148,163,184,.055) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(148,163,184,.055) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,#000 30%,transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,#000 30%,transparent 100%);
+}
+@keyframes drift{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(2.5%,1.5%,0) scale(1.06)}100%{transform:translate3d(-2%,2%,0) scale(1.02)}}
+h1,h2,h3,h4{font-family:var(--fd);letter-spacing:-.025em;line-height:1.18;font-weight:700}
+h1{font-size:clamp(1.55rem,3.4vw,2.2rem)}
+h2{font-size:clamp(1.15rem,2.2vw,1.4rem)}
+h3{font-size:1.02rem}
+p{color:var(--txt-2)}
+a{color:var(--brand-2);text-decoration:none}
+.mono{font-family:var(--fm)}
+::selection{background:rgba(99,102,241,.45);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(99,102,241,.4);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+
+/* ---------- layout ---------- */
+#app{max-width:1420px;margin:0 auto;padding:0 18px 120px}
+.page{display:none;animation:pageIn .45s cubic-bezier(.22,1,.36,1)}
+.page.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.grid{display:grid;gap:18px}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-main{grid-template-columns:minmax(0,1.62fr) minmax(320px,1fr)}
+.row{display:flex;gap:12px;align-items:center}
+.wrap{flex-wrap:wrap}
+.sb{justify-content:space-between}
+.col{flex-direction:column}
+.mt1{margin-top:8px}.mt2{margin-top:16px}.mt3{margin-top:24px}.mt4{margin-top:34px}
+.mb2{margin-bottom:16px}.mb3{margin-bottom:24px}
+.center{text-align:center}
+.hide{display:none!important}
+
+/* ---------- header ---------- */
+#topbar{
+  position:sticky;top:0;z-index:70;
+  backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);
+  background:linear-gradient(180deg,rgba(5,7,15,.94),rgba(5,7,15,.72));
+  border-bottom:1px solid var(--line);
+}
+.topbar-in{max-width:1420px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:16px;min-height:var(--nav-h)}
+.logo{display:flex;align-items:center;gap:11px;flex-shrink:0}
+.logo-mark{
+  width:40px;height:40px;border-radius:12px;position:relative;flex-shrink:0;
+  background:conic-gradient(from 210deg,var(--brand),var(--brand-3),var(--brand-2),var(--lime),var(--brand));
+  box-shadow:0 8px 26px -8px rgba(99,102,241,.9);display:grid;place-items:center;
+}
+.logo-mark::after{content:'';position:absolute;inset:2px;border-radius:10px;background:#080c18}
+.logo-mark svg{position:relative;z-index:2;width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.logo-txt{font-family:var(--fd);font-weight:800;font-size:1.06rem;letter-spacing:-.03em;white-space:nowrap}
+.logo-txt i{
+  font-style:normal;font-size:.52rem;letter-spacing:.16em;font-weight:700;padding:3px 7px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(163,230,53,.2),rgba(34,211,238,.2));color:var(--lime);
+  border:1px solid rgba(163,230,53,.35);vertical-align:middle;margin-left:6px;
+}
+#nav{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;flex:1;padding:4px;border-radius:14px;background:rgba(9,13,25,.6);border:1px solid var(--line)}
+#nav::-webkit-scrollbar{display:none}
+.nav-pill{
+  font:600 .8rem var(--ff);color:var(--txt-2);background:transparent;border:0;cursor:pointer;
+  padding:8px 13px;border-radius:10px;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:.22s
+}
+.nav-pill svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.nav-pill:hover{color:var(--txt);background:rgba(99,102,241,.13)}
+.nav-pill.active{color:#fff;background:linear-gradient(135deg,var(--brand),#4f46e5);box-shadow:0 8px 22px -10px rgba(79,70,229,1)}
+.pill-meta{font-family:var(--fm);font-size:.62rem;padding:2px 6px;border-radius:5px;background:rgba(5,7,15,.5)}
+.nav-pill.active .pill-meta{background:rgba(255,255,255,.2)}
+#userchip{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.avatar{
+  width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font:800 .82rem var(--fd);color:#fff;
+  background:linear-gradient(135deg,var(--brand-3),var(--brand));border:1px solid rgba(255,255,255,.16)
+}
+.uname{font-size:.78rem;font-weight:600;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:20px;
+  backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);
+  box-shadow:var(--sh);position:relative;overflow:hidden
+}
+.card::before{
+  content:'';position:absolute;inset:0 0 auto;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);opacity:.5
+}
+.card.flat{background:var(--surface-2)}
+.card.pad0{padding:0}
+.card-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-hd h2{display:flex;align-items:center;gap:9px}
+.card-hd h2 svg{width:19px;height:19px;stroke:var(--brand-2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.eyebrow{font:700 .62rem/1 var(--fm);letter-spacing:.18em;text-transform:uppercase;color:var(--txt-3)}
+.sub{font-size:.82rem;color:var(--txt-2)}
+
+/* ---------- stat tiles ---------- */
+.stat{padding:15px 17px;border-radius:var(--r-m);background:linear-gradient(155deg,rgba(30,41,66,.7),rgba(11,16,30,.55));border:1px solid var(--line);position:relative;overflow:hidden}
+.stat .k{font:700 .6rem/1 var(--fm);letter-spacing:.16em;text-transform:uppercase;color:var(--txt-3)}
+.stat .v{font-family:var(--fd);font-size:1.85rem;font-weight:800;letter-spacing:-.035em;margin-top:7px;line-height:1}
+.stat .u{font-size:.72rem;color:var(--txt-3);font-weight:600;margin-left:3px;letter-spacing:0}
+.stat .foot{font-size:.68rem;color:var(--txt-3);margin-top:6px}
+.stat.lime .v{color:var(--lime)}.stat.cyan .v{color:var(--brand-2)}.stat.amber .v{color:var(--amber)}
+.stat.rose .v{color:var(--rose)}.stat.violet .v{color:#c4b5fd}.stat.emerald .v{color:var(--emerald)}
+.stat::after{content:'';position:absolute;right:-26px;top:-26px;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.35),transparent 70%)}
+.stat.lime::after{background:radial-gradient(circle,rgba(163,230,53,.3),transparent 70%)}
+.stat.cyan::after{background:radial-gradient(circle,rgba(34,211,238,.3),transparent 70%)}
+.stat.amber::after{background:radial-gradient(circle,rgba(251,191,36,.28),transparent 70%)}
+.stat.rose::after{background:radial-gradient(circle,rgba(251,113,133,.28),transparent 70%)}
+.stat.emerald::after{background:radial-gradient(circle,rgba(52,211,153,.28),transparent 70%)}
+
+/* ---------- buttons ---------- */
+.btn{
+  font:700 .82rem var(--ff);padding:10px 16px;border-radius:11px;border:1px solid var(--line-2);
+  background:rgba(148,163,184,.07);color:var(--txt);cursor:pointer;transition:.2s;display:inline-flex;
+  align-items:center;justify-content:center;gap:7px;white-space:nowrap;-webkit-tap-highlight-color:transparent
+}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn:hover:not(:disabled){transform:translateY(-1px);border-color:var(--line-2);background:rgba(148,163,184,.14)}
+.btn:active:not(:disabled){transform:translateY(0) scale(.985)}
+.btn:disabled{opacity:.36;cursor:not-allowed}
+.btn.primary{background:linear-gradient(135deg,var(--brand),#4f46e5);border-color:transparent;box-shadow:0 10px 26px -12px rgba(79,70,229,.95)}
+.btn.primary:hover:not(:disabled){box-shadow:0 14px 32px -10px rgba(79,70,229,1)}
+.btn.em{background:linear-gradient(135deg,#059669,#10b981);border-color:transparent;color:#04231a}
+.btn.warn{background:linear-gradient(135deg,#b45309,#f59e0b);border-color:transparent;color:#2b1601}
+.btn.dgr{background:linear-gradient(135deg,#be123c,#f43f5e);border-color:transparent;color:#fff}
+.btn.cy{background:linear-gradient(135deg,#0891b2,#22d3ee);border-color:transparent;color:#032b33}
+.btn.ghost{background:transparent}
+.btn.sm{padding:7px 11px;font-size:.72rem;border-radius:9px}
+.btn.xs{padding:4px 9px;font-size:.66rem;border-radius:7px}
+.btn.wide{width:100%}
+.btn.on{background:linear-gradient(135deg,rgba(163,230,53,.9),var(--lime));color:#15240a;border-color:transparent}
+.seg{display:inline-flex;background:rgba(5,7,15,.6);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px;flex-wrap:wrap}
+.seg button{
+  font:700 .75rem var(--ff);padding:7px 13px;border:0;border-radius:9px;background:transparent;color:var(--txt-2);
+  cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap
+}
+.seg button svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.seg button:hover{color:var(--txt);background:rgba(99,102,241,.14)}
+.seg button.active{background:linear-gradient(135deg,var(--brand),#4f46e5);color:#fff;box-shadow:0 6px 18px -8px rgba(79,70,229,.95)}
+.btn-group{display:flex;gap:9px;flex-wrap:wrap}
+
+/* ---------- inputs ---------- */
+label.f{display:block;font:700 .64rem var(--fm);letter-spacing:.13em;text-transform:uppercase;color:var(--txt-3);margin-bottom:6px}
+input[type=text],input[type=password],input[type=number],select,textarea{
+  width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--line-2);background:rgba(5,7,15,.66);
+  color:var(--txt);font:500 .88rem var(--ff);transition:.2s;appearance:none
+}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+input::placeholder{color:var(--txt-3)}
+select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a5b0cd' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+input[type=range]{-webkit-appearance:none;appearance:none;height:5px;border-radius:99px;background:rgba(148,163,184,.25);padding:0;border:0;width:100%}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--brand-2);cursor:pointer;box-shadow:0 0 0 4px rgba(34,211,238,.22);border:2px solid #04121a}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--brand-2);border:2px solid #04121a;cursor:pointer}
+.check{display:flex;align-items:center;gap:9px;font-size:.8rem;color:var(--txt-2);cursor:pointer;user-select:none}
+.check input{width:17px;height:17px;flex-shrink:0;accent-color:var(--brand);cursor:pointer}
+
+/* ---------- chips / badges ---------- */
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 .68rem var(--ff);padding:5px 10px;border-radius:99px;border:1px solid var(--line-2);background:rgba(148,163,184,.08);color:var(--txt-2);white-space:nowrap}
+.chip svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+.chip.ok{color:var(--lime);border-color:rgba(163,230,53,.38);background:rgba(163,230,53,.1)}
+.chip.info{color:var(--brand-2);border-color:rgba(34,211,238,.38);background:rgba(34,211,238,.1)}
+.chip.warn{color:var(--amber);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.11)}
+.chip.bad{color:var(--rose);border-color:rgba(251,113,133,.42);background:rgba(251,113,133,.12)}
+.chip.violet{color:#c4b5fd;border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.13)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--txt-3);flex-shrink:0}
+.dot.live{background:var(--lime);box-shadow:0 0 0 0 rgba(163,230,53,.75);animation:ping 1.7s cubic-bezier(0,0,.2,1) infinite}
+.dot.bad{background:var(--red)}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(163,230,53,.7)}70%{box-shadow:0 0 0 9px rgba(163,230,53,0)}100%{box-shadow:0 0 0 0 rgba(163,230,53,0)}}
+
+/* ---------- camera stage ---------- */
+.stage{
+  position:relative;width:100%;aspect-ratio:4/3;background:#03050c;border-radius:var(--r-m);overflow:hidden;
+  border:1px solid var(--line);--guide:rgba(148,163,184,.22)
+}
+.stage video,.stage canvas,.stage img.preview{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#03050c}
+.stage video{object-fit:cover}
+.stage canvas.overlay{pointer-events:none;z-index:3}
+.mirror{transform:scaleX(-1)}
+.stage .guide{position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:var(--r-m)}
+.stage .guide::before{
+  content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:56%;height:82%;border:2px dashed var(--guide);border-radius:130px 130px 46px 46px/170px 170px 26px 26px;
+  transition:border-color .3s,box-shadow .3s
+}
+.stage.g-good .guide::before{border-color:rgba(163,230,53,.85);box-shadow:0 0 40px -6px rgba(163,230,53,.4),inset 0 0 34px -14px rgba(163,230,53,.5)}
+.stage.g-adjust .guide::before{border-color:rgba(251,191,36,.8)}
+.stage.g-bad .guide::before{border-color:rgba(251,113,133,.85)}
+.stage.g-good{box-shadow:inset 0 0 90px -34px rgba(163,230,53,.6)}
+.stage.g-bad{box-shadow:inset 0 0 90px -34px rgba(251,113,133,.55)}
+.stage .vig{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 76% 66% at 50% 46%,transparent 42%,rgba(3,5,12,.72) 100%)}
+.stage-top{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:11px;background:linear-gradient(180deg,rgba(3,5,12,.82),transparent)}
+.stage-bot{position:absolute;left:0;right:0;bottom:0;z-index:6;padding:11px 12px;background:linear-gradient(0deg,rgba(3,5,12,.92),transparent)}
+.guide-msg{font:600 .82rem var(--ff);color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.9);display:flex;align-items:center;gap:8px;min-height:20px}
+.guide-msg .ic{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;flex-shrink:0;font-size:.7rem}
+.setup-overlay{
+  position:absolute;inset:0;z-index:7;display:grid;place-items:center;text-align:center;padding:22px;
+  background:rgba(4,6,14,.8);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);transition:.3s
+}
+.setup-overlay .so-in{max-width:430px;display:grid;gap:11px;justify-items:center}
+.setup-ico{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(99,102,241,.28),rgba(34,211,238,.18));border:1px solid var(--line-2)}
+.setup-ico svg{width:29px;height:29px;stroke:var(--brand-2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.setup-t{font-family:var(--fd);font-weight:700;font-size:1.05rem}
+.setup-s{font-size:.8rem;color:var(--txt-2)}
+.countdown{position:absolute;inset:0;z-index:9;display:grid;place-items:center;font-family:var(--fd);font-size:7rem;font-weight:800;color:#fff;text-shadow:0 0 60px rgba(99,102,241,.9);background:rgba(4,6,14,.62);animation:cdIn .4s}
+@keyframes cdIn{from{transform:scale(1.5);opacity:0}to{transform:none;opacity:1}}
+.rec-flag{position:absolute;top:11px;left:50%;transform:translateX(-50%);z-index:8;display:flex;align-items:center;gap:7px;font:800 .66rem var(--fm);letter-spacing:.14em;padding:5px 12px;border-radius:99px;background:rgba(244,63,94,.9);color:#fff;box-shadow:0 8px 24px -8px rgba(244,63,94,.9)}
+.blur-priv{position:absolute;inset:0;z-index:8;backdrop-filter:blur(26px) saturate(60%);-webkit-backdrop-filter:blur(26px) saturate(60%);background:rgba(4,6,14,.5);display:grid;place-items:center;text-align:center;padding:20px;gap:8px}
+.stage-empty{position:absolute;inset:0;z-index:5;display:grid;place-items:center;text-align:center;padding:24px;background:repeating-linear-gradient(135deg,rgba(148,163,184,.03) 0 12px,transparent 12px 24px)}
+.stage-empty .se-in{display:grid;gap:10px;justify-items:center;max-width:400px}
+.stage-empty svg{width:38px;height:38px;stroke:var(--txt-3);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- exercise picker ---------- */
+#actGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px;max-height:340px;overflow-y:auto;padding:4px 6px 4px 2px;margin:0 -4px}
+#actGrid::-webkit-scrollbar{width:7px}
+.act-card{
+  border:1px solid var(--line);border-radius:14px;padding:12px 12px 11px;background:linear-gradient(160deg,rgba(30,41,66,.6),rgba(10,15,28,.5));
+  cursor:pointer;transition:.22s;position:relative;overflow:hidden;display:grid;gap:7px;align-content:start
+}
+.act-card:hover{border-color:rgba(99,102,241,.6);transform:translateY(-2px);background:linear-gradient(160deg,rgba(49,60,92,.75),rgba(12,18,34,.6))}
+.act-card.selected{border-color:transparent;background:linear-gradient(160deg,rgba(99,102,241,.3),rgba(34,211,238,.12));box-shadow:var(--glow)}
+.act-card.selected::after{content:'';position:absolute;inset:0;border-radius:14px;border:1.5px solid rgba(129,140,248,.85);pointer-events:none}
+.act-ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.32);flex-shrink:0}
+.act-ico svg{width:19px;height:19px;stroke:var(--brand-2);fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.act-card.selected .act-ico{background:rgba(163,230,53,.16);border-color:rgba(163,230,53,.4)}
+.act-card.selected .act-ico svg{stroke:var(--lime)}
+.act-nm{font:700 .83rem var(--ff);letter-spacing:-.01em}
+.act-mt{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.act-tag{font:700 .58rem var(--fm);letter-spacing:.08em;text-transform:uppercase;padding:2.5px 6px;border-radius:5px;background:rgba(148,163,184,.13);color:var(--txt-3)}
+.act-tag.d1{background:rgba(52,211,153,.14);color:var(--emerald)}
+.act-tag.d2{background:rgba(251,191,36,.14);color:var(--amber)}
+.act-tag.d3{background:rgba(251,113,133,.14);color:var(--rose)}
+.act-card .has-vid{position:absolute;top:9px;right:9px;font-size:.6rem;color:var(--brand-2)}
+
+/* ---------- meter / bars ---------- */
+.bar{height:7px;border-radius:99px;background:rgba(148,163,184,.16);overflow:hidden;position:relative}
+.bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand-2));transition:width .55s cubic-bezier(.22,1,.36,1);position:relative}
+.bar.lime>i{background:linear-gradient(90deg,#65a30d,var(--lime))}
+.bar.amber>i{background:linear-gradient(90deg,#d97706,var(--amber))}
+.bar.rose>i{background:linear-gradient(90deg,#e11d48,var(--rose))}
+.bar.em>i{background:linear-gradient(90deg,#059669,var(--emerald))}
+.bar.violet>i{background:linear-gradient(90deg,#7c3aed,#c4b5fd)}
+.bar>i::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);animation:shine 2.6s infinite}
+@keyframes shine{0%{transform:translateX(-100%)}60%,100%{transform:translateX(100%)}}
+.barrow{display:grid;grid-template-columns:118px 1fr 46px;gap:11px;align-items:center;font-size:.76rem}
+.barrow .nm{color:var(--txt-2);font-weight:600;display:flex;align-items:center;gap:6px}
+.barrow .vl{font-family:var(--fm);font-weight:700;text-align:right;font-size:.76rem}
+
+/* ---------- rings ---------- */
+.ring{position:relative;width:var(--sz,158px);height:var(--sz,158px);border-radius:50%;margin:0 auto;
+  background:conic-gradient(var(--c,var(--brand)) calc(var(--p,0)*1%), rgba(148,163,184,.13) 0);
+  display:grid;place-items:center;transition:background .8s cubic-bezier(.22,1,.36,1)}
+.ring::before{content:'';position:absolute;inset:11px;border-radius:50%;background:#080c18;border:1px solid var(--line)}
+.ring::after{content:'';position:absolute;inset:-9px;border-radius:50%;background:radial-gradient(circle,transparent 62%,var(--c,var(--brand)) 100%);opacity:.16;filter:blur(9px)}
+.ring .rc{position:relative;z-index:2;text-align:center;line-height:1.05}
+.ring .rc b{font-family:var(--fd);font-size:calc(var(--sz,158px)*.23);font-weight:800;letter-spacing:-.04em;display:block}
+.ring .rc span{font:700 .58rem var(--fm);letter-spacing:.16em;text-transform:uppercase;color:var(--txt-3)}
+
+/* ---------- tables ---------- */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:.8rem}
+.tbl th{
+  text-align:left;font:700 .6rem var(--fm);letter-spacing:.14em;text-transform:uppercase;color:var(--txt-3);
+  padding:9px 11px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(8,12,24,.96);backdrop-filter:blur(8px);z-index:2
+}
+.tbl td{padding:11px;border-bottom:1px solid rgba(148,163,184,.08);vertical-align:middle}
+.tbl tbody tr{transition:.18s}
+.tbl tbody tr:hover{background:rgba(99,102,241,.07)}
+.tbl tbody tr:last-child td{border-bottom:0}
+.rank{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font:800 .78rem var(--fd);background:rgba(148,163,184,.1);border:1px solid var(--line)}
+.rank.g1{background:linear-gradient(140deg,#facc15,#f59e0b);color:#3b2503;border-color:#fbbf24;box-shadow:0 8px 20px -8px rgba(251,191,36,.75)}
+.rank.g2{background:linear-gradient(140deg,#e2e8f0,#94a3b8);color:#1e293b;border-color:#cbd5e1}
+.rank.g3{background:linear-gradient(140deg,#f0a875,#c2743b);color:#331a07;border-color:#d98d5a}
+.empty-row td{text-align:center;color:var(--txt-3);padding:34px 10px}
+
+/* ---------- moderation ---------- */
+.mod{border-radius:var(--r-m);padding:16px;border:1px solid var(--line);background:rgba(6,9,18,.6);transition:.35s;position:relative;overflow:hidden}
+.mod .stripe{position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,var(--txt-3),transparent)}
+.mod.ok{border-color:rgba(52,211,153,.4);background:linear-gradient(160deg,rgba(5,80,60,.34),rgba(6,9,18,.6))}
+.mod.ok .stripe{background:linear-gradient(90deg,var(--emerald),transparent)}
+.mod.warn{border-color:rgba(251,191,36,.45);background:linear-gradient(160deg,rgba(120,72,4,.34),rgba(6,9,18,.6))}
+.mod.warn .stripe{background:linear-gradient(90deg,var(--amber),transparent)}
+.mod.bad{border-color:rgba(244,63,94,.5);background:linear-gradient(160deg,rgba(120,12,32,.4),rgba(6,9,18,.6));animation:alertPulse 1.9s ease-in-out infinite}
+.mod.bad .stripe{background:linear-gradient(90deg,var(--red),transparent)}
+.mod.idle .stripe{background:linear-gradient(90deg,rgba(148,163,184,.5),transparent)}
+@keyframes alertPulse{0%,100%{box-shadow:0 0 0 0 rgba(244,63,94,.28)}50%{box-shadow:0 0 0 10px rgba(244,63,94,0)}}
+.mod-hd{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.mod-ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex-shrink:0;background:rgba(148,163,184,.1);border:1px solid var(--line)}
+.mod-ic svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.mod.ok .mod-ic{color:var(--emerald);border-color:rgba(52,211,153,.4)}
+.mod.warn .mod-ic{color:var(--amber);border-color:rgba(251,191,36,.4)}
+.mod.bad .mod-ic{color:var(--rose);border-color:rgba(244,63,94,.45)}
+.mod-t{font-family:var(--fd);font-weight:800;font-size:1.02rem;letter-spacing:-.02em}
+.mod-s{font-size:.76rem;color:var(--txt-2)}
+.flaglist{display:grid;gap:6px;margin-top:11px}
+.flag{font-size:.74rem;display:flex;gap:8px;align-items:flex-start;color:var(--txt-2);padding:7px 10px;border-radius:9px;background:rgba(5,7,15,.5);border:1px solid var(--line)}
+.flag b{color:var(--rose);font-weight:700}
+.flag.y b{color:var(--amber)}
+.flag.g b{color:var(--emerald)}
+.wristband{display:inline-block;width:100%;text-align:center;font:800 .7rem var(--fm);letter-spacing:.22em;padding:8px;border-radius:9px;background:repeating-linear-gradient(45deg,#f43f5e 0 11px,#0b0f1c 11px 22px);color:#fff;border:1px solid rgba(255,255,255,.2)}
+
+/* ---------- camera troubleshooting ---------- */
+.diag{font-family:var(--fm);font-size:.7rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:8px}
+.diag .di{padding:8px 10px;border-radius:9px;background:rgba(5,7,15,.55);border:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.diag .di span{color:var(--txt-3);font-size:.62rem;letter-spacing:.09em;text-transform:uppercase}
+.diag .di b{font-weight:700;color:var(--txt);text-align:right;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alert{display:flex;gap:11px;padding:13px 15px;border-radius:13px;border:1px solid rgba(251,191,36,.34);background:rgba(251,191,36,.08);font-size:.79rem;align-items:flex-start}
+.alert.err{border-color:rgba(244,63,94,.4);background:rgba(244,63,94,.09)}
+.alert.info{border-color:rgba(34,211,238,.32);background:rgba(34,211,238,.08)}
+.alert svg{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-top:1px}
+.alert b{display:block;margin-bottom:3px;color:var(--txt)}
+.alert .in{flex:1}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{font:700 .8rem var(--ff);padding:10px 15px;border:0;background:transparent;color:var(--txt-3);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;white-space:nowrap;display:inline-flex;gap:7px;align-items:center}
+.tabs button svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tabs button:hover{color:var(--txt)}
+.tabs button.active{color:#fff;border-bottom-color:var(--brand-2)}
+
+/* ---------- timeline / waveform ---------- */
+.tl{position:relative;height:64px;border-radius:11px;background:rgba(5,7,15,.6);border:1px solid var(--line);overflow:hidden}
+.tl canvas{position:absolute;inset:0;width:100%;height:100%}
+.tl .marks{position:absolute;inset:0;pointer-events:none}
+.tl .rep-mark{position:absolute;top:0;bottom:0;width:2px;background:rgba(163,230,53,.85);box-shadow:0 0 12px rgba(163,230,53,.85)}
+.progress-strip{height:4px;border-radius:99px;background:rgba(148,163,184,.16);overflow:hidden}
+.progress-strip>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand-2),var(--lime));width:0%;transition:width .3s}
+
+/* ---------- toast + confetti ---------- */
+#toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,26px);z-index:200;opacity:0;pointer-events:none;
+  padding:12px 20px;border-radius:13px;background:rgba(13,19,35,.97);border:1px solid var(--line-2);
+  box-shadow:var(--sh);font:600 .84rem var(--ff);display:flex;align-items:center;gap:10px;transition:.32s cubic-bezier(.22,1,.36,1);max-width:min(90vw,460px)
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.ok{border-color:rgba(52,211,153,.5)}#toast.err{border-color:rgba(244,63,94,.55)}#toast.warn{border-color:rgba(251,191,36,.5)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:190}
+.rep-pop{position:fixed;left:50%;top:34%;transform:translateX(-50%);z-index:150;font-family:var(--fd);font-size:3.6rem;font-weight:800;pointer-events:none;color:var(--lime);text-shadow:0 0 44px rgba(163,230,53,.7);animation:repPop .95s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes repPop{0%{opacity:0;transform:translate(-50%,14px) scale(.7)}22%{opacity:1;transform:translate(-50%,0) scale(1.08)}100%{opacity:0;transform:translate(-50%,-64px) scale(.96)}}
+
+/* ---------- auth ---------- */
+#auth{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 50% 0%,#111a33,#04060d 70%);transition:.5s;overflow:auto}
+#auth.gone{opacity:0;pointer-events:none;transform:scale(1.03)}
+.auth-card{width:min(430px,100%);border-radius:var(--r-xl);padding:32px 30px;background:linear-gradient(165deg,rgba(24,33,58,.92),rgba(9,13,25,.94));border:1px solid var(--line-2);box-shadow:0 40px 100px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08);position:relative;overflow:hidden}
+.auth-card::before{content:'';position:absolute;top:-60px;right:-50px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.42),transparent 68%);filter:blur(12px)}
+.auth-card>*{position:relative;z-index:2}
+
+/* ---------- misc ---------- */
+.divider{height:1px;background:var(--line);margin:18px 0}
+.kbd{font-family:var(--fm);font-size:.66rem;padding:2.5px 6px;border-radius:6px;background:rgba(148,163,184,.14);border:1px solid var(--line-2);border-bottom-width:2px;color:var(--txt-2)}
+.num-tick{font-family:var(--fd);font-weight:800;letter-spacing:-.04em}
+.hint{font-size:.72rem;color:var(--txt-3);line-height:1.5}
+.hr-fade{height:1px;background:linear-gradient(90deg,transparent,var(--line-2),transparent);margin:16px 0}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.badge{padding:13px 10px;border-radius:13px;text-align:center;border:1px solid var(--line);background:rgba(9,13,25,.5);transition:.3s}
+.badge .bi{font-size:1.4rem;display:block;margin-bottom:6px;filter:grayscale(1) opacity(.42)}
+.badge .bn{font:700 .68rem var(--ff)}
+.badge .bd{font-size:.58rem;color:var(--txt-3);margin-top:2px;line-height:1.35}
+.badge.earned{border-color:rgba(163,230,53,.42);background:linear-gradient(160deg,rgba(163,230,53,.13),rgba(9,13,25,.5))}
+.badge.earned .bi{filter:none}
+.badge.earned .bn{color:var(--lime)}
+.scroll-y{overflow-y:auto}
+.nowrap{white-space:nowrap}
+.fs11{font-size:.72rem}.fs12{font-size:.79rem}.fs13{font-size:.86rem}
+.c2{color:var(--txt-2)}.c3{color:var(--txt-3)}
+.lime{color:var(--lime)}.cyan{color:var(--brand-2)}.amber{color:var(--amber)}.rose{color:var(--rose)}.em{color:var(--emerald)}.vio{color:#c4b5fd}
+.w100{width:100%}
+svg.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.gauge{position:relative;height:11px;border-radius:99px;background:rgba(148,163,184,.15);overflow:hidden}
+.gauge .zone{position:absolute;top:0;bottom:0;opacity:.34}
+.gauge .needle{position:absolute;top:-4px;bottom:-4px;width:3px;border-radius:99px;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.95);transition:left .55s cubic-bezier(.22,1,.36,1)}
+.spark{width:100%;height:34px;display:block}
+details.acc{border:1px solid var(--line);border-radius:13px;background:rgba(6,9,18,.42);overflow:hidden}
+details.acc+details.acc{margin-top:9px}
+details.acc>summary{list-style:none;cursor:pointer;padding:12px 15px;font:700 .8rem var(--ff);display:flex;align-items:center;gap:9px;transition:.2s}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary:hover{background:rgba(99,102,241,.08)}
+details.acc>summary .cv{margin-left:auto;transition:.3s;color:var(--txt-3)}
+details.acc[open]>summary .cv{transform:rotate(90deg)}
+details.acc .acc-b{padding:0 15px 14px;font-size:.79rem;color:var(--txt-2)}
+.live-val{font-family:var(--fd);font-weight:800;letter-spacing:-.045em;line-height:1}
+.angle-dial{width:104px;height:104px;position:relative;flex-shrink:0}
+.angle-dial svg{transform:rotate(-90deg)}
+.angle-dial .av{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:1.25rem}
+.file-drop{border:1.5px dashed var(--line-2);border-radius:14px;padding:16px;text-align:center;transition:.25s;cursor:pointer;background:rgba(6,9,18,.4)}
+.file-drop:hover,.file-drop.hot{border-color:var(--brand);background:rgba(99,102,241,.1)}
+.file-drop svg{width:22px;height:22px;stroke:var(--brand-2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px}
+::-webkit-file-upload-button{display:none}
+input[type=file]{font-size:0;padding:0;border:0;background:transparent;color:transparent}
+
+/* ---------- responsive ---------- */
+@media(max-width:1180px){
+  .g-main{grid-template-columns:minmax(0,1fr)}
+  .g-3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:860px){
+  #topbar{position:sticky}
+  .topbar-in{flex-wrap:wrap;padding:9px 14px}
+  #nav{order:3;width:100%;flex:1 0 100%;border-radius:12px}
+  .nav-pill{padding:8px 11px;font-size:.76rem}
+  #userchip{margin-left:auto}
+  .uname{display:none}
+  .g-2,.g-3{grid-template-columns:minmax(0,1fr)}
+  .barrow{grid-template-columns:96px 1fr 40px;font-size:.72rem}
+  #actGrid{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));max-height:280px}
+  .app-pad{padding:0 12px 90px}
+  .stage{aspect-ratio:3/4}
+  .card{padding:16px;border-radius:18px}
+  .tbl th,.tbl td{padding:9px 8px;font-size:.74rem}
+}
+@media(max-width:600px){
+  .stage{aspect-ratio:1/1}
+  #actGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .btn{padding:10px 13px;font-size:.78rem}
+  .seg button{padding:7px 10px;font-size:.71rem}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  body::before{animation:none}
+}
+@media print{
+  body{background:#fff;color:#000}
+  body::before,body::after,#topbar,.btn,#nav{display:none!important}
+  .card{border:1px solid #ccc;background:#fff;box-shadow:none}
+  .page{display:block!important}
+}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div id="toast"><span class="dot live"></span><span id="toastMsg"></span></div>
+<!-- ══════════════════ AUTH ══════════════════ -->
+<div id="auth">
+  <div class="auth-card">
+    <div class="row sb" style="align-items:flex-start">
+      <div class="logo">
+        <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/></svg></div>
+        <div>
+          <div class="logo-txt" style="font-size:1.24rem">AI Fitness Pro</div>
+          <div class="eyebrow" style="margin-top:2px">On-Device CV Lab · v4.0</div>
+        </div>
+      </div>
+      <span class="chip ok"><span class="dot live" style="background:var(--lime)"></span>Local Only</span>
+    </div>
+
+    <div class="mt4">
+      <h1 id="loginTitle">Welcome back</h1>
+      <p class="fs13 mt1">Your camera, your biomechanics, your data — nothing is uploaded. Ever.</p>
+    </div>
+
+    <div class="mt3" style="display:grid;gap:13px">
+      <div>
+        <label class="f" for="authUsername">Athlete name</label>
+        <input type="text" id="authUsername" placeholder="e.g. krithik" autocomplete="username" autocapitalize="none" spellcheck="false"/>
+      </div>
+      <div>
+        <label class="f" for="authPassword">Passcode</label>
+        <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <div class="row sb">
+        <label class="check"><input type="checkbox" id="authRemember" checked/><span>Keep me signed in</span></label>
+        <span class="hint mono" id="authMode">LOGIN</span>
+      </div>
+      <div class="alert err hide" id="authErrorBox"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><div class="in"><b id="authError">—</b></div></div>
+      <button class="btn primary wide" id="authSubmit" style="padding:13px" onclick="handleAuth()">Enter the lab →</button>
+      <button class="btn ghost wide sm" onclick="toggleAuthMode()"><span id="authToggleBtn">New athlete? Create a local profile</span></button>
+      <div class="hr-fade"></div>
+      <button class="btn cy wide sm" onclick="demoLogin()"><svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3z"/></svg> Skip — open Judge Demo profile</button>
+    </div>
+    <div class="mt3 hint" style="text-align:center">Profiles live in this browser's storage. Clearing site data resets everything.</div>
+  </div>
+</div>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header id="topbar" class="hide">
+  <div class="topbar-in">
+    <div class="logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/></svg></div>
+      <div class="logo-txt">AI Fitness Pro <i>PRO</i></div>
+    </div>
+    <nav id="nav">
+      <button class="nav-pill active" data-page="home" onclick="showPage('home',this)"><svg viewBox="0 0 24 24"><path d="M3 12 12 4l9 8M5 10v10h14V10"/></svg>Command</button>
+      <button class="nav-pill" data-page="act" onclick="showPage('act',this)"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/></svg>Exercises<span class="pill-meta" id="navExN">20</span></button>
+      <button class="nav-pill" data-page="height" onclick="showPage('height',this)"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 6l4-3 4 3M8 18l4 3 4-3"/></svg>Height Lab</button>
+      <button class="nav-pill" data-page="react" onclick="showPage('react',this)"><svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z"/></svg>Reaction</button>
+      <button class="nav-pill" data-page="privacy" onclick="showPage('privacy',this)"><svg viewBox="0 0 24 24"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/></svg>Moderation</button>
+      <button class="nav-pill" data-page="fitness" onclick="showPage('fitness',this)"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 4-6 5 5M3 21h18"/></svg>Report</button>
+      <button class="nav-pill" data-page="history" onclick="showPage('history',this)"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2"/></svg>History</button>
+      <button class="nav-pill" data-page="leaderboard" onclick="showPage('leaderboard',this)"><svg viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M8 20h8M12 14v6"/></svg>Arena</button>
+      <button class="nav-pill" data-page="settings" onclick="showPage('settings',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.2A1.6 1.6 0 0 0 6 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 14H3a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 4.6 6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3V3a2 2 0 1 1 4 0v.2A1.6 1.6 0 0 0 18 4.6l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.1a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></svg>Setup</button>
+    </nav>
+    <div id="userchip">
+      <span class="chip info" id="engineChip" title="Active on-device AI engine"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg><span id="engineChipTxt">Booting AI</span></span>
+      <div class="avatar" id="userAvatar">A</div>
+      <span class="uname" id="headerUser">—</span>
+    </div>
+  </div>
+</header>
+
+<div id="app" class="app-pad">
+
+<!-- ══════════════════ PAGE: HOME ══════════════════ -->
+<div id="page-home" class="page active">
+  <div class="grid g-main">
+    <div style="display:grid;gap:18px">
+      <div class="card" style="padding:26px 26px 24px;background:linear-gradient(150deg,rgba(49,46,129,.55),rgba(8,35,48,.5) 55%,rgba(9,13,25,.6))">
+        <div class="row wrap sb" style="align-items:flex-start">
+          <div style="max-width:600px">
+            <span class="chip violet"><span class="dot live" style="background:var(--lime)"></span> 20 exercises · 10 reaction drills · privacy shield</span>
+            <h1 class="mt2">Your phone camera is now a<br/><span style="background:linear-gradient(90deg,var(--lime),var(--brand-2),#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent">33-point motion-capture lab</span></h1>
+            <p class="fs13 mt2">AI Fitness Pro estimates height with a calibrated anatomical model, counts and scores reps in real time, replays uploaded videos through the same physics engine, and screens every frame for modesty — all inside your browser. Zero frames uploaded, zero cloud dependency.</p>
+            <div class="row wrap mt3">
+              <button class="btn primary" onclick="showPage('act',q('[data-page=act]'))"><svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3z"/></svg> Start a session</button>
+              <button class="btn" onclick="showPage('height',q('[data-page=height]'))"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 6l4-3 4 3M8 18l4 3 4-3"/></svg> Measure my height</button>
+              <button class="btn" onclick="showPage('privacy',q('[data-page=privacy]'))"><svg viewBox="0 0 24 24"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/></svg> Privacy shield</button>
+            </div>
+          </div>
+          <div class="ring" id="homeRing" style="--p:0;--sz:150px;--c:var(--lime)">
+            <div class="rc"><b id="homeRingVal">0</b><span>Fitness<br/>Index</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g-3" style="grid-template-columns:repeat(auto-fit,minmax(148px,1fr))">
+        <div class="stat violet"><div class="k">Total Score</div><div class="v" id="sum-score">0</div><div class="foot">lifetime points</div></div>
+        <div class="stat lime"><div class="k">Total Reps</div><div class="v" id="sum-reps">0</div><div class="foot">verified by AI</div></div>
+        <div class="stat amber"><div class="k">Est. Calories</div><div class="v" id="sum-cals">0<span class="u">kcal</span></div><div class="foot">MET-based model</div></div>
+        <div class="stat cyan"><div class="k">Sessions</div><div class="v" id="sum-acts">0</div><div class="foot">saved locally</div></div>
+        <div class="stat emerald"><div class="k">Height</div><div class="v" id="sum-height">—<span class="u">cm</span></div><div class="foot" id="sum-height-src">not measured</div></div>
+        <div class="stat rose"><div class="k">Best Reaction</div><div class="v" id="sum-react">—<span class="u">ms</span></div><div class="foot">human benchmark</div></div>
+      </div>
+
+      <div class="grid g-2">
+        <div class="card">
+          <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 4-6 5 5"/></svg> Last 14 days</h2><span class="chip" id="trendChip">—</span></div>
+          <div id="trendWrap"><svg class="spark" id="trendSvg" viewBox="0 0 300 70" preserveAspectRatio="none" style="height:100px"></svg></div>
+          <div class="row sb mt2"><span class="hint">Activity volume</span><span class="hint mono" id="trendMeta">no data yet</span></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg> Engine status</h2></div>
+          <div class="diag" id="diagHome" style="grid-template-columns:1fr"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:18px;align-content:start">
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z"/></svg> Quick actions</h2></div>
+        <div style="display:grid;gap:8px">
+          <button class="btn wide" onclick="quickStart('live')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg> Live camera workout</button>
+          <button class="btn wide" onclick="quickStart('file')"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> Analyse a workout video</button>
+          <button class="btn wide" onclick="runSelfTest()"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Run AI self-test (1.4k synthetic frames)</button>
+        </div>
+        <div class="divider"></div>
+        <div class="hint">Self-test drives the live scoring pipeline with a synthetic athlete, so judges can verify rep counting and height maths without a demo-room camera.</div>
+      </div>
+
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/></svg> Privacy shield</h2><span class="chip ok" id="modChipHome">ARMED</span></div>
+        <div id="homeModSummary" class="fs12">Runs a skin-region coverage model over the 33 landmarks. Nudity or missing garment coverage → the session is blocked, blurred and never stored.</div>
+        <div class="bar mt2" style="height:5px"><i id="homeModBar" style="width:0%"></i></div>
+        <div class="row sb mt1"><span class="hint">Upper coverage</span><span class="hint mono" id="homeUp">—</span></div>
+        <div class="bar mt1" style="height:5px"><i id="homeUpBar" style="width:0%;background:linear-gradient(90deg,#059669,var(--emerald))"></i></div>
+      </div>
+
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 20h9M12 4h9M4 20l3-3M4 4l3 3M4 12h3"/></svg> Achievements</h2><span class="chip" id="badgeCount">0/8</span></div>
+        <div class="badge-grid" id="badgeGrid" style="grid-template-columns:1fr 1fr"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ PAGE: EXERCISE ══════════════════ -->
+<div id="page-act" class="page">
+  <div class="row sb wrap mb3">
+    <div>
+      <span class="eyebrow">Module 01 · pose classification</span>
+      <h1>Exercise Tracker</h1>
+      <p class="fs13">AI counts reps, scores depth &amp; tempo, and rejects sloppy form. Works live or from an uploaded video.</p>
+    </div>
+    <div class="row wrap" style="gap:8px">
+      <span class="chip ok"><span class="dot live" style="background:var(--lime)"></span>100% on-device</span>
+      <span class="chip info" id="actEngineChip">Pose engine idle</span>
+    </div>
+  </div>
+
+  <div class="card mb3">
+    <div class="card-hd">
+      <h2><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Select exercise</h2>
+      <div class="row wrap" style="gap:8px">
+        <div class="seg" id="actFilter">
+          <button class="active" data-f="all" onclick="filterActs('all',this)">All</button>
+          <button data-f="Upper" onclick="filterActs('Upper',this)">Upper</button>
+          <button data-f="Lower" onclick="filterActs('Lower',this)">Lower</button>
+          <button data-f="Core" onclick="filterActs('Core',this)">Core</button>
+          <button data-f="Cardio" onclick="filterActs('Cardio',this)">Cardio</button>
+          <button data-f="Hold" onclick="filterActs('Hold',this)">Holds</button>
+        </div>
+        <input type="text" id="actSearch" placeholder="Search…" style="width:132px;padding:7px 11px;font-size:.78rem" oninput="filterActs(document.getElementById('actFilter .active').dataset.f,this.value)"/>
+      </div>
+    </div>
+    <div id="actGrid"></div>
+  </div>
+
+  <div class="grid g-main">
+    <div style="display:grid;gap:18px">
+      <div class="card pad0" style="overflow:hidden">
+        <div style="padding:16px 18px 0">
+          <div class="tabs" style="margin-bottom:0">
+            <button class="active" data-mode="live" onclick="setActMode('live',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg> Live camera</button>
+            <button data-mode="file" onclick="setActMode('file',this)"><svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8zM2 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg> Video / Photo upload</button>
+            <button data-mode="demo" onclick="setActMode('demo',this)"><svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3z"/></svg> Synthetic demo</button>
+          </div>
+        </div>
+
+        <div style="padding:16px 18px 18px">
+          <div class="stage" id="actStage">
+            <video id="actVideo" playsinline webkit-playsinline muted autoplay></video>
+            <canvas id="actCanvas" class="overlay"></canvas>
+            <img class="preview hide" id="actImage" alt=""/>
+            <div class="vig"></div>
+            <div class="guide"></div>
+            <div class="stage-top">
+              <div class="row" style="gap:7px">
+                <span class="chip" style="background:rgba(3,5,12,.62)"><span class="dot" id="actLiveDot"></span><span id="actModeTag">CAM OFF</span></span>
+                <span class="chip" style="background:rgba(3,5,12,.62)" id="actFpsChip">— fps</span>
+              </div>
+              <div class="row" style="gap:7px">
+                <span class="chip ok" style="background:rgba(3,5,12,.62)" id="actModChip">PRIVACY OK</span>
+                <button class="btn xs" onclick="CamManager.switchCam('act')" title="Flip front / rear camera"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7M21 12a9 9 0 0 1-15 6.7M18 3v4h-4M6 21v-4h4"/></svg></button>
+              </div>
+            </div>
+            <div class="rec-flag hide" id="actRecFlag"><span class="dot live" style="background:#fff"></span><span id="actRecTxt">REPLAY ANALYSIS</span></div>
+            <div class="setup-overlay" id="actSetupOverlay">
+              <div class="so-in">
+                <div class="setup-ico"><svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7zM1 5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg></div>
+                <div class="setup-t" id="actSetupTitle">Exercise Setup</div>
+                <div class="setup-s" id="actSetupTips">Select an exercise and press Start.</div>
+                <div class="setup-s mono" id="actGuidanceMsg" style="color:var(--lime);min-height:19px">Waiting for camera…</div>
+                <div class="row" style="gap:8px;margin-top:4px"><span class="hint">Auto-locks tracking when framing is stable for 2s</span></div>
+              </div>
+            </div>
+            <div class="stage-empty" id="actEmpty">
+              <div class="se-in">
+                <div class="setup-ico" style="width:52px;height:52px"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L8 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4l-1.5-2z"/><circle cx="12" cy="13" r="3.6"/></svg></div>
+                <div class="setup-t" style="font-size:.95rem">Camera is off</div>
+                <div class="setup-s">Press <b>Start camera</b> below. On phones you'll get one permission prompt — allow it and the feed stays on-device.</div>
+              </div>
+            </div>
+            <div class="blur-priv hide" id="actBlur">
+              <div class="setup-ico" style="background:rgba(244,63,94,.18);border-color:rgba(244,63,94,.45)"><svg viewBox="0 0 24 24" style="stroke:var(--rose)"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div>
+              <div class="setup-t">Preview blurred — modesty check failed</div>
+              <div class="setup-s" id="actBlurWhy">Garment coverage below threshold.</div>
+              <button class="btn sm" onclick="document.getElementById('actBlur').classList.add('hide')">Show anyway (30s)</button>
+            </div>
+          </div>
+
+          <div class="row sb wrap mt2" style="gap:10px">
+            <div class="row" style="gap:9px;min-width:0">
+              <span class="dot" id="actLiveDot2"></span>
+              <span class="fs12 c2 mono" id="actStatusText">Idle</span>
+            </div>
+            <div class="row wrap" style="gap:8px">
+              <button class="btn em" id="actStartBtn" onclick="startActivity()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg> Start camera</button>
+              <button class="btn warn" id="actLockBtn" onclick="forceTrackingLock()" disabled>Force lock</button>
+              <button class="btn dgr" id="actStopBtn" onclick="stopActivity()" disabled>Stop</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- file mode -->
+          <div id="actFilePanel">
+            <div class="file-drop" id="actDrop">
+              <svg viewBox="0 0 24 24"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+              <div class="fs13" style="font-weight:700">Attach a workout video or photo</div>
+              <div class="hint mt1">MP4 · MOV · WebM · GIF · JPG · PNG — processed frame-by-frame <b>on this device</b>, nothing uploads</div>
+              <div class="row wrap mt2" style="justify-content:center;gap:8px">
+                <label class="btn primary sm" style="margin:0"><svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8zM2 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg> Choose video<input type="file" id="actVideoFile" accept="video/*,.mkv,.mov" onchange="handleActFile(event,'video')"/></label>
+                <label class="btn sm" style="margin:0"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg> Choose photo<input type="file" id="actPhotoFile" accept="image/*" onchange="handleActFile(event,'photo')"/></label>
+                <label class="btn sm" style="margin:0"><svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7zM1 5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg> Record now<input type="file" id="actCamFile" accept="video/*" capture="environment" onchange="handleActFile(event,'video')"/></label>
+                <button class="btn sm dgr" id="actCancelBtn" onclick="cancelReplay()" style="display:none">Cancel</button>
+              </div>
+            </div>
+            <div class="mt2">
+              <div class="row sb fs11 c2"><span class="mono" id="actFileMeta">No file attached</span><span class="mono" id="actAnalyzePct">0%</span></div>
+              <div class="progress-strip mt1"><i id="actAnalyzeBar"></i></div>
+            </div>
+            <div class="row wrap mt2" style="gap:14px">
+              <label class="check"><span class="fs11 c2">Sample rate</span><input type="range" id="actSampleRate" min="3" max="15" value="9" style="width:104px" oninput="document.getElementById('actSampleRateVal').innerText=this.value+' fps'"/><b class="mono fs11" id="actSampleRateVal">9 fps</b></label>
+              <label class="check"><input type="checkbox" id="actDrawSkeleton" checked/><span class="fs11">Draw skeleton overlay</span></label>
+              <label class="check"><input type="checkbox" id="actStrictMode"/><span class="fs11">Strict form (reject partial reps)</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <h2><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 3-4 3 3 4-6"/></svg> Rep timeline</h2>
+          <div class="row" style="gap:8px"><span class="chip" id="actTempoChip">tempo —</span><span class="chip" id="actFormChip">form —</span></div>
+        </div>
+        <div class="tl"><canvas id="actTimeline"></canvas><div class="marks" id="actMarks"></div></div>
+        <div class="row sb mt1"><span class="hint">Joint-angle signal — each green mark is one verified rep</span><span class="hint mono" id="actRangeMeta">ROM —</span></div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:18px;align-content:start">
+      <div class="grid g-3" style="grid-template-columns:1fr 1fr 1fr;gap:11px">
+        <div class="stat lime"><div class="k">Reps</div><div class="v" id="ls-reps">0</div></div>
+        <div class="stat violet"><div class="k">Score</div><div class="v" id="ls-score">0</div></div>
+        <div class="stat amber"><div class="k">Kcal</div><div class="v" id="ls-cals">0</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2"/></svg> Live biomechanics</h2><span class="chip info" id="actQualChip">—</span></div>
+        <div class="row" style="gap:16px;align-items:center">
+          <div class="angle-dial" id="actDial">
+            <svg viewBox="0 0 100 100" width="104" height="104">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(148,163,184,.15)" stroke-width="9"/>
+              <circle id="actDialArc" cx="50" cy="50" r="42" fill="none" stroke="var(--lime)" stroke-width="9" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" style="transition:stroke-dashoffset .28s,stroke .3s"/>
+            </svg>
+            <div class="av" id="actAngleVal">—</div>
+          </div>
+          <div style="flex:1;min-width:0;display:grid;gap:9px">
+            <div><div class="row sb fs11"><span class="c2">Range of motion</span><span class="mono" id="actRomVal">—</span></div><div class="bar lime mt1" style="height:6px"><i id="actRomBar" style="width:0%"></i></div></div>
+            <div><div class="row sb fs11"><span class="c2">Symmetry L/R</span><span class="mono" id="actSymVal">—</span></div><div class="bar mt1" style="height:6px"><i id="actSymBar" style="width:0%"></i></div></div>
+            <div><div class="row sb fs11"><span class="c2">Tracking quality</span><span class="mono" id="actTrackVal">—</span></div><div class="bar amber mt1" style="height:6px"><i id="actTrackBar" style="width:0%"></i></div></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="row sb fs11"><span class="c2">Est. distance</span><b class="mono" id="actDist">—</b></div>
+        <div class="row sb fs11"><span class="c2">Rejection counter</span><b class="mono" id="actReject">0</b></div>
+        <div class="hint mt1">Reps that fail depth, symmetry or visibility gates are counted as rejections — that's the anti-cheat layer.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/></svg> Privacy screen</h2><span class="chip" id="actModState">idle</span></div>
+        <div class="row" style="gap:12px;align-items:center">
+          <div class="mod-ic" id="actModIco" style="border-color:var(--line);color:var(--txt-3)"><svg viewBox="0 0 24 24"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/></svg></div>
+          <div style="min-width:0;flex:1">
+            <div class="fs13" style="font-weight:700" id="actModVerdict">Not started</div>
+            <div class="hint" id="actModSub">Coverage analysis begins with the camera</div>
+          </div>
+        </div>
+        <div class="row sb fs11 mt2"><span class="c2">Torso cover</span><span class="mono" id="actTorsoPct">—</span></div>
+        <div class="bar em mt1" style="height:6px"><i id="actTorsoBar" style="width:0%"></i></div>
+        <div class="row sb fs11 mt1"><span class="c2">Legs cover</span><span class="mono" id="actLegsPct">—</span></div>
+        <div class="bar em mt1" style="height:6px"><i id="actLegsBar" style="width:0%"></i></div>
+      </div>
+
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> <span id="actInstrTitle">Coach brief</span></h2></div>
+        <p class="fs12" id="actInstrText">Pick an exercise above.</p>
+        <div class="mt2" style="display:grid;gap:7px" id="actTipList"></div>
+        <div class="divider"></div>
+        <div class="row wrap" style="gap:8px">
+          <button class="btn primary" onclick="saveActivitySession()"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8"/></svg> Save session</button>
+          <button class="btn" onclick="resetAct()">Reset</button>
+          <button class="btn ghost sm" onclick="shareResult('act')">Share card</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ══════════════════ PAGE: HEIGHT LAB ══════════════════ -->
+<div id="page-height" class="page">
+  <div class="row sb wrap mb3">
+    <div>
+      <span class="eyebrow">Module 02 · anthropometry</span>
+      <h1>Height &amp; Body Metrics Lab</h1>
+      <p class="fs13" style="max-width:720px">Pinhole-camera geometry + an anatomical prior, so the estimate is <b>scale-invariant</b>: you get the same answer at 1.8 m or 3.5 m, and the same answer from a 4032 px photo or a 640 px video frame.</p>
+    </div>
+    <div class="row wrap" style="gap:8px">
+      <span class="chip info" id="htMethodChip">Method: anatomical prior</span>
+      <span class="chip" id="htCalibChip">Uncalibrated</span>
+    </div>
+  </div>
+
+  <div class="grid g-main">
+    <div style="display:grid;gap:18px">
+      <div class="card pad0" style="overflow:hidden">
+        <div style="padding:16px 18px 0">
+          <div class="tabs" style="margin-bottom:0">
+            <button class="active" data-ht="live" onclick="setHtMode('live',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg> Live camera</button>
+            <button data-ht="photo" onclick="q('#htPhotoFile').click()"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg> Upload photo</button>
+            <button data-ht="video" onclick="q('#htVideoFile').click()"><svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8zM2 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg> Upload video</button>
+            <button data-ht="ref" onclick="setHtMode('ref',this)"><svg viewBox="0 0 24 24"><path d="M3 8h18v8H3zM7 8v8M11 8v8M15 8v8M19 8v8"/></svg> A4 reference</button>
+            <button data-ht="manual" onclick="setHtMode('manual',this)"><svg viewBox="0 0 24 24"><path d="M12 20h9M16 4l4 4-10 10H6v-4z"/></svg> Manual</button>
+          </div>
+        </div>
+
+        <div style="padding:16px 18px 18px">
+          <div class="stage" id="htStage" style="aspect-ratio:3/4">
+            <video id="htVideo" playsinline webkit-playsinline muted></video>
+            <canvas id="htCanvas" class="overlay"></canvas>
+            <img class="preview hide" id="htImage" alt="uploaded frame"/>
+            <div class="vig"></div>
+            <div class="guide"></div>
+            <div class="stage-top">
+              <div class="row" style="gap:7px"><span class="chip" style="background:rgba(3,5,12,.62)"><span class="dot" id="htLiveDot"></span><span id="htModeTag">CAM OFF</span></span></div>
+              <div class="row" style="gap:7px">
+                <span class="chip ok" style="background:rgba(3,5,12,.62)" id="htModChip">PRIVACY OK</span>
+                <button class="btn xs" onclick="CamManager.switchCam('ht')" title="Flip camera"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7M21 12a9 9 0 0 1-15 6.7M18 3v4h-4M6 21v-4h4"/></svg></button>
+              </div>
+            </div>
+            <div class="rec-flag hide" id="htRecFlag"><span class="dot live" style="background:#fff"></span> FILE ANALYSIS</div>
+            <div class="setup-overlay" id="htSetupOverlay">
+              <div class="so-in">
+                <div class="setup-ico"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 6l4-3 4 3M8 18l4 3 4-3"/></svg></div>
+                <div class="setup-t">Full-body setup</div>
+                <div class="setup-s" id="htSetupTips">Stand 2–3.5 m from the camera in good light. Head <b>and both ankles</b> must be fully in frame — the crown and the ankles are the two measurement endpoints. Place the phone on a stable surface at chest height, landscape or portrait both work.</div>
+                <div class="setup-s mono" id="htGuidanceMsg" style="color:var(--lime);min-height:19px">Press Start camera</div>
+              </div>
+            </div>
+            <div class="stage-empty" id="htEmpty">
+              <div class="se-in">
+                <div class="setup-ico"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 6l4-3 4 3M8 18l4 3 4-3"/></svg></div>
+                <div class="setup-t" style="font-size:.95rem">Ready to measure</div>
+                <div class="setup-s">Live camera, an uploaded photo, or an uploaded video all work. Best accuracy: <b>A4 reference mode</b>.</div>
+              </div>
+            </div>
+            <div class="blur-priv hide" id="htBlur">
+              <div class="setup-t">Measurement blocked</div>
+              <div class="setup-s" id="htBlurWhy">Modesty screen did not pass — height was not computed and nothing was saved.</div>
+            </div>
+          </div>
+
+          <div class="row sb wrap mt2" style="gap:10px">
+            <span class="fs12 c2 mono" id="htStatusText">Idle</span>
+            <div class="row wrap" style="gap:8px">
+              <button class="btn em" id="htStartBtn" onclick="startHeight()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg> Start camera</button>
+              <label class="btn cy"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg> Photo<input type="file" id="htPhotoFile" accept="image/*" onchange="handleFileUpload(event,'photo')" style="width:1px;height:1px;position:absolute;opacity:0"/></label>
+              <label class="btn cy"><svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8zM2 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg> Video<input type="file" id="htVideoFile" accept="video/*,.mov,.mkv" onchange="handleFileUpload(event,'video')" style="width:1px;height:1px;position:absolute;opacity:0"/></label>
+              <label class="btn warn"><svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7zM1 5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg> Record<input type="file" id="htCamFile" accept="video/*" capture="environment" onchange="handleFileUpload(event,'video')" style="width:1px;height:1px;position:absolute;opacity:0"/></label>
+              <button class="btn dgr" id="htStopBtn" onclick="stopHeight()" disabled>Stop</button>
+            </div>
+          </div>
+
+          <!-- A4 reference calibration -->
+          <div id="htRefPanel" class="hide mt3">
+            <div class="alert info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><div class="in"><b>Reference-object mode — the most accurate option</b>Lay one A4 sheet (297 × 210 mm) flat on the floor with its <b>long edge parallel to the camera</b>, touching your heels. Stand on it so your heels are at the far edge. Take the photo, then drag the dashed box so it covers the sheet only. Height is then computed from real millimetres per pixel — no anatomical prior needed.</div></div>
+            <div class="grid g-2 mt2">
+              <div>
+                <div class="row sb fs11 mb2"><span class="c2">Reference box (drag the corners on the preview)</span><span class="mono" id="refPxMeta">—</span></div>
+                <div style="position:relative;border-radius:13px;overflow:hidden;border:1px solid var(--line);background:#03050c;min-height:210px">
+                  <img id="refImage" alt="" style="width:100%;display:block"/>
+                  <svg id="refBox" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></svg>
+                </div>
+              </div>
+              <div style="display:grid;gap:12px;align-content:start">
+                <div>
+                  <label class="f" for="refObj">Reference object</label>
+                  <select id="refObj" onchange="applyRefPreset()">
+                    <option value="297,210">A4 paper — 297 × 210 mm</option>
+                    <option value="210,297">A4 rotated (short edge parallel)</option>
+                    <option value="85.6,54">Bank card — 85.6 × 54 mm</option>
+                    <option value="215,279">US Letter — 215.9 × 279.4 mm</option>
+                    <option value="custom">Custom…</option>
+                  </select>
+                </div>
+                <div class="row" style="gap:10px">
+                  <div style="flex:1"><label class="f" for="refCustomW">Width mm</label><input type="number" id="refCustomW" value="297" step="0.1"/></div>
+                  <div style="flex:1"><label class="f" for="refCustomH">Depth mm</label><input type="number" id="refCustomH" value="210" step="0.1"/></div>
+                </div>
+                <div class="hint">Use the ground-truth mm/pixel scale from the floor plane, then measure the vertical body span at the subject's mid-depth. Perspective between floor and crown is corrected automatically.</div>
+                <button class="btn primary wide" onclick="computeRefHeight()">Compute height from reference</button>
+                <div class="stat emerald"><div class="k">Reference result</div><div class="v" id="refVal">—<span class="u">cm</span></div><div class="foot" id="refFoot">awaiting box + landmarks</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- manual -->
+          <div id="htManualPanel" class="hide mt3">
+            <div class="alert info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><div class="in"><b>Manual entry</b>Skip the camera and type a measured value. This is also the number to feed the one-time calibration below.</div></div>
+            <div class="row wrap mt2" style="gap:11px;align-items:flex-end">
+              <div style="min-width:150px"><label class="f" for="manualHt">Height (cm)</label><input type="number" id="manualHt" step="0.1" min="80" max="250" placeholder="172.4"/></div>
+              <div style="min-width:150px"><label class="f" for="manualUnits">Units</label><select id="manualUnits"><option value="cm">Centimetres</option><option value="ftin">ft / in</option></select></div>
+              <div style="min-width:120px"><label class="f" for="manualTime">Time of day</label><select id="manualTime"><option>Afternoon (peak accuracy)</option><option>Morning (+1–2 cm)</option><option>Evening (−1 cm)</option></select></div>
+              <button class="btn primary" onclick="applyManualHeight()">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M3 12h4l2-7 4 14 2-7h4"/></svg> Measurement confidence</h2><span class="chip" id="htStateChip">idle</span></div>
+        <div class="row sb fs11"><span class="c2">Landmark quality</span><span class="mono" id="qLand">—</span></div>
+        <div class="bar mt1" style="height:6px"><i id="qLandBar"></i></div>
+        <div class="row sb fs11 mt2"><span class="c2">Framing (crown → ankles inside)</span><span class="mono" id="qFrame">—</span></div>
+        <div class="bar mt1" style="height:6px"><i id="qFrameBar"></i></div>
+        <div class="row sb fs11 mt2"><span class="c2">Pose straightness</span><span class="mono" id="qStraight">—</span></div>
+        <div class="bar mt1" style="height:6px"><i id="qStraightBar"></i></div>
+        <div class="row sb fs11 mt2"><span class="c2">Sharpness (gradient energy)</span><span class="mono" id="qSharp">—</span></div>
+        <div class="bar mt1" style="height:6px"><i id="qSharpBar"></i></div>
+        <div class="divider"></div>
+        <div class="grid g-2" style="gap:12px">
+          <div class="stat cyan"><div class="k">Est. distance</div><div class="v" id="htDist">—<span class="u">m</span></div><div class="foot">from shoulder-width parallax</div></div>
+          <div class="stat lime"><div class="k">Samples fused</div><div class="v" id="htSamples">0</div><div class="foot">median of stable frames</div></div>
+        </div>
+        <div class="mt3">
+          <label class="f" for="calibKnown">One-time calibration — enter your true height once, get ±1 cm after that</label>
+          <div class="row wrap" style="gap:9px">
+            <input type="number" id="calibKnown" step="0.1" placeholder="e.g. 172.5" style="max-width:170px"/>
+            <button class="btn primary sm" onclick="calibrateFromKnown()">Calibrate scale</button>
+            <button class="btn sm" onclick="resetCalibration()">Reset</button>
+          </div>
+          <div class="hint mt1">Saves a device-specific ratio constant (<span class="mono" id="calibKVal">k = 1.0000</span>) in local storage — it corrects your lens FOV, screen aspect and shoulder-width bias. Applied to every future live, photo and video measurement on this phone.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:18px;align-content:start">
+      <div class="card" style="background:linear-gradient(160deg,rgba(6,78,59,.5),rgba(9,13,25,.7))">
+        <div class="eyebrow">Estimated height</div>
+        <div class="row sb" style="align-items:baseline;margin-top:8px">
+          <div class="live-val" style="font-size:4.1rem" id="htVal">—</div>
+          <div style="text-align:right"><div class="fs13 c2 font-weight">cm</div><div class="hint mono" id="htRange">± — cm</div></div>
+        </div>
+        <div class="row wrap mt2" style="gap:7px">
+          <span class="chip" id="htBadgePrior">Anatomical prior</span>
+          <span class="chip" id="htBadgeCalib">No calibration</span>
+          <span class="chip" id="htBadgeRef">A4 not used</span>
+        </div>
+        <div class="row sb mt2 fs11"><span class="c2">Feet &amp; inches</span><b class="mono" id="htFtIn">—</b></div>
+        <div class="row sb fs11"><span class="c2">Method</span><b class="mono" id="htMethodTxt">—</b></div>
+        <div class="row sb fs11"><span class="c2">Captured</span><b class="mono" id="htCapturedAt">—</b></div>
+        <div class="btn-group mt3">
+          <button class="btn primary" onclick="saveHeightSession()"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg> Save measurement</button>
+          <button class="btn ghost sm" onclick="shareResult('height')">Share card</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> BMI &amp; composition</h2><span class="chip" id="bmiChip">enter weight</span></div>
+        <div class="row wrap" style="gap:11px;align-items:flex-end">
+          <div style="flex:1;min-width:120px"><label class="f" for="bmiWeight">Weight (kg)</label><input type="number" id="bmiWeight" step="0.1" min="20" max="350" placeholder="68.5" oninput="calcBMI()"/></div>
+          <div style="flex:1;min-width:120px"><label class="f" for="bmiAge">Age</label><input type="number" id="bmiAge" step="1" min="8" max="100" placeholder="21" oninput="calcBMI()"/></div>
+          <div style="min-width:110px"><label class="f" for="bmiSex">Sex</label><select id="bmiSex" onchange="calcBMI()"><option value="m">Male</option><option value="f">Female</option></select></div>
+        </div>
+        <div class="mt3">
+          <div class="row sb" style="align-items:baseline"><span class="c2 fs12">Your BMI</span><b class="mono" style="font-size:2rem;font-family:var(--fd)" id="bmiVal">—</b></div>
+          <div class="gauge mt2" id="bmiGauge">
+            <span class="zone" style="left:0;width:18.5%;background:var(--amber)"></span>
+            <span class="zone" style="left:18.5%;width:20%;background:var(--emerald)"></span>
+            <span class="zone" style="left:38.5%;width:14%;background:var(--amber)"></span>
+            <span class="zone" style="left:52.5%;width:47.5%;background:var(--red)"></span>
+            <span class="needle" id="bmiNeedle" style="left:0%"></span>
+          </div>
+          <div class="row sb fs11 mt1 c3"><span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span></div>
+          <div class="row sb mt2"><span class="fs13" style="font-weight:700" id="bmiCategory">—</span><span class="chip" id="bmiCat2">—</span></div>
+          <p class="fs12 mt2" id="bmiAdvice">Height and weight are needed to compute BMI.</p>
+          <div class="divider"></div>
+          <div class="grid g-2" style="gap:10px">
+            <div class="stat"><div class="k">Ideal weight</div><div class="v" style="font-size:1.15rem" id="bmiRange">—</div><div class="foot">BMI 18.5–24.9</div></div>
+            <div class="stat"><div class="k">Body fat est.</div><div class="v" style="font-size:1.15rem" id="bfVal">—</div><div class="foot">Deurenberg formula</div></div>
+          </div>
+          <div class="hint mt2">Also reported: Ponderal index, BSA (Mosteller) and healthy-weight delta.</div>
+          <div class="row wrap mt2" style="gap:8px">
+            <button class="btn sm" onclick="saveHeightSession(true)">Save BMI to history</button>
+            <button class="btn sm ghost" onclick="copyMetrics()">Copy summary</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/></svg> Privacy screen</h2><span class="chip" id="htModState">idle</span></div>
+        <div class="fs13" id="htModVerdict" style="font-weight:700">Not started</div>
+        <div class="flaglist" id="htModFlags"></div>
+        <div class="hint mt2">A measurement is only written to history when the modesty screen passes. Blocked sessions keep no image, no thumbnail and no frame.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ PAGE: REACTION ══════════════════ -->
+<div id="page-react" class="page">
+  <div class="row sb wrap mb3">
+    <div>
+      <span class="eyebrow">Module 03 · neuromotor latency</span>
+      <h1>Reaction Speed Arena</h1>
+      <p class="fs13">10 command types. Latency is measured from the exact frame the prompt is shown to the exact frame the pose matches — with a camera-exposure correction for mobile shutter lag.</p>
+    </div>
+    <div class="row wrap" style="gap:8px"><span class="chip ok">Live &amp; video-replay supported</span></div>
+  </div>
+
+  <div class="grid g-main">
+    <div style="display:grid;gap:18px">
+      <div class="card pad0" style="overflow:hidden">
+        <div style="padding:16px 18px 0">
+          <div class="tabs" style="margin-bottom:0">
+            <button class="active" data-rm="live" onclick="setReactMode('live',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg> Live camera</button>
+            <button data-rm="file" onclick="q('#reactVideoFile').click()"><svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8zM2 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg> Video upload</button>
+            <button data-rm="demo" onclick="setReactMode('demo',this)"><svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3z"/></svg> Demo</button>
+          </div>
+        </div>
+        <div style="padding:16px 18px 18px">
+          <div class="stage" id="reactStage">
+            <video id="reactVideo" playsinline webkit-playsinline muted></video>
+            <canvas id="reactCanvas" class="overlay"></canvas>
+            <div class="vig"></div>
+            <div class="guide"></div>
+            <div class="stage-top">
+              <div class="row" style="gap:7px"><span class="chip" style="background:rgba(3,5,12,.62)"><span class="dot" id="reactLiveDot"></span><span id="reactModeTag">CAM OFF</span></span></div>
+              <div class="row" style="gap:7px">
+                <span class="chip" style="background:rgba(3,5,12,.62)" id="reactFpsChip">— fps</span>
+                <button class="btn xs" onclick="CamManager.switchCam('react')" title="Flip camera"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7M21 12a9 9 0 0 1-15 6.7M18 3v4h-4M6 21v-4h4"/></svg></button>
+              </div>
+            </div>
+            <div class="rec-flag hide" id="reactRecFlag"><span class="dot live" style="background:#fff"></span> REPLAY</div>
+            <div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);z-index:7;text-align:center;padding:0 18px;pointer-events:none">
+              <div id="reactPrompt" style="font-family:var(--fd);font-weight:800;font-size:clamp(1.5rem,4.6vw,2.6rem);letter-spacing:-.03em;text-shadow:0 6px 30px rgba(0,0,0,.95);color:#fff">Ready?</div>
+              <div id="reactSub" class="mono fs12" style="color:var(--brand-2);text-shadow:0 2px 12px #000;letter-spacing:.1em">Start camera, then tap Begin</div>
+            </div>
+            <div class="setup-overlay hide" id="reactSetupOverlay">
+              <div class="so-in"><div class="setup-t">Stand centred, full upper body visible</div></div>
+            </div>
+            <div class="stage-empty" id="reactEmpty">
+              <div class="se-in">
+                <div class="setup-ico"><svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z"/></svg></div>
+                <div class="setup-t" style="font-size:.95rem">Camera is off</div>
+                <div class="setup-s">Press Start camera and allow access, or upload a recorded clip to score reaction latency from video.</div>
+              </div>
+            </div>
+            <div class="blur-priv hide" id="reactBlur"><div class="setup-t">Test paused by privacy screen</div><div class="setup-s" id="reactBlurWhy">Garment coverage insufficient.</div></div>
+          </div>
+
+          <div class="row sb wrap mt2" style="gap:10px">
+            <span class="fs12 c2 mono" id="reactStatusText">Idle</span>
+            <div class="row wrap" style="gap:8px">
+              <button class="btn em" id="reactStartBtn" onclick="startReaction()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg> Start camera</button>
+              <button class="btn warn" id="reactBeginBtn" onclick="beginReactTest()" disabled>Arm next prompt</button>
+              <button class="btn primary" id="reactRunBtn" onclick="runReactSuite()" disabled>Run 10-prompt suite</button>
+              <button class="btn dgr" id="reactStopBtn" onclick="stopReaction()" disabled>Stop</button>
+            </div>
+          </div>
+
+          <div id="reactFilePanel" class="mt3 hide">
+            <div class="file-drop" id="reactDrop">
+              <svg viewBox="0 0 24 24"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+              <div class="fs13" style="font-weight:700">Attach a reaction-test video</div>
+              <div class="hint mt1">Record yourself (or a teammate) reacting to a partner's shouts, upload it, and the engine extracts latency per detected motion from the timeline.</div>
+              <div class="row wrap mt2" style="justify-content:center;gap:8px">
+                <label class="btn primary sm"><svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8zM2 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg> Choose video<input type="file" id="reactVideoFile" accept="video/*,.mov,.mkv" onchange="handleReactFile(event)" style="width:1px;height:1px;position:absolute;opacity:0"/></label>
+                <label class="btn sm"><svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7zM1 5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg> Record now<input type="file" id="reactCamFile" accept="video/*" capture="environment" onchange="handleReactFile(event)" style="width:1px;height:1px;position:absolute;opacity:0"/></label>
+                <button class="btn sm dgr hide" id="reactCancelBtn" onclick="cancelReplay('react')">Cancel</button>
+              </div>
+            </div>
+            <div class="mt2"><div class="row sb fs11 c2"><span class="mono" id="reactFileMeta">No file attached</span><span class="mono" id="reactAnalyzePct">0%</span></div><div class="progress-strip mt1"><i id="reactAnalyzeBar"></i></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-6 3 4 5-8"/></svg> Latency distribution</h2><span class="chip" id="reactConsistency">consistency —</span></div>
+        <div class="tl" style="height:92px"><canvas id="reactChart"></canvas></div>
+        <div class="row sb mt1"><span class="hint">Each bar = one prompt trial (lower is better)</span><span class="hint mono" id="reactCount">0 trials</span></div>
+        <div class="grid g-2 mt3" style="gap:11px">
+          <div class="stat"><div class="k">Median latency</div><div class="v" style="font-size:1.3rem" id="reactMed">—</div><div class="foot">robust central value</div></div>
+          <div class="stat"><div class="k">Std deviation</div><div class="v" style="font-size:1.3rem" id="reactSd">—</div><div class="foot">focus indicator</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:18px;align-content:start">
+      <div class="grid g-3" style="grid-template-columns:1fr 1fr 1fr;gap:11px">
+        <div class="stat cyan"><div class="k">Avg</div><div class="v" id="reactAvgVal">—</div><div class="foot">ms</div></div>
+        <div class="stat lime"><div class="k">Best</div><div class="v" id="reactBestVal">—</div><div class="foot">ms</div></div>
+        <div class="stat violet"><div class="k">Score</div><div class="v" id="reactScoreVal">0</div><div class="foot">pts</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 6v6l4 2"/></svg> Percentile vs population</h2></div>
+        <div class="row sb"><span class="fs13">You are faster than</span><b class="mono lime" style="font-size:1.35rem" id="reactPct">—</b></div>
+        <div class="bar lime mt2" style="height:9px"><i id="reactPctBar" style="width:0%"></i></div>
+        <div class="hint mt2">Modelled against published simple-reaction-time distributions (≈250 ms visual mean, 40–60 ms elite, +~30 ms auditory).</div>
+        <div class="divider"></div>
+        <div style="display:grid;gap:8px" id="reactBreakdown"></div>
+        <div class="btn-group mt3">
+          <button class="btn primary" onclick="saveReactSession()">Save session</button>
+          <button class="btn ghost sm" onclick="shareResult('react')">Share card</button>
+        </div>
+      </div>
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/></svg> Privacy screen</h2></div>
+        <div class="fs13" style="font-weight:700" id="reactModVerdict">Not started</div>
+        <div class="hint mt1">The reaction module keeps the same guard: no pose data or frames are stored when coverage fails.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ PAGE: PRIVACY ══════════════════ -->
+<div id="page-privacy" class="page">
+  <div class="row sb wrap mb3">
+    <div>
+      <span class="eyebrow">Module 04 · safety &amp; consent</span>
+      <h1>Moderation &amp; Privacy Shield</h1>
+      <p class="fs13" style="max-width:760px">A garment-coverage classifier built on the pose skeleton: it never classifies bodies or people, only <b>whether clothing covers the anatomical regions that must be covered</b>. Runs on the same frames the tracker already holds in RAM, so no second stream, no upload, no storage.</p>
+    </div>
+    <span class="chip ok"><span class="dot live" style="background:var(--lime)"></span> Active in every module</span>
+  </div>
+
+  <div class="grid g-main">
+    <div style="display:grid;gap:18px">
+      <div class="card">
+        <div class="mod idle" id="modPanel" style="margin:0">
+          <span class="stripe"></span>
+          <div class="mod-hd">
+            <div class="mod-ic" id="modIco"><svg viewBox="0 0 24 24"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/></svg></div>
+            <div style="min-width:0">
+              <div class="mod-t" id="modTitle">Shield armed — waiting for frames</div>
+              <div class="mod-s" id="modSub">Start any module (camera or upload) and screening begins automatically.</div>
+            </div>
+            <span class="chip" id="modStateChip" style="margin-left:auto">IDLE</span>
+          </div>
+          <div class="grid g-3" style="gap:12px">
+            <div><div class="row sb fs11"><span class="c2">Upper-body coverage</span><span class="mono" id="covUp">—</span></div><div class="bar mt1"><i id="covUpBar"></i></div><div class="hint">chest + shoulders + upper back</div></div>
+            <div><div class="row sb fs11"><span class="c2">Lower-body coverage</span><span class="mono" id="covLow">—</span></div><div class="bar amber mt1"><i id="covLowBar"></i></div><div class="hint">hips + thighs</div></div>
+            <div><div class="row sb fs11"><span class="c2">Confidence</span><span class="mono" id="covConf">—</span></div><div class="bar violet mt1"><i id="covConfBar"></i></div><div class="hint">pose quality × pixel sample</div></div>
+          </div>
+          <div class="flaglist" id="modFlags"></div>
+          <div class="wristband mt2" id="modBand" style="visibility:hidden">⚠ CONTENT FLAGGED · SESSION BLOCKED · NOTHING STORED</div>
+        </div>
+
+        <div class="row sb wrap mt3" style="gap:10px">
+          <div class="row wrap" style="gap:8px">
+            <button class="btn primary" onclick="startShieldTest()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg> Run live shield test</button>
+            <label class="btn cy"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg> Screen a photo<input type="file" id="modPhotoFile" accept="image/*" onchange="screenFile(event)" style="width:1px;height:1px;position:absolute;opacity:0"/></label>
+            <label class="btn cy"><svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8zM2 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg> Screen a video<input type="file" id="modVideoFile" accept="video/*,.mov,.mkv" onchange="screenFile(event)" style="width:1px;height:1px;position:absolute;opacity:0"/></label>
+            <button class="btn" onclick="calibrateBaseline()"><svg viewBox="0 0 24 24"><path d="M12 20h9M12 4h9M4 20l3-3M4 4l3 3M4 12h3"/></svg> Calibrate to my outfit</button>
+            <button class="btn ghost sm" onclick="resetBaseline()">Reset baseline</button>
+          </div>
+        </div>
+
+        <div class="alert info mt3"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><div class="in"><b>Why “Calibrate to my outfit” matters</b>Skin-tone thresholds alone mislabel tank tops, dark lighting and deep skin tones. So the shield first records your <i>baseline</i> coverage profile during setup (your actual outfit, your skin tone, your room lighting) and then alarms only when coverage <b>drops relative to that baseline</b> or absolute coverage collapses. That single change removes most false positives and works across skin tones.</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Screening verdicts</h2><span class="chip">4 levels</span></div>
+        <table class="tbl">
+          <thead><tr><th>Verdict</th><th>Trigger</th><th>App response</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip ok">CLEAN</span></td><td class="fs12">All required regions covered vs. baseline</td><td class="fs12">Session proceeds, metrics may be stored</td></tr>
+            <tr><td><span class="chip warn">CAUTION</span></td><td class="fs12">Coverage marginal or pose partially occluded</td><td class="fs12">Coaching hint shown, scoring continues, save warns</td></tr>
+            <tr><td><span class="chip bad">BLOCKED</span></td><td class="fs12">Torso or hip/thigh skin area far above baseline</td><td class="fs12">Preview blurred, session refused, nothing persisted</td></tr>
+            <tr><td><span class="chip">NO PERSON</span></td><td class="fs12">No 33-landmark body detected</td><td class="fs12">Nothing counted, nothing stored</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg> Live moderation log</h2><div class="row" style="gap:8px"><button class="btn xs" onclick="clearModLog()">Clear</button></div></div>
+        <div id="modLog" style="max-height:260px;overflow-y:auto;font-family:var(--fm);font-size:.7rem;display:grid;gap:5px"></div>
+        <div class="hint mt2">Log lives in RAM only — reloading the page erases it. Frames are never written to disk or localStorage.</div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:18px;align-content:start">
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg> Thresholds</h2></div>
+        <div class="hint mb2">Absolute skin-fraction limits per region, plus the relative drop-vs-baseline alarm. Move the slider to tune sensitivity.</div>
+        <label class="f" for="modSens">Sensitivity <span class="mono" id="modSensVal">55</span></label>
+        <input type="range" id="modSens" min="1" max="100" value="55" oninput="setModSensitivity(this.value)"/>
+        <div class="grid g-2 mt3" style="gap:11px">
+          <div class="stat"><div class="k">Torso skin limit</div><div class="v" style="font-size:1.2rem" id="limTorso">—</div><div class="foot">clean above / blocked below</div></div>
+          <div class="stat"><div class="k">Leg skin limit</div><div class="v" style="font-size:1.2rem" id="limLegs">—</div><div class="foot">shorts allowed by baseline</div></div>
+        </div>
+        <div class="divider"></div>
+        <label class="check"><input type="checkbox" id="optBlur" checked onchange="applyPrivacyOptions()"/><span class="fs12">Blur preview when BLOCKED</span></label>
+        <label class="check mt1"><input type="checkbox" id="optBlockSave" checked onchange="applyPrivacyOptions()"/><span class="fs12">Refuse to save flagged sessions</span></label>
+        <label class="check mt1"><input type="checkbox" id="optAudio" onchange="applyPrivacyOptions()"/><span class="fs12">Audible alert on flag</span></label>
+        <label class="check mt1"><input type="checkbox" id="optRequireConsent" checked onchange="applyPrivacyOptions()"/><span class="fs12">Require consent notice before any camera starts</span></label>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Architecture</h2></div>
+        <div style="display:grid;gap:9px" class="fs12">
+          <div class="flag g"><b>1</b><span>Frame is already in canvas memory for pose tracking — the shield reuses it, so cost is one pixel pass, not a second model.</span></div>
+          <div class="flag g"><b>2</b><span>33 landmarks → three anatomical polygons (upper torso, pelvis + thighs, control limb) via <span class="mono">Path2D</span> hit-testing on subsampled pixels.</span></div>
+          <div class="flag g"><b>3</b><span>Pixels classified as skin by an RGB + HSV rule set (Peeradee et al.) → per-region skin fraction, hue variance and luminance.</span></div>
+          <div class="flag g"><b>4</b><span>Verdict = f(absolute coverage, coverage drop vs calibrated baseline, pose confidence). Median-of-N temporal vote suppresses single-frame flicker.</span></div>
+          <div class="flag y"><b>5</b><span>On BLOCKED: UI blur, scoring halted, history write refused, no frame ever leaves <span class="mono">RAM</span>. Explicitly <i>not</i> a body-shaming or identity system.</span></div>
+        </div>
+      </div>
+      <div class="card" style="background:linear-gradient(160deg,rgba(120,12,32,.35),rgba(9,13,25,.7))">
+        <div class="eyebrow">Demo panel</div>
+        <h2 class="mt1">Prove it to the judges in 20 seconds</h2>
+        <p class="fs12 mt1">These synthetic frames force each verdict path — useful when a live demo can't risk an unclothed volunteer.</p>
+        <div class="btn-group mt3">
+          <button class="btn sm em" onclick="simulateVerdict('clean')">Force CLEAN</button>
+          <button class="btn sm warn" onclick="simulateVerdict('caution')">Force CAUTION</button>
+          <button class="btn sm dgr" onclick="simulateVerdict('blocked')">Force BLOCKED</button>
+        </div>
+        <div class="hint mt2">Runs the exact same decision function the live pipeline uses — no separate demo code path.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ══════════════════ PAGE: FITNESS REPORT ══════════════════ -->
+<div id="page-fitness" class="page">
+  <div class="row sb wrap mb3">
+    <div>
+      <span class="eyebrow">Module 05 · composite analytics</span>
+      <h1>Overall Fitness Analyzer</h1>
+      <p class="fs13">Six weighted dimensions, all derived from measured data — never from guesses.</p>
+    </div>
+    <div class="btn-group">
+      <button class="btn primary" onclick="generateFitnessReport(true)"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/></svg> Recompute</button>
+      <button class="btn" onclick="exportPDF()">Export PDF</button>
+      <button class="btn ghost" onclick="shareResult('fitness')">Share card</button>
+    </div>
+  </div>
+
+  <div class="grid g-main">
+    <div style="display:grid;gap:18px">
+      <div class="card">
+        <div class="row wrap" style="gap:26px;align-items:center">
+          <div class="ring" id="fitCircle" style="--p:0;--sz:184px"><div class="rc"><b id="fitScoreVal">0</b><span>Composite<br/>0 – 100</span></div></div>
+          <div style="flex:1;min-width:230px">
+            <span class="eyebrow">Classification</span>
+            <h2 style="font-size:1.9rem;margin:6px 0 4px" id="fitCategory">Needs data</h2>
+            <p class="fs12" id="fitBlurb">Run a session in any module and the analyzer will start scoring you.</p>
+            <div class="row wrap mt2" style="gap:7px" id="fitChips"></div>
+          </div>
+          <svg id="radar" viewBox="0 0 220 220" width="220" height="220" style="flex-shrink:0"></svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/></svg> Dimension breakdown</h2><span class="chip" id="fitWeightChip">weights: 20/20/20/20/10/10</span></div>
+        <div style="display:grid;gap:13px" id="fitBars"></div>
+        <div class="alert info mt3"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><div class="in"><b>Scoring contract</b><span id="fitContract"></span></div></div>
+      </div>
+
+      <div class="grid g-2">
+        <div class="card">
+          <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg> Readiness &amp; load</h2></div>
+          <div class="grid g-2" style="gap:11px">
+            <div class="stat emerald"><div class="k">Weekly load</div><div class="v" id="rdLoad">0</div><div class="foot">pts last 7 days</div></div>
+            <div class="stat amber"><div class="k">Streak</div><div class="v" id="rdStreak">0</div><div class="foot">consecutive days</div></div>
+          </div>
+          <div class="mt3"><div class="row sb fs11"><span class="c2">Recommended volume</span><span class="mono" id="rdRecTxt">—</span></div><div class="bar lime mt1"><i id="rdRecBar" style="width:0%"></i></div><div class="hint mt1">WHO guideline: 150 min moderate activity / week, approximated from reps × tempo.</div></div>
+          <div class="fs13 mt3" id="rdAdvice"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="m7 8 5 5-5 5M14 8l5 5-5 5"/></svg> Personal bests</h2></div>
+          <div style="display:grid;gap:8px" id="pbList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:18px;align-content:start">
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 20h9M12 4h9M4 20l3-3M4 4l3 3M4 12h3"/></svg> Prescriptions</h2></div>
+        <div id="fitRx" style="display:grid;gap:9px"></div>
+      </div>
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg> Measurement report card</h2></div>
+        <div style="display:grid;gap:7px" class="fs12" id="metroCards"></div>
+        <div class="hint mt2">Every metric carries a method + uncertainty line so judges can audit the number instead of trusting it.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ PAGE: HISTORY ══════════════════ -->
+<div id="page-history" class="page">
+  <div class="row sb wrap mb3">
+    <div><span class="eyebrow">Data vault</span><h1>Workout History</h1><p class="fs13">Everything below lives in <span class="mono">localStorage</span> under your profile key. Export or wipe at will.</p></div>
+    <div class="row wrap" style="gap:8px">
+      <button class="btn" onclick="exportJSON()"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> JSON</button>
+      <button class="btn primary" onclick="exportPDF()">Export PDF</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row sb wrap mb3" style="gap:10px">
+      <div class="seg" id="histFilters">
+        <button class="active" data-f="all" onclick="filterHistory('all',this)">All</button>
+        <button data-f="exercise" onclick="filterHistory('exercise',this)">Exercises</button>
+        <button data-f="reaction" onclick="filterHistory('reaction',this)">Reaction</button>
+        <button data-f="height" onclick="filterHistory('height',this)">Height</button>
+        <button data-f="flagged" onclick="filterHistory('flagged',this)">Blocked</button>
+      </div>
+      <div class="row wrap" style="gap:9px">
+        <input type="text" id="histSearch" placeholder="Search sessions…" style="width:180px;padding:8px 12px;font-size:.8rem" oninput="loadHistory()"/>
+        <select id="histSort" style="width:auto;padding:8px 30px 8px 12px;font-size:.8rem" onchange="loadHistory()">
+          <option value="new">Newest first</option><option value="score">Top score</option><option value="reps">Most reps</option>
+        </select>
+      </div>
+    </div>
+    <div style="overflow-x:auto;max-height:560px;overflow-y:auto">
+      <table class="tbl">
+        <thead><tr><th>Date &amp; time</th><th>Activity</th><th>Source</th><th>Reps / ms</th><th>Score</th><th>Kcal</th><th>Form</th><th>Privacy</th><th></th></tr></thead>
+        <tbody id="histBody"><tr class="empty-row"><td colspan="9">No history yet.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="row sb mt2"><span class="hint mono" id="histMeta">0 records</span><button class="btn xs dgr" onclick="clearHistory()">Clear visible records</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════ PAGE: LEADERBOARD ══════════════════ -->
+<div id="page-leaderboard" class="page">
+  <div class="row sb wrap mb3">
+    <div><span class="eyebrow">Arena</span><h1>Global Leaderboard</h1><p class="fs13">Local-first with optional team sync: entries are shared only if you turn sync on and paste a shared code. Verification badges mark sessions that passed form + privacy gates.</p></div>
+    <div class="row wrap" style="gap:8px">
+      <span class="chip info" id="lbModeChip">Local mode</span>
+      <button class="btn primary" onclick="loadLeaderboard()">Refresh</button>
+    </div>
+  </div>
+  <div class="grid g-2">
+    <div class="card">
+      <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M8 20h8M12 14v6"/></svg> Ranking</h2><div class="row" style="gap:7px">
+        <select id="lbScope" style="width:auto;padding:6px 26px 6px 10px;font-size:.74rem" onchange="loadLeaderboard()"><option value="all">All activities</option><option value="verified">Verified only</option><option value="exercise">Exercises</option><option value="reaction">Reaction</option><option value="height">Height lab</option></select>
+      </div></div>
+      <div style="overflow-x:auto"><table class="tbl">
+        <thead><tr><th>#</th><th>Athlete</th><th>Activity</th><th>Score</th><th>Tags</th></tr></thead>
+        <tbody id="lbBody"></tbody>
+      </table></div>
+    </div>
+    <div style="display:grid;gap:18px;align-content:start">
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M17 11l2 2 4-4"/></svg> Team sync room</h2></div>
+        <div class="hint">Optional. A room code lets multiple phones on the same demo table share one board. Uses a public realtime relay only when enabled — scores, never video.</div>
+        <div class="row wrap mt2" style="gap:9px;align-items:flex-end">
+          <div style="flex:1;min-width:150px"><label class="f" for="roomCode">Room code</label><input type="text" id="roomCode" placeholder="TEAM-2026" class="mono"/></div>
+          <button class="btn primary" onclick="joinRoom()">Connect</button>
+          <button class="btn ghost sm" onclick="leaveRoom()">Leave</button>
+        </div>
+        <div class="row sb mt2 fs11"><span class="c2">Status</span><b class="mono" id="roomStatus">offline (local only)</b></div>
+        <div class="row wrap mt2" style="gap:8px">
+          <button class="btn sm" onclick="seedBoard()">Seed demo entries</button>
+          <button class="btn sm ghost" onclick="resetBoard()">Reset board</button>
+        </div>
+      </div>
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 4-6 5 5"/></svg> Podium</h2></div>
+        <div id="podium" style="display:flex;gap:11px;align-items:flex-end;justify-content:center;min-height:150px"></div>
+      </div>
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg> Anti-cheat notes</h2></div>
+        <div class="fs12" style="display:grid;gap:8px">
+          <div class="flag y"><b>Flag</b><span>Reps are only counted when joint-angle hysteresis, minimum rep duration and landmark visibility all pass.</span></div>
+          <div class="flag y"><b>Flag</b><span>Impossible scores (e.g. &gt;60 reps/min sustained) are tagged <span class="mono">review</span> in the export.</span></div>
+          <div class="flag g"><b>Badge</b><span>“Verified” requires the privacy screen to have passed plus ≥70 % tracking quality.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ PAGE: SETTINGS ══════════════════ -->
+<div id="page-settings" class="page">
+  <div class="row sb wrap mb3">
+    <div><span class="eyebrow">Configuration</span><h1>Settings &amp; Diagnostics</h1><p class="fs13">Everything needed to make the camera work on the room's Wi-Fi, phones and that dodgy conference lighting.</p></div>
+    <div class="row" style="gap:8px"><span class="chip" id="settingsVer">v4.0 · build —</span></div>
+  </div>
+
+  <div class="grid g-2">
+    <div style="display:grid;gap:18px;align-content:start">
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg> Profile</h2></div>
+        <div class="row" style="gap:13px;align-items:center">
+          <div class="avatar" style="width:52px;height:52px;border-radius:16px;font-size:1.25rem" id="settingsAvatar">A</div>
+          <div style="min-width:0"><div class="fs13" style="font-weight:800" id="settingsUser">—</div><div class="hint">Local profile · <span class="mono" id="settingsKey">—</span></div></div>
+        </div>
+        <div class="grid g-2 mt3" style="gap:11px">
+          <div><label class="f" for="setWeight">Default weight (kg)</label><input type="number" id="setWeight" step="0.1" placeholder="68"/></div>
+          <div><label class="f" for="setAge">Age</label><input type="number" id="setAge" step="1" placeholder="21"/></div>
+          <div><label class="f" for="setHeight">Known height (cm)</label><input type="number" id="setHeight" step="0.1" placeholder="172"/></div>
+          <div><label class="f" for="setUnit">Units</label><select id="setUnit" onchange="applySettings()"><option value="metric">Metric</option><option value="imperial">Imperial</option></select></div>
+        </div>
+        <div class="btn-group mt3"><button class="btn primary sm" onclick="saveSettings()">Save</button><button class="btn sm" onclick="logout()">Logout</button><button class="btn sm dgr" onclick="clearUserData()">Erase my data</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7zM1 5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg> Camera</h2><span class="chip" id="camDiagChip">—</span></div>
+        <div class="diag" id="diagSettings"></div>
+        <div class="divider"></div>
+        <div class="grid g-2" style="gap:11px">
+          <div><label class="f" for="setRes">Requested resolution</label><select id="setRes" onchange="applySettings()"><option value="1280x720">1280 × 720 (recommended)</option><option value="640x480">640 × 480 (fast, weak phones)</option><option value="1920x1080">1920 × 1080 (desktop)</option><option value="0">Device default</option></select></div>
+          <div><label class="f" for="setModel">Pose model</label><select id="setModel" onchange="applySettings();Engine.reload()"><option value="lite">Pose Lite — fastest</option><option value="full" selected>Pose Full — balanced</option><option value="heavy">Pose Heavy — most accurate</option></select></div>
+        </div>
+        <div class="row wrap mt2" style="gap:8px">
+          <button class="btn sm" onclick="CamManager.testCamera()">Run camera self-test</button>
+          <button class="btn sm" onclick="Engine.reload()">Reload AI engines</button>
+          <button class="btn sm ghost" onclick="location.reload()">Restart app</button>
+        </div>
+        <div class="alert mt3 hide" id="cameraHelp"></div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:18px;align-content:start">
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 3 4 6.5V12c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5V6.5L12 3z"/></svg> Privacy &amp; data</h2><span class="chip ok" id="privChip">No network egress for media</span></div>
+        <p class="fs12">AI Fitness Pro performs every inference in this tab. Camera frames go from the encoder to a canvas in the same process. Nothing is posted to a server, no thumbnail or clip is stored, and history holds only numbers plus verdict labels.</p>
+        <div class="grid g-2 mt3" style="gap:11px">
+          <div class="stat"><div class="k">localStorage used</div><div class="v" style="font-size:1.2rem" id="storageUse">—</div><div class="foot">numeric records only</div></div>
+          <div class="stat"><div class="k">Stored frames</div><div class="v" style="font-size:1.2rem" id="storedFrames">0</div><div class="foot">by design</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="fs12" style="display:grid;gap:8px">
+          <div class="flag g"><b>✓</b><span>Consent gate before camera start</span></div>
+          <div class="flag g"><b>✓</b><span>One-tap erase of all data</span></div>
+          <div class="flag g"><b>✓</b><span>Export includes the scoring formula, so results are auditable</span></div>
+          <div class="flag y"><b>!</b><span>Model weights are fetched from a CDN once and cached by the browser</span></div>
+        </div>
+        <div class="btn-group mt3">
+          <button class="btn sm" onclick="exportJSON()">Download my data</button>
+          <label class="btn sm">Import data<input type="file" accept="application/json" onchange="importJSON(event)" style="width:1px;height:1px;position:absolute;opacity:0"/></label>
+          <button class="btn sm dgr" onclick="clearUserData()">Erase everything</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5z"/></svg> Keyboard &amp; shortcuts</h2></div>
+        <div class="grid g-2" style="gap:8px;font-size:.76rem">
+          <div class="row sb"><span class="c2">Start/stop current module</span><span class="kbd">Space</span></div>
+          <div class="row sb"><span class="c2">Flip camera</span><span class="kbd">C</span></div>
+          <div class="row sb"><span class="c2">Switch module</span><span class="kbd">1 – 9</span></div>
+          <div class="row sb"><span class="c2">Next exercise</span><span class="kbd">N</span></div>
+          <div class="row sb"><span class="c2">Force tracking lock</span><span class="kbd">L</span></div>
+          <div class="row sb"><span class="c2">Save session</span><span class="kbd">S</span></div>
+        </div>
+      </div>
+
+      <div class="card flat">
+        <div class="card-hd"><h2><svg viewBox="0 0 24 24"><path d="M12 20h9M12 4h9M4 20l3-3M4 4l3 3M4 12h3"/></svg> Known limits — read before demoing</h2></div>
+        <div style="display:grid;gap:9px">
+          <details class="acc"><summary>Height accuracy claims<span class="cv">›</span></summary><div class="acc-b">Uncalibrated anatomical-prior mode is typically ±4–8 cm because biacromial width varies between people. A4-reference mode is ±1–2 cm. One-time calibration on a phone typically gives ±2–4 cm. The UI always states which mode produced the number — never silently overclaims.</div></details>
+          <details class="acc"><summary>What the modesty screen is not<span class="cv">›</span></summary><div class="acc-b">It is not a nudity classifier in the ML sense and it does not identify anyone. It measures pixel coverage of anatomical polygons using a colour rule. It can miss thin fabrics and it can flag a bare-torso stretch routine — which is why it is a <i>safety gate that blocks saving</i>, not evidence of wrongdoing.</div></details>
+          <details class="acc"><summary>Rep counting edge cases<span class="cv">›</span></summary><div class="acc-b">Occluded limbs (side plank, burpee bottom-out), very dark clothing against dark floors, and camera shake degrade landmark quality. The engine degrades by rejecting reps and exposing a rejection counter rather than guessing — visible score drops are intentional.</div></details>
+          <details class="acc"><summary>Why HTTPS is mandatory<span class="cv">›</span></summary><div class="acc-b">Browsers only expose <span class="mono">getUserMedia</span> in secure contexts. Opening this file from <span class="mono">file://</span> or plain <span class="mono">http://</span> on a phone will be blocked by the browser, not by the app. Use GitHub Pages, or <span class="mono">python3 -m http.server</span> + <span class="mono">localhost</span> on a laptop.</div></details>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
