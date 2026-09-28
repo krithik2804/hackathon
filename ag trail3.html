@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Exercise Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #6366f1; --primary-hover: #4f46e5;
+  --accent: #06b6d4; --accent-hover: #0891b2;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+  --bg-dark: #0f172a; --bg-card: #1e293b; --bg-card-hover: #334155;
+  --text-main: #f8fafc; --text-muted: #94a3b8;
+  --border-color: rgba(255,255,255,0.1);
+  --glass: rgba(30, 41, 59, 0.7);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-dark); color: var(--text-main);
+  min-height: 100vh; overflow-x: hidden; line-height: 1.5;
+}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+h1, h2, h3 { font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+h1 { font-size: 1.8rem; font-weight: 800; }
+h2 { font-size: 1.4rem; }
+p { font-size: 0.9rem; color: var(--text-muted); }
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+/* MODALS & OVERLAYS */
+.overlay-full { position: fixed; inset: 0; background: var(--bg-dark); display: none; align-items: center; justify-content: center; z-index: 10000; }
+.overlay-full.active { display: flex; animation: fadeIn 0.3s ease; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.9); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+.modal-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
+.modal-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; width: 90%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }
+.modal-card h2 { color: var(--text-main); margin-bottom: 16px; }
+.modal-card p { margin-bottom: 24px; }
+.btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* BUTTONS & INPUTS */
+.btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', sans-serif; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-warning { background: var(--warning); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+.btn-outline:hover { background: rgba(255,255,255,0.05); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.form-input { width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.95rem; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
+.form-input:focus { border-color: var(--primary); }
+
+/* HEADER */
+header { background: var(--glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.brand-icon svg { width: 24px; height: 24px; color: #fff; }
+.brand-text h1 { font-size: 1.2rem; margin: 0; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.brand-text span { font-size: 0.7rem; color: var(--accent); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+.header-stats { display: flex; gap: 16px; align-items: center; }
+.header-user { font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
+
+/* NAVIGATION */
+nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-top: 16px; }
+.nav-pill { padding: 8px 16px; background: transparent; border: 1px solid transparent; color: var(--text-muted); border-radius: 20px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.nav-pill:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+.nav-pill.active { background: var(--primary); color: #fff; }
+
+/* PAGES */
+.page { display: none; animation: fadeIn 0.4s ease; padding: 24px 0; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* CARDS & GRIDS */
+.glass-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; transition: transform 0.2s, box-shadow 0.2s; margin-bottom: 24px;}
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.metric-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.metric-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+.metric-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: var(--primary); margin-bottom: 12px; }
+.metric-val { font-size: 1.8rem; font-weight: 800; color: var(--text-main); line-height: 1.2; }
+.metric-lbl { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+/* ACTIVITIES GRID */
+.act-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-top: 16px; }
+.act-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.act-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+.act-card.selected { border-color: var(--accent); background: rgba(6,182,212,0.1); }
+.act-card.selected::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent); }
+.act-icon { width: 40px; height: 40px; margin: 0 auto 12px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.act-name { font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 4px; }
+.act-desc { font-size: 0.7rem; color: var(--text-muted); }
+
+/* CAMERA LAYOUT */
+.layout-split { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+@media (max-width: 860px) { .layout-split { grid-template-columns: 1fr; } }
+.cam-wrapper { background: #000; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); position: relative; aspect-ratio: 16/9; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+.cam-wrapper video, .cam-wrapper canvas, .cam-wrapper img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cam-wrapper video.mirrored, .cam-wrapper canvas.mirrored { transform: scaleX(-1); }
+
+/* CAMERA OVERLAYS */
+.cam-top-bar { position: absolute; top: 0; left: 0; right: 0; padding: 12px 16px; display: flex; justify-content: space-between; z-index: 10; background: linear-gradient(rgba(0,0,0,0.7), transparent); pointer-events: none; }
+.privacy-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16,185,129,0.2); border: 1px solid var(--success); color: var(--success); padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; backdrop-filter: blur(4px); }
+.cam-bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; padding: 24px 16px 12px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); z-index: 10; text-align: center; }
+.guidance-msg { color: #fff; font-size: 1.1rem; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin-bottom: 8px; }
+.guidance-border { position: absolute; inset: 0; border: 6px solid transparent; z-index: 5; transition: border-color 0.3s; pointer-events: none; }
+.guidance-border.good { border-color: var(--success); }
+.guidance-border.adjust { border-color: var(--warning); }
+.guidance-border.bad { border-color: var(--danger); }
+.setup-overlay { position: absolute; inset: 0; background: rgba(15,23,42,0.85); z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px); text-align: center; padding: 24px; transition: opacity 0.3s; }
+.setup-overlay.hidden { opacity: 0; pointer-events: none; }
+.setup-icon { width: 64px; height: 64px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #fff; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.4); } 70% { box-shadow: 0 0 0 20px rgba(99,102,241,0); } 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); } }
+.setup-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; }
+.setup-tips { font-size: 1rem; color: var(--text-muted); line-height: 1.6; max-width: 80%; }
+
+/* CAMERA CONTROLS */
+.cam-controls { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; margin-top: 16px; align-items: center; justify-content: space-between; }
+.cam-controls-left { display: flex; gap: 12px; align-items: center; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); display: none; }
+.status-dot.active { display: inline-block; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
+.status-text { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+
+/* TABLES & MISC */
+.lb-table, .hist-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+.lb-table th, .hist-table th { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600; }
+.lb-table td, .hist-table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
+.lb-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; margin-right: 12px; vertical-align: middle; color: white; }
+
+/* TOAST & CONFETTI */
+#toast { position: fixed; bottom: 24px; right: 24px; background: var(--success); color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: 600; box-shadow: 0 10px 15px rgba(0,0,0,0.2); transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 9999; }
+#toast.show { transform: translateY(0); opacity: 1; }
+.confetti { position: fixed; width: 10px; height: 10px; z-index: 9999; animation: fall linear forwards; pointer-events: none; }
+@keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+/* UTILITIES */
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-danger { color: var(--danger); }
+.text-primary { color: var(--primary); }
+.text-accent { color: var(--accent); }
+.mt-4 { margin-top: 16px; } .mb-4 { margin-bottom: 16px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+/* PROGRESS CIRCLE */
+.circular-progress {
+  position: relative; width: 150px; height: 150px; border-radius: 50%;
+  background: conic-gradient(var(--primary) calc(var(--progress)*1%), rgba(255,255,255,0.1) 0deg);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto;
+}
+.circular-progress::before {
+  content: ""; position: absolute; inset: 12px; border-radius: 50%; background: var(--bg-card);
+}
+.circular-progress-value { position: relative; font-size: 2.5rem; font-weight: 800; color: var(--text-main); }
+.progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; background: var(--primary); transition: width 0.3s; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div class="overlay-full active" id="loginOverlay">
+  <div class="modal-card">
+    <div class="metric-icon" style="margin: 0 auto 20px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+    <h2 id="loginTitle">Login to AEM</h2>
+    <p>AI Exercise Manager</p>
+    <input type="text" id="authUsername" class="form-input" placeholder="Username">
+    <input type="password" id="authPassword" class="form-input" placeholder="Password">
+    <div class="btn-group mt-4">
+      <button class="btn btn-outline" id="authToggleBtn" onclick="toggleAuthMode()">Need an account? Register</button>
+      <button class="btn btn-primary" onclick="handleAuth()">Submit</button>
+    </div>
+    <p class="text-danger mt-4" id="authError"></p>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header id="mainHeader" style="display:none;">
+  <div class="brand">
+    <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+    <div class="brand-text">
+      <h1>AI Exercise Manager</h1>
+      <span>Smart AI-Powered Fitness Tracking</span>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="header-user" id="headerUser"></div>
+  </div>
+</header>
+
+<div class="container" id="mainApp" style="display:none;">
+  <nav id="mainNav">
+    <button class="nav-pill active" onclick="showPage('dashboard', this)">Dashboard</button>
+    <button class="nav-pill" onclick="showPage('activity', this)">Exercise Tracker</button>
+    <button class="nav-pill" onclick="showPage('height', this)">Height & Body</button>
+    <button class="nav-pill" onclick="showPage('reaction', this)">Reaction Tests</button>
+    <button class="nav-pill" onclick="showPage('fitness', this)">Fitness Report</button>
+    <button class="nav-pill" onclick="showPage('history', this)">History</button>
+    <button class="nav-pill" onclick="showPage('leaderboard', this)">Leaderboard</button>
+    <button class="nav-pill" onclick="showPage('settings', this)">Settings</button>
+  </nav>
+
+  <!-- PAGE 1: DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <h1 id="dashWelcome">Welcome Back</h1>
+    <p class="mb-4">Select a module to begin your AI-powered tracking session.</p>
+    
+    <div class="metric-grid">
+      <div class="metric-card" onclick="showPage('activity', document.querySelectorAll('.nav-pill')[1])" style="cursor:pointer">
+        <div class="metric-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M9 10H6M15 10h3M9 17l-2 4M15 17l2 4"/></svg></div>
+        <div class="metric-val">20</div><div class="metric-lbl">Exercises</div>
+      </div>
+      <div class="metric-card" onclick="showPage('height', document.querySelectorAll('.nav-pill')[2])" style="cursor:pointer">
+        <div class="metric-icon" style="color:var(--accent);background:rgba(6,182,212,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 3H3M21 21H3M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg></div>
+        <div class="metric-val">AI</div><div class="metric-lbl">Measure</div>
+      </div>
+      <div class="metric-card" onclick="showPage('reaction', document.querySelectorAll('.nav-pill')[3])" style="cursor:pointer">
+        <div class="metric-icon" style="color:var(--warning);background:rgba(245,158,11,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="metric-val">Speed</div><div class="metric-lbl">Reaction</div>
+      </div>
+    </div>
+    
+    <div class="glass-card">
+      <h2>Overall Summary</h2>
+      <p>Your lifetime performance overview.</p>
+      <div class="metric-grid mt-4" style="grid-template-columns: repeat(4, 1fr); margin-bottom:0;">
+        <div><div class="metric-lbl">Total Score</div><div class="metric-val text-primary" id="sum-score">0</div></div>
+        <div><div class="metric-lbl">Est Calories</div><div class="metric-val text-accent" id="sum-cals">0</div></div>
+        <div><div class="metric-lbl">Total Reps</div><div class="metric-val text-success" id="sum-reps">0</div></div>
+        <div><div class="metric-lbl">Activities</div><div class="metric-val text-warning" id="sum-acts">0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: EXERCISE TRACKER -->
+  <div id="page-activity" class="page">
+    <div class="flex-between mb-4">
+      <div>
+        <h1>Exercise Tracker</h1>
+        <p>AI counts your reps and monitors your form.</p>
+      </div>
+    </div>
+    
+    <div class="glass-card mb-4">
+      <h3 style="font-size:1rem;margin-bottom:8px;">Select Exercise</h3>
+      <div class="act-grid" id="actGrid"></div>
+    </div>
+
+    <div class="layout-split">
+      <div>
+        <div class="cam-wrapper">
+          <video id="actVideo" playsinline webkit-playsinline muted></video>
+          <canvas id="actCanvas"></canvas>
+          <div class="guidance-border" id="actBorder"></div>
+          
+          <div class="cam-top-bar">
+            <span class="privacy-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> On-Device AI</span>
+            <span class="privacy-badge" style="background:rgba(0,0,0,0.6);border-color:var(--border-color);color:#fff;" id="actAngleBadge">Angle: —</span>
+          </div>
+
+          <div class="setup-overlay" id="actSetupOverlay">
+            <div class="setup-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+            <div class="setup-title" id="actSetupTitle">Setup Required</div>
+            <div class="setup-tips" id="actSetupTips">Face the camera.</div>
+          </div>
+
+          <div class="cam-bottom-bar">
+            <div class="guidance-msg" id="actGuidanceMsg">Select exercise and press Start</div>
+          </div>
+        </div>
+        
+        <div class="cam-controls">
+          <div class="cam-controls-left">
+            <span class="status-dot" id="actLiveDot"></span>
+            <span class="status-text" id="actStatusText">Camera Off</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline" onclick="CamManager.toggle('act')">Toggle Cam</button>
+            <button class="btn btn-success" onclick="startActivity()">Start</button>
+            <button class="btn btn-danger" onclick="stopActivity()" id="actStopBtn" disabled>Stop</button>
+            <button class="btn btn-primary" onclick="saveActivitySession()">Save</button>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <div class="metric-card mb-4" style="background:rgba(99,102,241,0.05); border-color:var(--primary);">
+          <div class="metric-lbl">Live Reps</div>
+          <div class="metric-val text-primary" id="ls-reps" style="font-size:3rem;">0</div>
+        </div>
+        <div class="metric-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="metric-card"><div class="metric-lbl">Score</div><div class="metric-val text-success" id="ls-score">0</div></div>
+          <div class="metric-card"><div class="metric-lbl">Calories</div><div class="metric-val text-accent" id="ls-cals">0</div></div>
+        </div>
+        <div class="glass-card mt-4">
+          <h3 id="actInstrTitle" style="font-size:1rem;margin-bottom:8px;">Instructions</h3>
+          <p id="actInstrText" style="font-size:0.85rem;"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 3: HEIGHT & BODY -->
+  <div id="page-height" class="page">
+    <h1>Height & Body Metrics</h1>
+    <p class="mb-4">Live camera or file upload for height estimation, plus BMI calculation.</p>
+    
+    <div class="layout-split">
+      <div>
+        <div class="cam-wrapper" id="htWrapper">
+          <video id="htVideo" playsinline webkit-playsinline muted style="display:none;"></video>
+          <img id="htImage" style="display:none;" />
+          <canvas id="htCanvas"></canvas>
+          <div class="guidance-border" id="htBorder"></div>
+          
+          <div class="cam-top-bar">
+            <span class="privacy-badge">On-Device AI</span>
+          </div>
+
+          <div class="setup-overlay" id="htSetupOverlay">
+            <div class="setup-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+            <div class="setup-title">Full Body Setup</div>
+            <div class="setup-tips">Stand 2-3m away facing the camera. Ensure your head and feet are fully visible.</div>
+          </div>
+
+          <div class="cam-bottom-bar">
+            <div class="guidance-msg" id="htGuidanceMsg">Choose input below</div>
+          </div>
+        </div>
+        
+        <div class="cam-controls">
+          <div class="cam-controls-left">
+            <span class="status-dot" id="htLiveDot"></span>
+            <span class="status-text" id="htStatusText">Off</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-success" onclick="startHeight()">Live Cam</button>
+            <button class="btn btn-danger" onclick="stopHeight()" id="htStopBtn" disabled>Stop</button>
+            <label class="btn btn-outline" style="cursor:pointer;">
+              Photo <input type="file" id="htPhotoUpload" accept="image/*" style="display:none;" onchange="handleFileUpload(event, 'photo')">
+            </label>
+            <label class="btn btn-outline" style="cursor:pointer;">
+              Video <input type="file" id="htVideoUpload" accept="video/*" style="display:none;" onchange="handleFileUpload(event, 'video')">
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <div class="metric-card mb-4" style="background:rgba(6,182,212,0.05); border-color:var(--accent);">
+          <div class="metric-lbl">Est. Height</div>
+          <div class="metric-val text-accent" id="htVal" style="font-size:3rem;">—</div>
+          <div class="metric-lbl mt-4">cm</div>
+        </div>
+        
+        <div class="glass-card">
+          <h3>BMI Calculator</h3>
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <input type="number" id="bmiWeight" class="form-input" placeholder="Weight (kg)">
+            <button class="btn btn-primary" onclick="calculateBMI()">Calculate</button>
+          </div>
+          <div class="mt-4" id="bmiResult" style="display:none;">
+            <div class="metric-lbl">Your BMI</div>
+            <div class="metric-val text-primary" id="bmiVal"></div>
+            <div class="metric-lbl mt-4" id="bmiCategory"></div>
+            <div class="progress-bar"><div class="progress-fill" id="bmiBar"></div></div>
+            <p class="mt-4" id="bmiAdvice" style="font-size:0.8rem;"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 4: REACTION TESTS -->
+  <div id="page-reaction" class="page">
+    <h1>Reaction Speed</h1>
+    <p class="mb-4">Follow the on-screen prompts as fast as possible.</p>
+    
+    <div class="layout-split">
+      <div>
+        <div class="glass-card mb-4" style="text-align:center; padding: 40px; background: rgba(245,158,11,0.05); border-color:var(--warning);">
+          <h2 id="reactPrompt" style="font-size:2rem; color:var(--warning);">Ready?</h2>
+          <p id="reactSub">Start camera, then click Begin Test</p>
+          <div id="reactSpeed" style="font-size:1.5rem; font-weight:700; color:var(--success); margin-top:16px;"></div>
+        </div>
+
+        <div class="cam-wrapper">
+          <video id="reactVideo" playsinline webkit-playsinline muted></video>
+          <canvas id="reactCanvas"></canvas>
+          <div class="guidance-border" id="reactBorder"></div>
+          
+          <div class="cam-top-bar">
+            <span class="privacy-badge">On-Device AI</span>
+          </div>
+
+          <div class="setup-overlay" id="reactSetupOverlay">
+            <div class="setup-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+            <div class="setup-title">Center Yourself</div>
+            <div class="setup-tips">Stand centered in the frame.</div>
+          </div>
+
+          <div class="cam-bottom-bar">
+            <div class="guidance-msg" id="reactGuidanceMsg">Press Start</div>
+          </div>
+        </div>
+        
+        <div class="cam-controls">
+          <div class="cam-controls-left">
+            <span class="status-dot" id="reactLiveDot"></span>
+            <span class="status-text" id="reactStatusText">Camera Off</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline" onclick="CamManager.toggle('react')">Toggle Cam</button>
+            <button class="btn btn-success" onclick="startReaction()">Start</button>
+            <button class="btn btn-warning" onclick="beginReactTest()" id="reactBeginBtn" disabled>Begin Test</button>
+            <button class="btn btn-danger" onclick="stopReaction()" id="reactStopBtn" disabled>Stop</button>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <div class="metric-card mb-4" style="background:rgba(245,158,11,0.05); border-color:var(--warning);">
+          <div class="metric-lbl">Avg Reaction Time</div>
+          <div class="metric-val text-warning" id="reactAvgVal" style="font-size:3rem;">—</div>
+          <div class="metric-lbl mt-4">ms</div>
+        </div>
+        <div class="metric-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="metric-card"><div class="metric-lbl">Best</div><div class="metric-val text-success" id="reactBestVal">—</div></div>
+          <div class="metric-card"><div class="metric-lbl">Score</div><div class="metric-val text-primary" id="reactScoreVal">0</div></div>
+        </div>
+        <button class="btn btn-primary mt-4" style="width:100%" onclick="saveReactSession()">Save Session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 5: FITNESS REPORT -->
+  <div id="page-fitness" class="page">
+    <h1>Overall Fitness Analyzer</h1>
+    <p class="mb-4">Your composite fitness score based on all activities.</p>
+    
+    <div class="glass-card text-center" style="max-width: 600px; margin: 0 auto 24px;">
+      <div class="circular-progress" id="fitCircle" style="--progress: 0;">
+        <div class="circular-progress-value" id="fitScoreVal">0</div>
+      </div>
+      <h2 class="mt-4" id="fitCategory">Needs Data</h2>
+      <p>Composite Score (0-100)</p>
+      
+      <div style="text-align:left; margin-top:32px;">
+        <div class="metric-lbl">Exercise Variety (0-20)</div>
+        <div class="progress-bar mb-4"><div class="progress-fill bg-success" id="fitBarVariety" style="width:0%"></div></div>
+        
+        <div class="metric-lbl">Total Reps (0-20)</div>
+        <div class="progress-bar mb-4"><div class="progress-fill bg-primary" id="fitBarReps" style="width:0%"></div></div>
+        
+        <div class="metric-lbl">Reaction Time (0-20)</div>
+        <div class="progress-bar mb-4"><div class="progress-fill bg-warning" id="fitBarReact" style="width:0%"></div></div>
+        
+        <div class="metric-lbl">Consistency (0-20)</div>
+        <div class="progress-bar mb-4"><div class="progress-fill bg-accent" id="fitBarConsist" style="width:0%"></div></div>
+        
+        <div class="metric-lbl">BMI Health (0-20)</div>
+        <div class="progress-bar mb-4"><div class="progress-fill bg-danger" id="fitBarBMI" style="width:0%"></div></div>
+      </div>
+      
+      <button class="btn btn-outline mt-4" onclick="generateFitnessReport()">Refresh Analysis</button>
+    </div>
+  </div>
+
+  <!-- PAGE 6: HISTORY -->
+  <div id="page-history" class="page">
+    <div class="flex-between mb-4">
+      <div>
+        <h1>Workout History</h1>
+        <p>Your past activities and sessions.</p>
+      </div>
+      <button class="btn btn-primary" onclick="exportPDF()">Export PDF</button>
+    </div>
+    
+    <div class="glass-card">
+      <div class="btn-group mb-4" id="histFilters">
+        <button class="btn btn-outline active" onclick="filterHistory('all')">All</button>
+        <button class="btn btn-outline" onclick="filterHistory('exercise')">Exercises</button>
+        <button class="btn btn-outline" onclick="filterHistory('reaction')">Reactions</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="hist-table">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Activity</th>
+              <th>Reps / MS</th>
+              <th>Score</th>
+              <th>Calories</th>
+            </tr>
+          </thead>
+          <tbody id="histBody">
+            <tr><td colspan="5" style="text-align:center;">No history found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 7: LEADERBOARD -->
+  <div id="page-leaderboard" class="page">
+    <h1>Global Leaderboard</h1>
+    <p class="mb-4">Top performers in AI Exercise Manager.</p>
+    
+    <div class="glass-card">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Activity</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="lbBody">
+          <tr><td colspan="4" style="text-align:center; color:var(--text-muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAGE 8: SETTINGS -->
+  <div id="page-settings" class="page">
+    <h1>Settings</h1>
+    <p class="mb-4">Manage your account and data.</p>
+    
+    <div class="glass-card" style="max-width: 500px;">
+      <h2>Profile</h2>
+      <p class="mb-4">Logged in as: <strong class="text-primary" id="settingsUser"></strong></p>
+      
+      <div class="btn-group" style="justify-content: flex-start; flex-direction:column;">
+        <button class="btn btn-outline" onclick="logout()">Logout</button>
+        <button class="btn btn-danger" onclick="clearUserData()">Clear My Data</button>
+      </div>
+      
+      <h3 class="mt-4 pt-4" style="border-top:1px solid var(--border-color);">Privacy Info</h3>
+      <p style="font-size:0.85rem;">This application uses On-Device AI via MediaPipe. Camera streams are processed locally in your browser. No video data is ever sent to a server. Your history and scores are saved locally on this device.</p>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast">Success!</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// GLOBAL STATE & CONSTANTS
+// ═══════════════════════════════════════════════════════════
+let currentUser = null;
+let currentAct = 'pushup';
+let actReps = 0, actScore = 0, actCals = 0, repState = 'up';
+let positionGoodSince = 0, trackingActive = false;
+let reactActive=false, reactPromptTime=0, reactTimes=[], reactTotalScore=0, currentReactCmd=null;
+let htBuffer = [];
+let plankActive = false, burpeePhase = 0, jumpBaseY = 0, jumpPeakY = Infinity;
+let timerInterval = null;
+let shoulderRefWidth = null;
+
+const ACT_CONFIG = {
+  pushup:       {name:'Push-ups',         facing:'side',  diff:'Medium', pts:4.5, cal:0.30, instr:'Lower chest until elbows reach 90°, then push back up', tips:['Face camera from side','Full body visible on floor']},
+  squat:        {name:'Squats',           facing:'front', diff:'Easy',   pts:3.5, cal:0.25, instr:'Squat until knees reach 90°, stand back up', tips:['Face camera front','Feet shoulder-width apart']},
+  jumping:      {name:'Jumping Jacks',    facing:'front', diff:'Easy',   pts:2.0, cal:0.15, instr:'Raise both arms above shoulders, lower back down', tips:['Face camera front','Arms at sides to start']},
+  pullup:       {name:'Pull-ups',         facing:'side',  diff:'Hard',   pts:6.0, cal:0.50, instr:'Pull chin above bar, lower all the way back down', tips:['Face camera sideways on bar','Full body visible']},
+  situp:        {name:'Sit-ups',          facing:'side',  diff:'Easy',   pts:3.0, cal:0.22, instr:'Rise from lying until torso is vertical, lower back', tips:['Lie down sideways to camera','Knees bent']},
+  highknee:     {name:'High Knees',       facing:'front', diff:'Easy',   pts:2.0, cal:0.12, instr:'Alternate raising each knee above hip height', tips:['Face camera front','March in place']},
+  lunge:        {name:'Lunges',           facing:'side',  diff:'Medium', pts:3.0, cal:0.22, instr:'Step forward, lower back knee toward floor, return', tips:['Face camera sideways','Step forward with one leg']},
+  plank:        {name:'Plank Hold',       facing:'side',  diff:'Medium', pts:1.0, cal:0.10, instr:'Hold plank position — scored by seconds held', tips:['Face camera sideways in plank','Keep body straight']},
+  shoulderpress:{name:'Shoulder Press',   facing:'front', diff:'Medium', pts:4.0, cal:0.20, instr:'Press arms straight overhead, lower to shoulders', tips:['Face camera front','Hands at shoulder height']},
+  bicep:        {name:'Bicep Curls',      facing:'side',  diff:'Easy',   pts:3.0, cal:0.18, instr:'Curl wrist up to shoulder, lower back down', tips:['Stand sideways to camera','Arms at sides']},
+  mountain:     {name:'Mountain Climbers',facing:'side',  diff:'Medium', pts:2.0, cal:0.15, instr:'Drive each knee toward chest alternately in plank', tips:['Face camera sideways in plank']},
+  burpee:       {name:'Burpees',          facing:'front', diff:'Hard',   pts:8.0, cal:0.80, instr:'Stand → Squat → Plank → Jump — full cycle = 1 rep', tips:['Face camera front','Full body visible']},
+  balance:      {name:'Balance Test',     facing:'front', diff:'Medium', pts:5.0, cal:0.05, instr:'Stand on one leg — scored by seconds balanced', tips:['Face camera front','Start standing on both feet']},
+  tpose:        {name:'T-Pose Hold',      facing:'front', diff:'Easy',   pts:2.0, cal:0.03, instr:'Extend both arms horizontally — hold for score', tips:['Face camera front','Arms at sides to start']},
+  calf:         {name:'Calf Raises',      facing:'side',  diff:'Easy',   pts:2.0, cal:0.10, instr:'Rise up on tiptoes, lower back to flat feet', tips:['Face camera sideways','Feet flat on ground']},
+  tricep:       {name:'Tricep Dips',      facing:'side',  diff:'Medium', pts:4.0, cal:0.28, instr:'Lower body by bending elbows to 90°, push back up', tips:['Face camera sideways on chair','Arms behind you']},
+  longjump:     {name:'Long Jump',        facing:'side',  diff:'Hard',   pts:10,  cal:0.50, instr:'Crouch then jump as far forward as possible', tips:['Face camera sideways','Start at one side of frame']},
+  highjump:     {name:'High Jump',        facing:'front', diff:'Hard',   pts:10,  cal:0.50, instr:'Crouch then jump as high as possible', tips:['Face camera front','Stand centered']},
+  deepbreath:   {name:'Breathing Sync',   facing:'front', diff:'Easy',   pts:3.0, cal:0.02, instr:'Inhale raising shoulders, exhale lowering them', tips:['Face camera front','Relax and breathe']},
+  armcircle:    {name:'Arm Circles',      facing:'front', diff:'Easy',   pts:1.0, cal:0.05, instr:'Extend arms sideways and make large full rotations', tips:['Face camera front','Arms extended']},
+};
+
+const REACT_CMDS = [
+  {cmd:'Raise LEFT Hand UP!', detect:'leftUp'}, {cmd:'Raise RIGHT Hand UP!', detect:'rightUp'},
+  {cmd:'Both Hands UP!', detect:'bothUp'}, {cmd:'Touch your HEAD!', detect:'touchHead'},
+  {cmd:'SQUAT Down!', detect:'squat'}, {cmd:'STAND Straight!', detect:'stand'},
+  {cmd:'Hands on HIPS!', detect:'handsHips'},
+  {cmd:'Step FORWARD!', detect:'forward'},
+  {cmd:'Step BACK!', detect:'back'},
+  {cmd:'Arms CROSS on Chest!', detect:'crossChest'}
+];
+
+// ═══════════════════════════════════════════════════════════
+// AUTHENTICATION SYSTEM
+// ═══════════════════════════════════════════════════════════
+let isLoginMode = true;
+function toggleAuthMode() {
+  isLoginMode = !isLoginMode;
+  document.getElementById('loginTitle').innerText = isLoginMode ? 'Login to AEM' : 'Register for AEM';
+  document.getElementById('authToggleBtn').innerText = isLoginMode ? 'Need an account? Register' : 'Have an account? Login';
+  document.getElementById('authError').innerText = '';
+}
+
+function handleAuth() {
+  const user = document.getElementById('authUsername').value.trim();
+  const pass = document.getElementById('authPassword').value.trim();
+  if(!user || !pass) { document.getElementById('authError').innerText = 'Please fill all fields.'; return; }
+  
+  let users = JSON.parse(localStorage.getItem('aem_users') || '[]');
+  const passHash = btoa(pass); // simple hashing as requested
+  
+  if (isLoginMode) {
+    const found = users.find(u => u.username === user && u.passwordHash === passHash);
+    if(found) { loginSuccess(user); }
+    else { document.getElementById('authError').innerText = 'Invalid credentials.'; }
+  } else {
+    if(users.find(u => u.username === user)) {
+      document.getElementById('authError').innerText = 'Username already exists.';
+    } else {
+      users.push({username: user, passwordHash: passHash});
+      localStorage.setItem('aem_users', JSON.stringify(users));
+      loginSuccess(user);
+    }
+  }
+}
+
+function loginSuccess(user) {
+  currentUser = user;
+  localStorage.setItem('aem_session', JSON.stringify({username: user, loginTime: Date.now()}));
+  document.getElementById('loginOverlay').classList.remove('active');
+  document.getElementById('mainHeader').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('headerUser').innerText = 'Welcome back, ' + user;
+  document.getElementById('settingsUser').innerText = user;
+  initApp();
+}
+
+function checkSession() {
+  const session = JSON.parse(localStorage.getItem('aem_session'));
+  if(session && session.username) {
+    loginSuccess(session.username);
+  } else {
+    document.getElementById('loginOverlay').classList.add('active');
+  }
+}
+
+function logout() {
+  localStorage.removeItem('aem_session');
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT & NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function initApp() {
+  const grid = document.getElementById('actGrid');
+  grid.innerHTML = '';
+  Object.keys(ACT_CONFIG).forEach(k => {
+    const c = ACT_CONFIG[k];
+    const div = document.createElement('div');
+    div.className = 'act-card' + (k === 'pushup' ? ' selected' : '');
+    div.innerHTML = `<div class="act-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div><div class="act-name">${c.name}</div><div class="act-desc">${c.pts} pts</div>`;
+    div.onclick = () => selectAct(k, div);
+    grid.appendChild(div);
+  });
+  selectAct('pushup', grid.firstChild);
+  updateGlobalStatsUI();
+  loadLeaderboard();
+  loadHistory();
+}
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id==='leaderboard') loadLeaderboard();
+  if (id==='history') loadHistory();
+  if (id==='fitness') generateFitnessReport();
+}
+
+function selectAct(k, el) {
+  currentAct = k;
+  document.querySelectorAll('.act-card').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  const c = ACT_CONFIG[k];
+  document.getElementById('actInstrTitle').innerText = c.name + ' Guide';
+  document.getElementById('actInstrText').innerText = c.instr;
+  actReps=0; actScore=0; actCals=0; repState='up'; trackingActive=false;
+  plankActive = false; burpeePhase = 0; jumpBaseY = 0; jumpPeakY = Infinity;
+  updateActUI();
+}
+
+function updateActUI() {
+  document.getElementById('ls-reps').innerText = actReps;
+  document.getElementById('ls-score').innerText = actScore;
+  document.getElementById('ls-cals').innerText = actCals.toFixed(1);
+}
+
+// ═══════════════════════════════════════════════════════════
+// DATA & HISTORY
+// ═══════════════════════════════════════════════════════════
+function getHistory() {
+  if(!currentUser) return [];
+  return JSON.parse(localStorage.getItem(`aem_history_${currentUser}`) || '[]');
+}
+
+function saveHistoryEntry(entry) {
+  if(!currentUser) return;
+  const hist = getHistory();
+  hist.push({ date: new Date().toISOString(), ...entry });
+  localStorage.setItem(`aem_history_${currentUser}`, JSON.stringify(hist));
+  updateGlobalStatsUI();
+  showToast('Session Saved!');
+}
+
+function updateGlobalStatsUI() {
+  const hist = getHistory();
+  let totScore = 0, totCals = 0, totReps = 0, totActs = hist.length;
+  hist.forEach(h => {
+    totScore += (h.score || 0);
+    totCals += (h.calories || 0);
+    if(h.type === 'exercise') totReps += (h.reps || 0);
+  });
+  
+  document.getElementById('sum-score').innerText = totScore;
+  document.getElementById('sum-cals').innerText = totCals.toFixed(1);
+  document.getElementById('sum-reps').innerText = totReps;
+  document.getElementById('sum-acts').innerText = totActs;
+}
+
+function saveActivitySession() {
+  if(actScore===0 && actReps===0) { alert('No activity to save.'); return; }
+  saveHistoryEntry({
+    type: 'exercise',
+    activity: ACT_CONFIG[currentAct].name,
+    reps: actReps,
+    score: actScore,
+    calories: actCals,
+    duration: 0
+  });
+  // Add to leaderboard
+  const lb = JSON.parse(localStorage.getItem('aem_leaderboard') || '[]');
+  lb.push({name: currentUser, act: ACT_CONFIG[currentAct].name, score: actScore});
+  localStorage.setItem('aem_leaderboard', JSON.stringify(lb));
+  actReps=0; actScore=0; actCals=0; updateActUI();
+}
+
+function saveReactSession() {
+  if(reactTotalScore===0) { alert('No reaction data to save.'); return; }
+  saveHistoryEntry({
+    type: 'reaction',
+    activity: 'Reaction Tests',
+    reps: reactTimes.length,
+    score: reactTotalScore,
+    calories: 0,
+    duration: 0
+  });
+  const lb = JSON.parse(localStorage.getItem('aem_leaderboard') || '[]');
+  lb.push({name: currentUser, act: 'Reaction Tests', score: reactTotalScore});
+  localStorage.setItem('aem_leaderboard', JSON.stringify(lb));
+  reactTotalScore=0; reactTimes=[]; document.getElementById('reactScoreVal').innerText = 0;
+  document.getElementById('reactAvgVal').innerText = '—';
+  document.getElementById('reactBestVal').innerText = '—';
+}
+
+function clearUserData() {
+  if(confirm("Delete all your history and fitness data? This cannot be undone.")) {
+    localStorage.removeItem(`aem_history_${currentUser}`);
+    localStorage.removeItem(`aem_fitness_${currentUser}`);
+    location.reload();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CAMERA MANAGER EXACT PATTERN
+// ═══════════════════════════════════════════════════════════
+const CamManager = (() => {
+  const cams = {
+    act: { video:'actVideo', canvas:'actCanvas', btn:'actStopBtn', dot:'actLiveDot', text:'actStatusText', overlay:'actSetupOverlay', msg:'actGuidanceMsg', border:'actBorder', stream:null, pose:null, raf:null, running:false, facing:'user' },
+    ht:  { video:'htVideo', canvas:'htCanvas', btn:'htStopBtn', dot:'htLiveDot', text:'htStatusText', overlay:'htSetupOverlay', msg:'htGuidanceMsg', border:'htBorder', stream:null, pose:null, raf:null, running:false, facing:'user' },
+    react:{ video:'reactVideo', canvas:'reactCanvas', btn:'reactStopBtn', dot:'reactLiveDot', text:'reactStatusText', overlay:'reactSetupOverlay', msg:'reactGuidanceMsg', border:'reactBorder', stream:null, pose:null, raf:null, running:false, facing:'user' }
+  };
+
+  async function start(key) {
+    const cam = cams[key];
+    if(cam.running) await stop(key);
+
+    const video = document.getElementById(cam.video);
+    const canvas = document.getElementById(cam.canvas);
+    
+    // Hide image if showing (for ht tab)
+    if(key==='ht') { document.getElementById('htImage').style.display='none'; video.style.display='block'; }
+
+    document.getElementById(cam.text).innerText = 'Starting...';
+
+    // 1. Progressive getUserMedia with fallbacks
+    let stream = null;
+    const constraints = [
+      { video: { facingMode: {ideal: cam.facing}, width:{ideal:1280}, height:{ideal:720} }, audio: false },
+      { video: { facingMode: {ideal: cam.facing}, width:{ideal:640}, height:{ideal:480} }, audio: false },
+      { video: true, audio: false }
+    ];
+    for (const c of constraints) {
+      try { stream = await navigator.mediaDevices.getUserMedia(c); break; } catch(e) { continue; }
+    }
+    if (!stream) { alert('Camera not available'); return; }
+    
+    // 2. Attach to video
+    cam.stream = stream;
+    video.srcObject = stream;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    await video.play().catch(()=>{});
+    await new Promise(r => setTimeout(r, 400));
+    
+    // 3. Set canvas size
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    
+    if(cam.facing==='user') { video.classList.add('mirrored'); canvas.classList.add('mirrored'); }
+    else { video.classList.remove('mirrored'); canvas.classList.remove('mirrored'); }
+
+    cam.running = true;
+    document.getElementById(cam.dot).classList.add('active');
+    document.getElementById(cam.text).innerText = (cam.facing==='user'?'Front':'Rear') + ' Camera Active';
+    document.getElementById(cam.btn).disabled = false;
+    document.getElementById(cam.overlay).classList.remove('hidden');
+
+    if(key==='act') setupOverlayUI(key);
+    
+    // 4. Create Pose
+    cam.pose = new Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}` });
+    cam.pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+    cam.pose.onResults(results => handlePose(key, results, canvas));
+    
+    // 5. Manual frame loop with sending guard
+    let sending = false;
+    function loop() {
+      if (!cam.running) return;
+      cam.raf = requestAnimationFrame(loop);
+      if (sending || video.readyState < 2) return;
+      sending = true;
+      cam.pose.send({image: video}).then(() => sending = false).catch(() => sending = false);
+    }
+    cam.raf = requestAnimationFrame(loop);
+  }
+
+  async function stop(key) {
+    const cam = cams[key];
+    if(!cam || !cam.running) return;
+    cam.running = false;
+    if(cam.raf) cancelAnimationFrame(cam.raf);
+    if(cam.stream) cam.stream.getTracks().forEach(t=>t.stop());
+    if(cam.pose) cam.pose.close();
+    
+    const v = document.getElementById(cam.video);
+    v.srcObject = null;
+    const ctx = document.getElementById(cam.canvas).getContext('2d');
+    ctx.clearRect(0,0, v.width, v.height);
+
+    document.getElementById(cam.dot).classList.remove('active');
+    document.getElementById(cam.text).innerText = 'Camera Off';
+    document.getElementById(cam.btn).disabled = true;
+    document.getElementById(cam.overlay).classList.add('hidden');
+    document.getElementById(cam.border).className = 'guidance-border';
+    document.getElementById(cam.msg).innerText = '';
+    
+    trackingActive = false;
+    if(key==='react') { reactActive=false; document.getElementById('reactBeginBtn').disabled=true; }
+  }
+
+  async function toggle(key) {
+    const cam = cams[key];
+    if(cam.running) {
+      cam.facing = cam.facing==='user' ? 'environment' : 'user';
+      await stop(key); await new Promise(r=>setTimeout(r,400)); await start(key);
+    } else {
+      cam.facing = cam.facing==='user' ? 'environment' : 'user';
+      document.getElementById(cam.text).innerText = 'Switched to ' + (cam.facing==='user'?'Front':'Rear');
+    }
+  }
+
+  return { start, stop, toggle };
+})();
+
+// START HANDLERS
+function startActivity() { 
+  CamManager.start('act'); 
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if(trackingActive && plankActive && ['plank','balance','tpose'].includes(currentAct)) {
+      const cfg = ACT_CONFIG[currentAct];
+      actScore += cfg.pts; actCals += cfg.cal;
+      updateActUI(); 
+    }
+  }, 1000);
+}
+function stopActivity() { CamManager.stop('act'); clearInterval(timerInterval); }
+function startHeight() { htBuffer=[]; document.getElementById('htVal').innerText='—'; CamManager.start('ht'); }
+function stopHeight() { CamManager.stop('ht'); }
+function startReaction() { CamManager.start('react'); document.getElementById('reactBeginBtn').disabled=false; }
+function stopReaction() { CamManager.stop('react'); }
+
+// ═══════════════════════════════════════════════════════════
+// AI CAMERA GUIDANCE SYSTEM WITH DISTANCE
+// ═══════════════════════════════════════════════════════════
+function setupOverlayUI(key) {
+  if (key==='act') {
+    const cfg = ACT_CONFIG[currentAct];
+    document.getElementById('actSetupTitle').innerText = cfg.name + ' Setup';
+    document.getElementById('actSetupTips').innerText = cfg.tips.join(' ');
+  }
+}
+
+function analyzePosition(lm, key, W) {
+  const status = { status: 'adjust', messages: [], score: 0 };
+  const nose = lm[0], lA = lm[27], rA = lm[28], lE = lm[7], rE = lm[8], lS=lm[11], rS=lm[12];
+  
+  if(!nose || !lA || !rA || nose.visibility<0.5 || lA.visibility<0.5 || rA.visibility<0.5) {
+    return { status: 'adjust', messages: ['Ensure full body is visible'], score: 20 };
+  }
+
+  // Calculate real-time distance using shoulder pixel width
+  const SHOULDER_CM = 38;
+  const focalPx = W * 0.85;
+  const shoulderPx = Math.abs(lS.x - rS.x) * W;
+  let distMsg = '';
+  if (shoulderPx > 5) {
+    const distanceCm = (SHOULDER_CM * focalPx) / shoulderPx;
+    const distM = distanceCm / 100;
+    
+    if (distM < 1.5) {
+      const needed = (1.8 - distM).toFixed(1);
+      status.messages.push(`You're too close (~${distM.toFixed(1)}m). Step back ${needed}m`);
+    } else if (distM >= 1.5 && distM < 1.8) {
+      const needed = (1.8 - distM).toFixed(1);
+      status.messages.push(`Almost there. Step back ${needed}m more`);
+    } else if (distM >= 1.8 && distM <= 3.0) {
+      distMsg = `✓ Perfect distance (${distM.toFixed(1)}m)`;
+    } else if (distM > 3.0 && distM <= 4.0) {
+      const needed = (distM - 3.0).toFixed(1);
+      status.messages.push(`A bit far. Come ${needed}m closer`);
+    } else {
+      const needed = (distM - 3.0).toFixed(1);
+      status.messages.push(`Too far (~${distM.toFixed(1)}m). Come ${needed}m closer`);
+    }
+  }
+
+  // Centered
+  const midX = lm.reduce((s,l)=>s+l.x,0) / lm.length;
+  if(midX<0.3) status.messages.push('Move right');
+  else if(midX>0.7) status.messages.push('Move left');
+
+  // Facing
+  const sw = Math.abs(lS.x - rS.x);
+  if(key==='act') {
+    const cfg = ACT_CONFIG[currentAct];
+    if(cfg.facing==='side' && sw > 0.15) status.messages.push('Turn sideways');
+    if(cfg.facing==='front' && sw < 0.15) status.messages.push('Face the camera');
+  }
+
+  if(status.messages.length===0) { 
+    status.status='good'; 
+    status.messages.push(distMsg || 'Hold steady...'); 
+  }
+  else if(status.messages.length>1) { status.status='bad'; }
+  
+  return status;
+}
+
+function handlePose(key, results, canvas) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0, canvas.width, canvas.height);
+  if(!results.poseLandmarks) {
+    document.getElementById(key+'Msg').innerText = 'No person detected';
+    return;
+  }
+
+  // Draw Skeleton
+  drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color:'rgba(99,102,241,0.5)', lineWidth:2});
+  drawLandmarks(ctx, results.poseLandmarks, {color:'#06b6d4', lineWidth:1, radius:3});
+
+  // Analyze Position
+  const pos = analyzePosition(results.poseLandmarks, key, canvas.width);
+  const border = document.getElementById(key+'Border');
+  const msgEl = document.getElementById(key+'Msg');
+  
+  border.className = 'guidance-border ' + pos.status;
+  
+  if(!trackingActive) {
+    if(pos.status==='good') {
+      if(!positionGoodSince) positionGoodSince = Date.now();
+      else if(Date.now() - positionGoodSince > 2000) { // Auto-lock after 2s
+        trackingActive = true;
+        document.getElementById(key+'SetupOverlay').classList.add('hidden');
+      }
+      msgEl.innerText = pos.messages[0];
+    } else {
+      positionGoodSince = 0;
+      document.getElementById(key+'SetupOverlay').classList.remove('hidden');
+      msgEl.innerText = pos.messages[0] || "Adjust position";
+    }
+  } else {
+    if(pos.status==='bad') {
+      trackingActive = false; positionGoodSince = 0;
+      document.getElementById(key+'SetupOverlay').classList.remove('hidden');
+    }
+  }
+
+  if(trackingActive) {
+    if(key==='act') processActivity(results.poseLandmarks);
+    if(key==='ht') processHeight(results.poseLandmarks, canvas.width);
+    if(key==='react') {
+      window.lastLM = results.poseLandmarks;
+      if(reactActive) checkReact(results.poseLandmarks);
+      else msgEl.innerText = "Ready for test";
+    }
+  }
+}
+
+function ang3(a,b,c){
+  const ab={x:a.x-b.x,y:a.y-b.y}, cb={x:c.x-b.x,y:c.y-b.y};
+  const d=ab.x*cb.x+ab.y*cb.y, m=Math.sqrt(ab.x**2+ab.y**2)*Math.sqrt(cb.x**2+cb.y**2);
+  return m===0?0: Math.acos(Math.max(-1,Math.min(1,d/m)))*180/Math.PI;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACTIVITY LOGIC (20 Exercises)
+// ═══════════════════════════════════════════════════════════
+function processActivity(lm) {
+  let a = null, msg = '';
+  switch(currentAct) {
+    case 'pushup': 
+      a=ang3(lm[11],lm[13],lm[15]); 
+      if(a<85&&repState==='up'){repState='down';msg='Lowered!';}
+      else if(a>155&&repState==='down'){repState='up';addRep();msg='Great Push-up!';}
+      else msg = repState==='up'?'Lower chest':'Push up';
+      break;
+    case 'squat':
+      a=ang3(lm[23],lm[25],lm[27]);
+      if(a<100&&repState==='up'){repState='down';msg='Good depth!';}
+      else if(a>160&&repState==='down'){repState='up';addRep();msg='Rep counted!';}
+      else msg = repState==='up'?'Squat down':'Stand up fully';
+      break;
+    case 'jumping':
+      const up = lm[15].y<lm[11].y-0.05 && lm[16].y<lm[12].y-0.05;
+      if(up&&repState==='up'){repState='down';msg='Arms up!';}
+      else if(!up&&repState==='down'){repState='up';addRep();msg='Rep counted!';}
+      else msg = 'Jumping Jacks';
+      break;
+    case 'pullup': a=ang3(lm[11],lm[13],lm[15]); if(a<70&&repState==='up'){repState='down';msg='Chin above bar!';}else if(a>155&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg=repState==='up'?'Pull up!':'Lower down'; break;
+    case 'situp': a=ang3(lm[11],lm[23],lm[25]); if(a<70&&repState==='up'){repState='down';msg='Top!';}else if(a>140&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg=repState==='up'?'Sit up!':'Lower back down'; break;
+    case 'highknee': {const u=lm[25].y<lm[23].y-0.05||lm[26].y<lm[24].y-0.05; if(u&&repState==='up'){repState='down';msg='Knee up!';}else if(!u&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg='Raise a knee!'; break;}
+    case 'lunge': a=ang3(lm[23],lm[25],lm[27]); if(a<100&&repState==='up'){repState='down';msg='Deep lunge!';}else if(a>160&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg=repState==='up'?'Lunge down':'Stand up'; break;
+    case 'plank': {const ok=Math.abs(lm[11].y-lm[27].y)<0.2; if(ok){plankActive=true;msg='Perfect Plank!';}else{plankActive=false;msg='Straighten body!';} break;}
+    case 'shoulderpress': {const u2=lm[15].y<lm[11].y-0.15&&lm[16].y<lm[12].y-0.15; if(u2&&repState==='up'){repState='down';msg='Arms pressed!';}else if(!u2&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg='Press arms up!'; break;}
+    case 'bicep': a=ang3(lm[11],lm[13],lm[15]); if(a<60&&repState==='up'){repState='down';msg='Curled!';}else if(a>155&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg=repState==='up'?'Curl up':'Lower arm'; break;
+    case 'mountain': {const i=lm[25].y<lm[23].y-0.07||lm[26].y<lm[24].y-0.07; if(i&&repState==='up'){repState='down';msg='Knee in!';}else if(!i&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg='Drive knee in!'; break;}
+    case 'burpee': {const hy2=lm[0].y,ay=(lm[27].y+lm[28].y)/2,ea=ang3(lm[11],lm[13],lm[15]); const st2=hy2<0.4&&(ay-hy2)>0.5,pl=hy2>0.35&&ea>140; if(st2&&burpeePhase===0){burpeePhase=1;msg='Drop to plank!';}else if(pl&&burpeePhase===1){burpeePhase=2;msg='Jump up!';}else if(st2&&burpeePhase===2){burpeePhase=0;addRep();msg='Burpee done!';}else msg='Burpee in progress'; break;}
+    case 'balance': {const ok2=Math.abs(lm[27].y-lm[28].y)>0.08; if(ok2){plankActive=true;msg='Balanced!';}else{plankActive=false;msg='Lift one foot!';} break;}
+    case 'tpose': {const flat=Math.abs(lm[15].y-lm[11].y)<0.08&&Math.abs(lm[16].y-lm[12].y)<0.08; if(flat){plankActive=true;msg='Perfect T-Pose!';}else{plankActive=false;msg='Extend arms sideways!';} break;}
+    case 'calf': {const tip=lm[27].y<lm[25].y-0.01; if(tip&&repState==='up'){repState='down';msg='On tiptoes!';}else if(!tip&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg='Rise on tiptoes'; break;}
+    case 'tricep': a=ang3(lm[11],lm[13],lm[15]); if(a<90&&repState==='up'){repState='down';msg='Lowered!';}else if(a>155&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg=repState==='up'?'Lower body':'Push up'; break;
+    case 'longjump': {const sp=Math.abs(lm[27].x-lm[28].x)*640,cr=ang3(lm[23],lm[25],lm[27])<120; if(cr&&repState==='up'){repState='down';msg='JUMP!';}else if(sp>640*0.22&&repState==='down'){repState='up';addRep();msg='Jump ~'+Math.round(sp/4)+'cm!';}else msg='Crouch to prepare'; break;}
+    case 'highjump': {const hy3=lm[0].y*480; if(!jumpBaseY)jumpBaseY=hy3; if(hy3<jumpPeakY)jumpPeakY=hy3; const cr2=ang3(lm[23],lm[25],lm[27])<120; if(cr2&&repState==='up'){repState='down';jumpPeakY=Infinity;msg='JUMP!';}else if(hy3<jumpBaseY-25&&repState==='down'){repState='up';addRep();msg='Jump ~'+Math.round((jumpBaseY-jumpPeakY)*0.35)+'cm!';jumpPeakY=Infinity;}else msg='Crouch to prepare'; break;}
+    case 'deepbreath': {const sy=(lm[11].y+lm[12].y)/2; if(sy<0.38&&repState==='up'){repState='down';msg='Full inhale!';}else if(sy>0.44&&repState==='down'){repState='up';addRep();msg='Breath complete!';}else msg=repState==='up'?'Breathe in deeply':'Breathe out slowly'; break;}
+    case 'armcircle': {const o2=Math.abs(lm[15].y-lm[11].y)<0.1&&Math.abs(lm[16].y-lm[12].y)<0.1,dn=lm[15].y>lm[11].y+0.12&&lm[16].y>lm[12].y+0.12; if(o2&&repState==='up'){repState='down';msg='Arms out — circle!';}else if(dn&&repState==='down'){repState='up';addRep();msg='Rep counted!';}else msg='Make arm circles!'; break;}
+  }
+  
+  if(a!==null) document.getElementById('actAngleBadge').innerText = 'Angle: ' + Math.round(a) + '°';
+  document.getElementById('actGuidanceMsg').innerText = "✓ Tracking Active — " + msg;
+}
+
+function addRep() {
+  actReps++; 
+  const cfg = ACT_CONFIG[currentAct];
+  actScore += cfg.pts; actCals += cfg.cal;
+  updateActUI();
+  if(actReps===1 || actReps%10===0) fireConfetti();
+}
+
+// ═══════════════════════════════════════════════════════════
+// HEIGHT, FILE UPLOAD & BMI
+// ═══════════════════════════════════════════════════════════
+function processHeight(lm, W) {
+  const sPx = Math.abs(lm[11].x - lm[12].x) * W;
+  if(sPx<10) return;
+  const ppc = sPx / 38; 
+  const bodyPx = (Math.max(lm[27].y, lm[28].y) - lm[0].y) * 480;
+  const ht = (bodyPx / ppc) / 0.87;
+  
+  htBuffer.push(ht);
+  if(htBuffer.length>30) htBuffer.shift();
+  
+  const avgH = htBuffer.reduce((s,b)=>s+b,0)/htBuffer.length;
+  document.getElementById('htVal').innerText = avgH.toFixed(1);
+  document.getElementById('htGuidanceMsg').innerText = "✓ Tracking Active — Stand still";
+}
+
+async function handleFileUpload(e, type) {
+  const file = e.target.files[0];
+  if(!file) return;
+  
+  CamManager.stop('ht');
+  document.getElementById('htSetupOverlay').classList.add('hidden');
+  
+  const video = document.getElementById('htVideo');
+  const img = document.getElementById('htImage');
+  const canvas = document.getElementById('htCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  const pose = new Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}` });
+  pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+  
+  let hts = [];
+  pose.onResults(results => {
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    if(type==='photo') ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    if(results.poseLandmarks) {
+      drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color:'rgba(99,102,241,0.5)', lineWidth:2});
+      drawLandmarks(ctx, results.poseLandmarks, {color:'#06b6d4', lineWidth:1, radius:3});
+      const W = canvas.width;
+      const lm = results.poseLandmarks;
+      const sPx = Math.abs(lm[11].x - lm[12].x) * W;
+      if(sPx>10) {
+        const ppc = sPx / 38;
+        const bodyPx = (Math.max(lm[27].y, lm[28].y) - lm[0].y) * canvas.height;
+        hts.push((bodyPx / ppc) / 0.87);
+      }
+    }
+  });
+
+  const url = URL.createObjectURL(file);
+  
+  if (type === 'photo') {
+    video.style.display = 'none'; img.style.display = 'block';
+    img.src = url;
+    img.onload = async () => {
+      canvas.width = img.width || 640; canvas.height = img.height || 480;
+      await pose.send({image: img});
+      if(hts.length>0) document.getElementById('htVal').innerText = hts[0].toFixed(1);
+      else document.getElementById('htVal').innerText = 'Fail';
+      pose.close();
+    };
+  } else {
+    img.style.display = 'none'; video.style.display = 'block';
+    video.src = url; video.muted = true; video.loop = false;
+    video.onloadeddata = async () => {
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      await video.play();
+      const int = setInterval(async () => {
+        if(video.paused || video.ended) {
+          clearInterval(int); pose.close();
+          if(hts.length>0) {
+            const avg = hts.reduce((a,b)=>a+b,0)/hts.length;
+            document.getElementById('htVal').innerText = avg.toFixed(1);
+          }
+        } else {
+          await pose.send({image: video});
+          if(hts.length>0) {
+            const avg = hts.reduce((a,b)=>a+b,0)/hts.length;
+            document.getElementById('htVal').innerText = avg.toFixed(1);
+          }
+        }
+      }, 500);
+    };
+  }
+}
+
+function calculateBMI() {
+  const w = parseFloat(document.getElementById('bmiWeight').value);
+  let h = parseFloat(document.getElementById('htVal').innerText);
+  if(isNaN(w) || isNaN(h)) { alert('Please get height and enter weight.'); return; }
+  
+  const hM = h / 100;
+  const bmi = w / (hM * hM);
+  document.getElementById('bmiResult').style.display = 'block';
+  document.getElementById('bmiVal').innerText = bmi.toFixed(1);
+  
+  let cat = '', color = '', pct = 0, text = '';
+  if(bmi < 18.5) { cat='Underweight'; color='var(--warning)'; pct=20; text='Consider gaining weight for better health.'; }
+  else if(bmi < 25) { cat='Normal'; color='var(--success)'; pct=50; text='Great job maintaining a healthy weight!'; }
+  else if(bmi < 30) { cat='Overweight'; color='var(--warning)'; pct=80; text='Consider losing some weight through exercise.'; }
+  else { cat='Obese'; color='var(--danger)'; pct=100; text='Consult a doctor for a healthy weight loss plan.'; }
+  
+  document.getElementById('bmiCategory').innerText = cat;
+  document.getElementById('bmiCategory').style.color = color;
+  document.getElementById('bmiBar').style.width = pct + '%';
+  document.getElementById('bmiBar').style.background = color;
+  
+  const minW = (18.5 * hM * hM).toFixed(1);
+  const maxW = (24.9 * hM * hM).toFixed(1);
+  document.getElementById('bmiAdvice').innerText = `${text} Ideal weight range: ${minW} - ${maxW} kg.`;
+  
+  // Save BMI for fitness report
+  localStorage.setItem(`aem_bmi_${currentUser}`, JSON.stringify({bmi: bmi.toFixed(1), h, w}));
+}
+
+// ═══════════════════════════════════════════════════════════
+// REACTION TESTS
+// ═══════════════════════════════════════════════════════════
+function beginReactTest() {
+  if (window.lastLM) shoulderRefWidth = Math.abs(window.lastLM[11].x - window.lastLM[12].x);
+  const cmd = REACT_CMDS[Math.floor(Math.random()*REACT_CMDS.length)];
+  currentReactCmd = cmd; reactActive = false;
+  document.getElementById('reactPrompt').innerText = cmd.cmd;
+  document.getElementById('reactSub').innerText = 'Wait for it...';
+  document.getElementById('reactSpeed').innerText = '';
+  setTimeout(()=>{
+    reactActive = true; reactPromptTime = Date.now();
+    document.getElementById('reactSub').innerText = 'GO GO GO!';
+  }, 1000 + Math.random()*2000);
+}
+
+function checkReact(lm) {
+  if(!reactActive || !currentReactCmd) return;
+  const d = currentReactCmd.detect; let ok=false;
+  switch(d) {
+    case 'leftUp': ok = lm[15].y<lm[11].y-0.1; break;
+    case 'rightUp': ok = lm[16].y<lm[12].y-0.1; break;
+    case 'bothUp': ok = lm[15].y<lm[11].y-0.1 && lm[16].y<lm[12].y-0.1; break;
+    case 'touchHead': ok = lm[15].y<lm[0].y+0.1 || lm[16].y<lm[0].y+0.1; break;
+    case 'squat': ok = ang3(lm[23],lm[25],lm[27])<110; break;
+    case 'stand': ok = ang3(lm[23],lm[25],lm[27])>165; break;
+    case 'handsHips': ok=Math.abs(lm[15].y-lm[23].y)<0.09||Math.abs(lm[16].y-lm[24].y)<0.09; break;
+    case 'forward': {const sw=Math.abs(lm[11].x-lm[12].x);ok=shoulderRefWidth&&sw>shoulderRefWidth*1.18;break;}
+    case 'back': {const sw=Math.abs(lm[11].x-lm[12].x);ok=shoulderRefWidth&&sw<shoulderRefWidth*0.82;break;}
+    case 'crossChest': {const mx=(lm[11].x+lm[12].x)/2;ok=Math.abs(lm[15].x-mx)<0.12&&Math.abs(lm[16].x-mx)<0.12;break;}
+  }
+  if(ok) {
+    reactActive = false;
+    const t = Date.now() - reactPromptTime;
+    reactTimes.push(t);
+    const pts = t<400?20 : t<700?15 : t<1000?10 : 5;
+    reactTotalScore += pts;
+    
+    document.getElementById('reactSpeed').innerText = `${t}ms (+${pts} pts)`;
+    document.getElementById('reactAvgVal').innerText = Math.round(reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length);
+    document.getElementById('reactBestVal').innerText = Math.min(...reactTimes);
+    document.getElementById('reactScoreVal').innerText = reactTotalScore;
+    
+    if(t<500) fireConfetti();
+    setTimeout(beginReactTest, 2000);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// FITNESS REPORT & HISTORY
+// ═══════════════════════════════════════════════════════════
+function generateFitnessReport() {
+  const hist = getHistory();
+  let varietyScore=0, repScore=0, reactScore=0, consistScore=0, bmiScore=0;
+  
+  // Variety (0-20)
+  const acts = new Set(hist.filter(h=>h.type==='exercise').map(h=>h.activity));
+  varietyScore = Math.min(20, acts.size * 2);
+  
+  // Reps (0-20)
+  const reps = hist.reduce((s,h) => s + (h.reps||0), 0);
+  repScore = Math.min(20, reps / 20); // 400 reps = 20 pts
+  
+  // React (0-20)
+  const reacts = hist.filter(h=>h.type==='reaction');
+  if(reacts.length > 0) {
+    const avgScore = reacts.reduce((s,h) => s + h.score, 0) / reacts.length;
+    reactScore = Math.min(20, avgScore / 5); // 100 react score = 20 pts
+  }
+  
+  // Consistency (0-20)
+  const days = new Set(hist.map(h => new Date(h.date).toDateString()));
+  consistScore = Math.min(20, days.size * 4); // 5 unique days = 20 pts
+  
+  // BMI (0-20)
+  const bmiData = JSON.parse(localStorage.getItem(`aem_bmi_${currentUser}`));
+  if(bmiData) {
+    const b = parseFloat(bmiData.bmi);
+    if(b>=18.5 && b<=24.9) bmiScore = 20;
+    else if(b>=25 && b<=29.9) bmiScore = 10;
+    else bmiScore = 5;
+  }
+  
+  const total = Math.round(varietyScore + repScore + reactScore + consistScore + bmiScore);
+  
+  document.getElementById('fitScoreVal').innerText = total;
+  document.getElementById('fitCircle').style.setProperty('--progress', total);
+  
+  let cat = '';
+  if(total<=30) cat='Poor'; else if(total<=50) cat='Fair'; else if(total<=70) cat='Good'; else if(total<=85) cat='Great'; else cat='Elite';
+  document.getElementById('fitCategory').innerText = cat;
+  
+  document.getElementById('fitBarVariety').style.width = (varietyScore/20*100)+'%';
+  document.getElementById('fitBarReps').style.width = (repScore/20*100)+'%';
+  document.getElementById('fitBarReact').style.width = (reactScore/20*100)+'%';
+  document.getElementById('fitBarConsist').style.width = (consistScore/20*100)+'%';
+  document.getElementById('fitBarBMI').style.width = (bmiScore/20*100)+'%';
+}
+
+function loadHistory(filter = 'all') {
+  let hist = getHistory();
+  if(filter !== 'all') hist = hist.filter(h => h.type === filter);
+  hist.sort((a,b) => new Date(b.date) - new Date(a.date));
+  
+  const tbody = document.getElementById('histBody');
+  if(hist.length===0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No history found.</td></tr>'; return; }
+  
+  tbody.innerHTML = hist.map(h => {
+    const d = new Date(h.date);
+    return `<tr>
+      <td>${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td>
+      <td><strong>${h.activity}</strong></td>
+      <td>${h.reps}</td>
+      <td><span class="text-success">${h.score}</span></td>
+      <td>${h.calories ? h.calories.toFixed(1) : '-'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterHistory(type) {
+  document.querySelectorAll('#histFilters .btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  loadHistory(type);
+}
+
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  doc.setFontSize(18);
+  doc.text("AI Exercise Manager — Fitness Report", 14, 20);
+  doc.setFontSize(11);
+  doc.text(`User: ${currentUser} | Date: ${new Date().toLocaleDateString()}`, 14, 28);
+  
+  const hist = getHistory();
+  let totScore = 0, totCals = 0, totReps = 0;
+  hist.forEach(h => { totScore+=(h.score||0); totCals+=(h.calories||0); if(h.type==='exercise')totReps+=(h.reps||0); });
+  
+  doc.text(`Summary: ${hist.length} sessions | ${totReps} reps | ${totScore} score | ${totCals.toFixed(1)} kcal`, 14, 36);
+  
+  const bmiData = JSON.parse(localStorage.getItem(`aem_bmi_${currentUser}`));
+  if(bmiData) doc.text(`BMI: ${bmiData.bmi} (H: ${bmiData.h}cm, W: ${bmiData.w}kg)`, 14, 42);
+  
+  const tableData = hist.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(h => {
+    const d = new Date(h.date);
+    return [
+      d.toLocaleDateString() + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+      h.activity,
+      h.reps,
+      h.score,
+      h.calories ? h.calories.toFixed(1) : '-'
+    ];
+  });
+  
+  doc.autoTable({
+    startY: 50,
+    head: [['Date/Time', 'Activity', 'Reps', 'Score', 'Calories']],
+    body: tableData,
+    theme: 'striped',
+    headStyles: { fillColor: [99, 102, 241] }
+  });
+  
+  doc.save(`AEM_Report_${currentUser}_${new Date().getTime()}.pdf`);
+}
+
+// ═══════════════════════════════════════════════════════════
+// LEADERBOARD & UTILS
+// ═══════════════════════════════════════════════════════════
+function loadLeaderboard() {
+  const lb = JSON.parse(localStorage.getItem('aem_leaderboard')||'[]');
+  lb.sort((a,b)=>b.score-a.score);
+  const tbody = document.getElementById('lbBody');
+  if(lb.length===0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No entries yet</td></tr>'; return; }
+  tbody.innerHTML = lb.slice(0,50).map((e,i) => {
+    const init = e.name.charAt(0).toUpperCase();
+    return `<tr>
+      <td><strong>#${i+1}</strong></td>
+      <td><span class="lb-avatar">${init}</span>${e.name}</td>
+      <td><span class="privacy-badge">${e.act}</span></td>
+      <td><strong class="text-success">${e.score}</strong></td>
+    </tr>`;
+  }).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if(msg) t.innerText = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function fireConfetti() {
+  for(let i=0;i<50;i++){
+    const c=document.createElement('div'); c.className='confetti';
+    c.style.left=Math.random()*100+'vw'; c.style.background=['#6366f1','#06b6d4','#10b981','#f59e0b'][i%4];
+    c.style.animationDuration=(2+Math.random()*2)+'s';
+    document.body.appendChild(c); setTimeout(()=>c.remove(),4000);
+  }
+}
+
+// Check session on load
+window.onload = checkSession;
+</script>
+</body>
+</html>
