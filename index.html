@@ -1,0 +1,83 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PolicyLens AI</title><script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:Inter,system-ui,sans-serif}.fade{animation:f .35s ease}@keyframes f{from{opacity:0;transform:translateY(8px)}to{opacity:1}}</style></head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+<header class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+<b class="text-indigo-600 text-lg cursor-pointer" onclick="go('landing')">◎ PolicyLens AI</b>
+<span class="text-xs text-slate-500 hidden sm:block">Evidence-backed comparison. No guessed coverage.</span></div></header>
+<main id="app" class="max-w-6xl mx-auto px-4 py-8"></main>
+<footer class="text-center text-xs text-slate-500 pb-8 px-4">Educational comparison tool — not insurance advice, a quotation, or a licensed insurance sale.</footer>
+<div id="drawer" class="fixed inset-0 hidden z-50"><div class="absolute inset-0 bg-black/30" onclick="closeEv()"></div>
+<aside class="absolute right-0 top-0 h-full w-full max-w-md bg-white p-6 overflow-y-auto shadow-xl" id="dbody"></aside></div>
+<script>
+const NF="No explicit clause was found in the provided policy document.";
+const st={step:"landing",profile:{customer_type:null,priorities:[],budget:null},files:[],data:null,view:null};
+const FIELDS=[["sum_insured","Coverage"],["waiting_period","Waiting Period"],["exclusions","Major Exclusions"],["premium","Premium"],["deductible","Deductible"],["claim_conditions","Claim Conditions"],["limitations","Limitations"]];
+const $=s=>document.querySelector(s), esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const btn="rounded-xl px-5 py-2.5 font-medium transition ", pri=btn+"bg-indigo-600 text-white hover:bg-indigo-700", sec=btn+"bg-white border hover:bg-slate-100";
+function go(s){st.step=s;render()}
+function render(){const v={landing,questions,upload,analysis,compare,detail}[st.step]();$("#app").innerHTML=`<div class="fade">${v}</div>`;window.scrollTo(0,0)}
+function landing(){return `<section class="text-center py-16 max-w-3xl mx-auto"><h1 class="text-4xl sm:text-5xl font-bold tracking-tight">Understand your insurance policy before you pay.</h1>
+<p class="mt-5 text-lg text-slate-600">Compare coverage, waiting periods, exclusions and premiums using evidence directly from your policy documents.</p>
+<div class="mt-8 flex gap-3 justify-center flex-wrap"><button class="${pri}" onclick="go('questions')">Compare Policies</button><button class="${sec}" onclick="runDemo()">View Demo</button></div>
+<p class="mt-6 text-sm text-slate-500">✓ Evidence-backed comparison. No guessed coverage.</p></section>
+<div class="grid sm:grid-cols-3 gap-4">${[["Exact quotes","Every value links to a sentence from your PDF."],["Page numbers","Know exactly where each clause lives."],["UNCLEAR, not guessed","Missing clauses are flagged, never assumed."]].map(([a,b])=>`<div class="bg-white rounded-2xl border p-5"><b>${a}</b><p class="text-sm text-slate-600 mt-1">${b}</p></div>`).join("")}</div>`}
+function chip(group,val,multi){const p=st.profile,on=multi?p.priorities.includes(val):p[group]===val;
+return `<button onclick="pick('${group}','${val}',${!!multi})" class="rounded-xl border px-4 py-2 ${on?'bg-indigo-600 text-white border-indigo-600':'bg-white hover:border-indigo-400'}">${val}</button>`}
+function pick(g,v,m){const p=st.profile;if(m){p.priorities=p.priorities.includes(v)?p.priorities.filter(x=>x!=v):[...p.priorities,v]}else p[g]=v;render()}
+function questions(){const p=st.profile,ok=p.customer_type&&p.priorities.length&&p.budget;
+const q=(t,c)=>`<div class="bg-white rounded-2xl border p-6"><h3 class="font-semibold mb-3">${t}</h3><div class="flex flex-wrap gap-2">${c}</div></div>`;
+return `<div class="max-w-2xl mx-auto space-y-4"><h2 class="text-2xl font-bold">Tell us what you need</h2>
+${q("1. Who is this policy for?",["Myself","Student","Family","Parents"].map(x=>chip('customer_type',x)).join(""))}
+${q("2. What matters most to you? (select any)",["Coverage","Waiting Period","Exclusions","Premium","Claim Conditions"].map(x=>chip('priorities',x,true)).join(""))}
+${q("3. What is your approximate annual budget?",["Below ₹5,000","₹5,000–₹10,000","₹10,000–₹20,000","Above ₹20,000"].map(x=>chip('budget',x)).join(""))}
+<button class="${pri} ${ok?'':'opacity-40 pointer-events-none'}" onclick="go('upload')">Continue</button></div>`}
+function upload(){const L="ABC";
+return `<div class="max-w-2xl mx-auto"><h2 class="text-2xl font-bold mb-4">Upload 2–3 policy PDFs</h2>
+<label id="drop" class="block border-2 border-dashed rounded-2xl bg-white p-10 text-center cursor-pointer hover:border-indigo-400" ondragover="event.preventDefault()" ondrop="event.preventDefault();addFiles(event.dataTransfer.files)">
+<input type="file" accept="application/pdf" multiple class="hidden" onchange="addFiles(this.files)"><div class="text-3xl">⬆</div><p class="mt-2 font-medium">Drag & drop PDFs or click to browse</p><p class="text-sm text-slate-500">PDF only · up to 10 MB each</p></label>
+<div id="err" class="text-red-600 text-sm mt-2"></div>
+<div class="mt-4 space-y-2">${st.files.map((f,i)=>`<div class="bg-white border rounded-xl p-4 flex justify-between items-center"><div><div class="text-xs text-slate-500">Policy ${L[i]}</div><div class="font-medium">${esc(f.name)}</div><div class="text-xs text-emerald-600">✓ PDF ready</div></div><button class="text-slate-400 hover:text-red-500" onclick="st.files.splice(${i},1);render()">✕</button></div>`).join("")}</div>
+<div class="mt-5 flex gap-3 items-center"><button class="${pri} ${st.files.length>=2?'':'opacity-40 pointer-events-none'}" onclick="analyze()">Analyze Policies</button><button class="${sec}" onclick="runDemo()">Try Demo</button></div></div>`}
+function addFiles(list){let e="";for(const f of list){if(f.type!=="application/pdf"&&!f.name.toLowerCase().endsWith(".pdf")){e=`${f.name}: only PDFs allowed.`;continue}
+if(f.size>10e6){e=`${f.name}: over 10 MB.`;continue}if(st.files.length>=3){e="Maximum 3 policies.";continue}st.files.push(f)}render();$("#err").textContent=e}
+async function analyze(){const fd=new FormData();st.files.forEach(f=>fd.append("files",f));await run(()=>fetch("/api/analyze",{method:"POST",body:fd}),st.files.map(f=>f.name))}
+async function runDemo(){if(!st.profile.customer_type)Object.assign(st.profile,{customer_type:"Student",priorities:["Coverage","Waiting Period","Exclusions"],budget:"₹5,000–₹10,000"});
+await run(()=>fetch("/api/demo",{method:"POST"}),["Policy A","Policy B","Policy C"])}
+async function run(call,names){st.step="analysis";st.log=[];render();const steps=["Document loaded","Extracting text","Finding coverage","Finding waiting periods","Finding exclusions","Finding premium","Verifying evidence"];
+const p=call().then(async r=>{if(!r.ok)throw new Error((await r.json()).detail||"Analysis failed");return r.json()});
+try{for(const n of names){for(const s of steps){st.log.push([n,s]);paint();await new Promise(r=>setTimeout(r,45))}}
+st.data=(await p).policies;st.log.push(["","Analysis Complete"]);paint();await new Promise(r=>setTimeout(r,350));go("compare")}
+catch(e){alert(e.message);go("upload")}}
+function paint(){$("#app").innerHTML=analysis()}
+function analysis(){return `<div class="max-w-md mx-auto bg-white border rounded-2xl p-6 font-mono text-sm space-y-1">${(st.log||[]).map(([n,s],i,a)=>(n&&(i==0||a[i-1][0]!=n)?`<div class="font-bold mt-2">Reading ${esc(n)}...</div>`:"")+`<div class="${n?'text-slate-600':'font-bold text-emerald-600'}">✓ ${s}</div>`).join("")}</div>`}
+function cell(pi,f){const r=st.data[pi].fields[f];
+if(r.value==="UNCLEAR")return `<button onclick="showEv(${pi},'${f}')" class="rounded-lg bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1 font-semibold hover:bg-amber-200">UNCLEAR ⓘ</button>`;
+if(Array.isArray(r.value))return `<button onclick="showEv(${pi},'${f}')" class="text-left text-indigo-700 hover:underline">${r.value.length} identified →</button><ul class="text-xs text-slate-600 mt-1 list-disc ml-4">${r.value.slice(0,f=="exclusions"?4:2).map(i=>`<li>${esc(i.label.length>60?i.label.slice(0,57)+"…":i.label)}</li>`).join("")}</ul>`;
+return `<button onclick="showEv(${pi},'${f}')" class="text-left font-medium text-indigo-700 hover:underline">${esc(r.value)}</button>`}
+function compare(){const D=st.data;
+return `<h2 class="text-2xl font-bold mb-4">Policy Comparison</h2>
+<div class="grid sm:grid-cols-${D.length} gap-4 mb-6">${D.map((p,i)=>`<div class="bg-white border rounded-2xl p-5"><div class="text-xs text-indigo-600 font-semibold">${p.label}</div><div class="font-semibold">${esc(p.fields.policy_name.value)}</div><div class="text-sm text-slate-500">${esc(p.fields.insurer.value)}</div><button class="mt-3 text-sm text-indigo-700 hover:underline" onclick="st.view=${i};go('detail')">View Policy →</button></div>`).join("")}</div>
+<div class="bg-white border rounded-2xl overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left bg-slate-50"><th class="p-4">Feature</th>${D.map(p=>`<th class="p-4">${p.label}</th>`).join("")}</tr></thead>
+<tbody>${FIELDS.map(([f,l])=>`<tr class="border-t align-top"><td class="p-4 font-medium text-slate-600">${l}</td>${D.map((_,i)=>`<td class="p-4">${cell(i,f)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+<p class="text-xs text-slate-500 mt-2">Click any value to see the exact clause, page and section it came from.</p>
+<div class="bg-white border rounded-2xl p-5 mt-6"><h3 class="font-semibold mb-2">Factual summary</h3>${D.map(p=>`<p class="text-sm text-slate-700 mb-2">${esc(p.summary)}</p>`).join("")}<p class="text-xs text-slate-500">This summary states extracted facts only and does not recommend a policy.</p></div>
+<div class="mt-6 flex gap-3"><button class="${sec}" onclick="go('upload')">Start over</button></div>`}
+function evBlock(e,label){return `<div class="mt-3 border-l-4 border-indigo-500 bg-slate-50 rounded-r-xl p-3">${label?`<div class="font-semibold text-sm">${esc(label)}</div>`:""}<p class="text-sm italic">“${esc(e.quote)}”</p><div class="text-xs text-slate-500 mt-1">Page ${e.page} · ${esc(e.section||"—")}</div></div>`}
+function showEv(pi,f){const p=st.data[pi],r=p.fields[f],name=FIELDS.find(x=>x[0]==f)?.[1]||f;
+const link=pg=>`<a class="${pri} inline-block mt-4" target="_blank" href="/api/pdf/${p.id}#page=${pg}">Open Source</a>`;
+let h=`<button class="float-right text-slate-400" onclick="closeEv()">✕</button><div class="text-xs uppercase tracking-wide text-slate-500">${name}</div><div class="font-semibold">${p.label} · ${esc(p.filename)}</div>`;
+if(r.value==="UNCLEAR")h+=`<div class="mt-4 rounded-xl bg-amber-50 border border-amber-300 p-4"><div class="text-2xl font-bold text-amber-800">UNCLEAR</div><p class="mt-2 text-sm">${r.reason}</p><p class="mt-2 text-xs text-slate-600">PolicyLens does not infer or assume missing terms. Absence of a clause is not the same as "no waiting period" — check with the insurer.</p></div>${link(1)}`;
+else if(Array.isArray(r.value))h+=r.value.map((i,n)=>evBlock(i,`${n+1}. ${i.label}`)).join("")+link(r.value[0].page);
+else h+=`<div class="text-2xl font-bold mt-3">${esc(r.value)}</div>${evBlock(r.evidence)}${link(r.evidence.page)}`;
+$("#dbody").innerHTML=h;$("#drawer").classList.remove("hidden")}
+function closeEv(){$("#drawer").classList.add("hidden")}
+function detail(){const p=st.data[st.view];
+return `<button class="text-sm text-indigo-700 mb-3" onclick="go('compare')">← Back to comparison</button><h2 class="text-2xl font-bold">${p.label}: ${esc(p.fields.policy_name.value)}</h2><p class="text-slate-500 mb-4">${esc(p.fields.insurer.value)} · ${esc(p.fields.policy_type.value)}</p>
+<div class="grid lg:grid-cols-3 gap-4"><div class="lg:col-span-2 space-y-3">${FIELDS.map(([f,l])=>{const r=p.fields[f];return `<div class="bg-white border rounded-2xl p-5"><div class="text-sm text-slate-500">${l}</div>`+
+(r.value==="UNCLEAR"?`<div class="font-bold text-amber-700">UNCLEAR</div><p class="text-sm text-slate-600">${r.reason}</p>`:Array.isArray(r.value)?r.value.map((i,n)=>evBlock(i,`${n+1}. ${i.label}`)).join(""):`<div class="text-xl font-semibold">${esc(r.value)}</div>${evBlock(r.evidence)}`)+`</div>`}).join("")}</div>
+<div class="bg-white border rounded-2xl p-5 h-fit"><h3 class="font-semibold">Ask about this policy</h3><div class="flex gap-2 mt-3"><input id="q" class="border rounded-xl px-3 py-2 flex-1 min-w-0" placeholder="What is the waiting period?" onkeydown="if(event.key=='Enter')ask()"><button class="${pri}" onclick="ask()">Ask</button></div><div id="ans" class="mt-3 text-sm"></div></div></div>`}
+async function ask(){const q=$("#q").value.trim();if(!q)return;const r=await(await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({doc_id:st.data[st.view].id,question:q})})).json();
+$("#ans").innerHTML=`<p class="font-medium">${r.answer}</p>`+r.evidence.map(e=>evBlock(e)).join("")}
+render();
+</script></body></html>
